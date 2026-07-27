@@ -21,7 +21,6 @@
 │
 └─► [ 모니터링 대시보드 UI (경고 메시지 & 신호 시각화) ]
 
-
 ---
 
 ## 🛠️ 3. 사용 스택 (Tech Stack)
@@ -37,3 +36,12 @@
 1. **저장소 클론 (Clone)**
    ```bash
    git clone [https://github.com/wangsuhyeon/beach-safety-watch.git](https://github.com/wangsuhyeon/beach-safety-watch.git)
+
+
+---
+
+## 🤖 5. 사용 AI (AI Models & Tools)
+본 프로젝트에서 해변 모니터링 및 객체/위험 감지를 위해 활용한 AI 모델 및 도구 내역입니다.
+
+* **AI Model:** `codex-mini-latest` (실시간 경량화 객체 감지 및 로직 처리)
+* **AI Tools:** OpenAI Codex, VS Code Extension
