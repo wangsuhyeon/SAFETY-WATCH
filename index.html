@@ -176,7 +176,7 @@
     /* ── v3: 다중 카메라 · 설치 유형 · 스트림 소스 ─────────────────────────── */
 
     /* 카메라 그리드 */
-    .stage-grid{display:grid;gap:12px;align-items:start}
+    .stage-grid{display:grid;gap:12px;align-items:start;grid-template-columns:minmax(0,1fr);min-width:0}
     .stage-grid .stage{margin:0;aspect-ratio:16/9;animation:none}
     .stage-grid[data-count="1"]{grid-template-columns:1fr}
     .stage-grid[data-count="2"]{grid-template-columns:1fr 1fr}
@@ -313,13 +313,13 @@
     .empty-start{grid-column:1/-1;display:grid;gap:16px;place-items:center;padding:34px 26px;border:2px dashed #a9d4d6;border-radius:22px;
                  background:repeating-linear-gradient(135deg,#f6fcfb 0 14px,#ecf7f6 14px 28px);text-align:center}
     .empty-start h2{margin:0;font-size:21px;letter-spacing:-.6px;color:#0b5568}
-    .empty-start p{margin:0;max-width:56ch;color:#4e727c;font-size:13.5px;line-height:1.65}
-    .empty-start .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:12px;width:100%;max-width:720px}
+    .empty-start p{margin:0;max-width:min(56ch,100%);color:#4e727c;font-size:13.5px;line-height:1.65}
+    .empty-start .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(168px,100%),1fr));gap:12px;width:100%;max-width:min(720px,100%)}
     .empty-start .steps div{padding:14px 15px;border:1px solid #d5eae8;border-radius:15px;background:#fff;text-align:left}
     .empty-start .steps b{display:block;margin-bottom:3px;color:#06566b;font-size:13px}
     .empty-start .steps span{color:#5f7d85;font-size:12px;line-height:1.55}
     .empty-start .go{display:flex;flex-wrap:wrap;gap:9px;justify-content:center}
-    .empty-start .go button{min-width:150px}
+    .empty-start .go button{min-width:min(150px,100%)}
 
     /* 알림 켜기 */
     .alert-toggle{width:100%;min-height:46px;margin-top:12px;font-size:14px;font-weight:800;
@@ -367,12 +367,80 @@
       .stage-grid{min-height:200px}
     }
   </style>
+  <style>
+    /* ── 감시 시간대 ─────────────────────────────────────────── */
+    .hours-row{display:none;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 4px}
+    .hours-row.on{display:grid}
+    .hours-row label{display:grid;gap:4px;font-size:12px;color:#4e727c}
+    .hours-row input{padding:8px 10px;border:1px solid #cfe4e6;border-radius:11px;background:#fff;
+                     font:inherit;font-size:13px;color:#0b4b5c;width:100%}
+    .hours-note{margin:6px 0 0;font-size:12px;color:#5f7d85;line-height:1.55}
+    .hours-note.muted-now{color:#b4541f;font-weight:600}
+
+    /* ── 오프라인 준비 ───────────────────────────────────────── */
+    .offline-box{margin-top:14px;padding-top:13px;border-top:1px solid #e2f0ef}
+    .offline-box button{width:100%}
+    .offline-box p{margin:7px 0 0;font-size:12px;color:#5f7d85;line-height:1.55}
+    #badgeOffline b{opacity:.72}
+
+    /* ── 경보 스냅샷 ─────────────────────────────────────────── */
+    .logbox p.has-shot{padding-bottom:6px}
+    .event-shot{display:block;margin-top:6px;width:100%;max-width:190px;border-radius:9px;
+                border:1px solid #d5eae8;cursor:zoom-in;background:#dfeef0}
+    .event-shot:hover{border-color:#7fc6c9}
+    .shot-dialog img{display:block;width:100%;max-width:640px;border-radius:14px;
+                     border:1px solid #cfe4e6;background:#0d3946}
+    .shot-dialog #snapshotCaption{margin:11px 0 0;font-size:13px;color:#2f5d68;font-weight:600}
+    .shot-dialog .shot-note{margin:7px 0 0;font-size:12px;color:#5f7d85;line-height:1.6}
+
+    /* ── 단축키 안내 ─────────────────────────────────────────── */
+    .shortcut-list{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+    .shortcut-list li{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:13px;color:#3d6470}
+    .shortcut-list span{flex:1;min-width:180px}
+    kbd{display:inline-block;min-width:24px;padding:3px 7px;border:1px solid #cfe4e6;border-bottom-width:2px;
+        border-radius:7px;background:#f4fbfb;font:inherit;font-size:12px;font-weight:700;color:#0b5568;text-align:center}
+
+    /* 키보드로 선택한 점을 눈에 띄게 */
+    .handle.selected{box-shadow:0 0 0 4px rgba(11,85,104,.28);border-color:#0b5568;z-index:6}
+
+    /* ── 관제 모드 (화면 가득) ───────────────────────────────── */
+    body.control-room .badges,
+    body.control-room .eyebrow,
+    body.control-room .heading,
+    body.control-room .zone-card,
+    body.control-room .lower-cards,
+    body.control-room .notice,
+    body.control-room .site-foot,
+    body.control-room aside{display:none}
+    body.control-room .app{max-width:none;padding:10px 12px 12px;gap:10px}
+    body.control-room .stage-grid{gap:8px}
+    body.control-room .camera-bar,
+    body.control-room .controls{margin-top:8px}
+    body.control-room .top{margin-bottom:6px}
+    /* 관제 모드에서는 카메라가 남는 높이를 전부 차지한다.
+       고정 높이를 쓰면 화면 크기마다 스크롤이 생기므로 flex 로 채운다. */
+    body.control-room .app{height:100vh;display:flex;flex-direction:column;overflow:hidden}
+    body.control-room .grid{flex:1;min-height:0;display:flex;flex-direction:column;align-items:stretch;margin-top:0;gap:0}
+    body.control-room .grid > div{flex:1;min-height:0;width:100%;display:flex;flex-direction:column}
+    body.control-room .stage-grid{flex:1;min-height:0;align-items:stretch}
+    body.control-room .stage-grid .stage{aspect-ratio:auto;height:100%;min-height:0}
+    #controlRoom[aria-pressed="true"]{background:#0b5568;color:#eaf7f8;border-color:#0b5568}
+
+    @media (max-width:820px){
+      /* 좁은 화면에서는 세로로 눌리는 것보다 16:9 를 유지하는 편이 낫다 */
+      body.control-room .app{height:auto;overflow:visible}
+      body.control-room .stage-grid .stage{height:auto;aspect-ratio:16/9}
+      .shortcut-list li{font-size:12.5px}
+    }
+  </style>
 </head>
 <body>
 <a class="skip-link" href="#stage" data-i18n="skipToMonitor">본문(관제 화면)으로 건너뛰기</a>
 <main class="app">
   <header class="top">
     <div class="brand"><span>BEACH</span> WATCH</div>
+    <button class="settings-button" id="controlRoom" type="button" aria-pressed="false" data-i18n="controlRoom">관제 모드</button>
+    <button class="settings-button" id="shortcutHelp" type="button" aria-haspopup="dialog" data-i18n="shortcutsShort">단축키</button>
     <button class="settings-button" id="settingsButton" type="button" aria-haspopup="dialog"><span aria-hidden="true">&#9881;</span> <span data-i18n="settings">설정</span></button>
     <div class="live" id="liveStatus">카메라 연결 안 됨</div>
   </header>
@@ -381,6 +449,7 @@
     <span class="badge" id="badgeBackend"><b data-i18n="badgeEngine">엔진</b> <span id="backendName">-</span></span>
     <span class="badge" id="badgeEnv"><b data-i18n="badgeEnvironment">환경</b> <span id="envName" data-i18n="envUnknown">분석 대기</span></span>
     <span class="badge" id="badgeHealth"><b data-i18n="badgeHealth">상태</b> <span id="healthName" data-i18n="healthIdle">대기</span></span>
+    <span class="badge" id="badgeOffline"><b data-i18n="badgeOffline">오프라인</b> <span id="offlineState" data-i18n="offlineNotYet">준비 안 됨</span></span>
     <span class="badge" data-i18n="badgeOnDevice">온디바이스 처리 · 영상 미전송</span>
     <span class="badge" data-i18n="badgeLicense">MIT 오픈소스</span>
   </div>
@@ -542,12 +611,33 @@
       </section>
 
       <section class="card">
+        <div class="eyebrow" data-i18n="opsEyebrow">OPERATION</div>
+        <h2 data-i18n="opsTitle">운영 설정</h2>
+
+        <fieldset class="fieldset">
+          <label><span data-i18n="hoursEnabled">감시 시간대만 경보</span><input id="hoursEnabled" type="checkbox"></label>
+        </fieldset>
+        <div class="hours-row" id="hoursRow">
+          <label><span data-i18n="hoursFrom">시작</span><input id="hoursFrom" type="time" value="09:00" step="300"></label>
+          <label><span data-i18n="hoursTo">종료</span><input id="hoursTo" type="time" value="19:00" step="300"></label>
+        </div>
+        <p class="hours-note" id="hoursNote" data-i18n="hoursAlways">지금은 하루 종일 경보를 울립니다.</p>
+
+        <div class="offline-box">
+          <button id="prepareOffline" type="button" data-i18n="prepareOffline">인터넷 없이 쓸 수 있게 준비</button>
+          <p data-i18n="prepareOfflineHelp">지금 한 번 받아 두면, 다음부터는 인터넷이 끊겨도 감지가 그대로 동작합니다.</p>
+        </div>
+      </section>
+
+      <section class="card">
         <div class="eyebrow" data-i18n="automation">AUTOMATION</div>
         <fieldset class="fieldset">
           <label><span data-i18n="boundaryDetection">경계선 침범 감지</span><input id="boundaryDetection" type="checkbox" checked></label>
           <label><span data-i18n="adminNotification">관리자 알림</span><input id="adminNotification" type="checkbox" checked></label>
           <label><span data-i18n="warningLight">현장 경광등</span><input id="warningLight" type="checkbox"></label>
           <label><span data-i18n="sirenToggle">경보음</span><input id="sirenEnabled" type="checkbox" checked></label>
+          <label><span data-i18n="voiceToggle">음성으로 읽어 주기</span><input id="voiceEnabled" type="checkbox" checked></label>
+          <label><span data-i18n="snapshotToggle">경보 순간 화면 남기기</span><input id="snapshotEnabled" type="checkbox" checked></label>
         </fieldset>
       </section>
 
@@ -572,6 +662,45 @@
 
   <div class="admin-toast" id="adminToast" role="alert" aria-live="assertive"><b data-i18n="adminAlertTitle">관리자 안전 알림</b><span id="adminToastText"></span></div>
   <p class="sr-only" id="liveRegion" role="status" aria-live="polite"></p>
+
+  <dialog class="source-dialog shot-dialog" id="snapshotDialog" aria-labelledby="snapshotTitle">
+    <form method="dialog">
+      <div>
+        <div class="eyebrow" data-i18n="snapshotEyebrow">ALERT SNAPSHOT</div>
+        <h2 id="snapshotTitle" data-i18n="snapshotTitle">경보 순간의 화면</h2>
+      </div>
+      <img id="snapshotImage" alt="">
+      <p id="snapshotCaption"></p>
+      <p class="shot-note" data-i18n="snapshotNote">이 화면은 기기 안에만 있습니다. 저장되지도, 어디로 전송되지도 않으며 새로고침하면 사라집니다.</p>
+      <div class="dialog-actions">
+        <button value="cancel" data-i18n="close">닫기</button>
+        <button class="primary" id="snapshotSave" type="button" data-i18n="snapshotSave">이미지로 저장</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="source-dialog" id="shortcutDialog" aria-labelledby="shortcutTitle">
+    <form method="dialog">
+      <div>
+        <div class="eyebrow" data-i18n="shortcutsEyebrow">SHORTCUTS</div>
+        <h2 id="shortcutTitle" data-i18n="shortcutsTitle">키보드 단축키</h2>
+      </div>
+      <ul class="shortcut-list">
+        <li><kbd>1</kbd>–<kbd>5</kbd><span data-i18n="scCamera">그 번호의 카메라를 크게 보기</span></li>
+        <li><kbd>E</kbd><span data-i18n="scEdit">위험 구역 그리기 시작 / 끝내기</span></li>
+        <li><kbd>F</kbd><span data-i18n="scFull">관제 모드 (화면 가득)</span></li>
+        <li><kbd>D</kbd><span data-i18n="scDemo">체험 모드 시작 / 끄기</span></li>
+        <li><kbd>M</kbd><span data-i18n="scMute">경보음 켜기 / 끄기</span></li>
+        <li><kbd>T</kbd><span data-i18n="scTest">스스로 점검하기</span></li>
+        <li><kbd>Tab</kbd><span data-i18n="scPoint">(그리는 중) 다음 점 선택</span></li>
+        <li><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd><span data-i18n="scNudge">(그리는 중) 선택한 점을 옮기기 · Shift 를 누르면 크게</span></li>
+        <li><kbd>?</kbd><span data-i18n="scHelp">이 도움말 열기</span></li>
+      </ul>
+      <div class="dialog-actions">
+        <button class="primary" value="cancel" data-i18n="close">닫기</button>
+      </div>
+    </form>
+  </dialog>
 
   <dialog class="source-dialog contact-dialog" id="contactDialog" aria-labelledby="contactTitle">
     <form method="dialog" id="contactForm">
@@ -1258,6 +1387,11 @@ Object.assign(I18N.ko, {
   degradedTiles:'분석이 느려져 확대 분석 칸을 {tiles}개로 줄였습니다',
   restoredTiles:'여유가 생겨 확대 분석 칸을 {tiles}개로 되돌렸습니다',
   loopHalted:'분석이 계속 실패해 안전하게 멈췄습니다. 카메라를 다시 연결해 주세요.',
+  loopHaltedHelp:'연결된 카메라가 모두 응답하지 않습니다. 전체 끄기를 누른 뒤 다시 연결해 주세요.',
+  modelLoadFailedHelp:'감지 기능을 받지 못해 감시를 시작하지 않았습니다. 인터넷 연결을 확인하고 카메라를 다시 연결해 주세요. (카메라 없이 확인만 하려면 체험 모드를 쓰세요.)',
+  needsAttention:'확인이 필요합니다',
+  cameraDropped:'{name} 이(가) 계속 실패해 감시에서 제외했습니다. 나머지 카메라는 그대로 감시합니다.',
+  streamFailedHelp:'{name} 연결 실패 — 주소를 확인해 주세요. ({reason})',
   nightWarning:'밤·어두움으로 판단했습니다. 일반 카메라만으로는 멀리 있는 사람을 찾기 어렵습니다.',
   noEventsToExport:'내려받을 경보 기록이 없습니다.',
   cycleShared:'카메라 {count}대를 번갈아 살핍니다. 카메라 하나를 다시 보기까지 {seconds}초가 걸립니다.',
@@ -1409,6 +1543,11 @@ Object.assign(I18N.en, {
   degradedTiles:'Running slow — magnified tiles reduced to {tiles}',
   restoredTiles:'Headroom recovered — magnified tiles back to {tiles}',
   loopHalted:'Detection kept failing and stopped safely. Reconnect the camera.',
+  loopHaltedHelp:'None of the connected cameras are responding. Disconnect all, then connect again.',
+  modelLoadFailedHelp:'Detection could not be downloaded, so monitoring did not start. Check your internet connection and reconnect the camera. (Use demo mode to see how it works without a camera.)',
+  needsAttention:'Needs attention',
+  cameraDropped:'{name} kept failing and was dropped from monitoring. The other cameras keep watching.',
+  streamFailedHelp:'{name} could not connect — check the address. ({reason})',
   nightWarning:'Judged as night / dark. An ordinary camera struggles to spot people far away in these conditions.',
   noEventsToExport:'There is no alert history to download.',
   cycleShared:'{count} cameras are checked in turn. Each camera comes round again every {seconds}s.',
@@ -1442,6 +1581,109 @@ Object.assign(I18N.en, {
   noticeTitle:'This system assists lifeguards — it does not replace them.',
   noticeText:'Danger alerts should combine AI detection with confirmation by staff on site. Video is processed on this device only and never leaves it.',
   licProject:'This project · free to use (MIT)'
+});
+/* v7 — 오프라인 · 음성 안내 · 스냅샷 · 감시 시간대 · 관제 모드 · 단축키 */
+Object.assign(I18N.ko, {
+  /* 관제 모드 · 단축키 */
+  controlRoom:'관제 모드', controlRoomExit:'관제 모드 끄기',
+  controlRoomOn:'관제 모드 — 카메라를 화면 가득 띄웁니다', controlRoomOff:'관제 모드를 껐습니다',
+  shortcutsShort:'단축키', shortcutsEyebrow:'단축키', shortcutsTitle:'키보드 단축키',
+  scCamera:'그 번호의 카메라를 크게 보기',
+  scEdit:'위험 구역 그리기 시작 / 끝내기',
+  scFull:'관제 모드 (화면 가득)',
+  scDemo:'체험 모드 시작 / 끄기',
+  scMute:'경보음 켜기 / 끄기',
+  scTest:'스스로 점검하기',
+  scPoint:'(그리는 중) 다음 점 선택',
+  scNudge:'(그리는 중) 선택한 점을 옮기기 · Shift 를 누르면 크게',
+  scHelp:'이 도움말 열기',
+  close:'닫기',
+  sirenOn:'경보음을 켰습니다', sirenOff:'경보음을 껐습니다',
+  zonePointMoved:'{n}번 점을 가로 {x}%, 세로 {y}% 로 옮겼습니다',
+  zonePointSelected:'{n}번 점 선택 (전체 {total}개) · 가로 {x}%, 세로 {y}%',
+
+  /* 운영 설정 · 감시 시간대 */
+  opsEyebrow:'운영', opsTitle:'운영 설정',
+  hoursEnabled:'감시 시간대만 경보',
+  hoursFrom:'시작', hoursTo:'종료',
+  hoursAlways:'지금은 하루 종일 경보를 울립니다.',
+  hoursInside:'{from}–{to} 사이에만 경보를 울립니다. 지금은 이 시간 안입니다.',
+  hoursOutside:'{from}–{to} 사이에만 경보를 울립니다. 지금은 이 시간 밖이라 소리와 알림 전송이 멈춰 있습니다 (감지와 화면 표시는 계속됩니다).',
+  hoursMuted:'{name} — 감시 시간대 밖이라 소리·알림 전송을 건너뛰었습니다 (기록은 남습니다)',
+
+  /* 음성 안내 */
+  voiceToggle:'음성으로 읽어 주기',
+  voiceAlert:'{level}. {camera}, 위험 구역에 {count}명. {seconds}초째입니다.',
+  voiceHere:'현재 화면',
+
+  /* 경보 스냅샷 */
+  snapshotToggle:'경보 순간 화면 남기기',
+  snapshotEyebrow:'경보 화면', snapshotTitle:'경보 순간의 화면',
+  snapshotAlt:'{time} 경보 순간의 화면',
+  snapshotSave:'이미지로 저장',
+  snapshotNote:'이 화면은 기기 안에만 있습니다. 저장되지도, 어디로 전송되지도 않으며 새로고침하면 사라집니다.',
+
+  /* 오프라인 */
+  badgeOffline:'오프라인',
+  offlineReady:'준비 완료 · 파일 {n}개', offlineNotYet:'준비 안 됨',
+  offlineUnsupported:'이 브라우저는 오프라인 저장을 지원하지 않습니다',
+  prepareOffline:'인터넷 없이 쓸 수 있게 준비',
+  prepareOfflineHelp:'지금 한 번 받아 두면, 다음부터는 인터넷이 끊겨도 감지가 그대로 동작합니다.',
+  offlinePreparing:'받는 중…',
+  offlineStored:'오프라인 준비 완료 — 파일 {n}개를 저장했습니다',
+  offlineFailed:'오프라인 준비 실패 — 인터넷 연결을 확인해 주세요',
+  offlineUsedCache:'{what} 를 저장해 둔 것에서 불러왔습니다 (인터넷 불필요)',
+  offlineModel:'AI 모델',
+  docLinks:'자세한 내용은 저장소 문서에 있습니다 — <b>README.md</b>(문제 정의·사용법·임팩트·개발 기록·로드맵) · <b>TECHNICAL.md</b>(AI 파이프라인·안정성·검증 전략) · <b>AI_STACK.md</b>(AI 기술 상세 분석) · <b>RELAY.md</b>(문자·이메일 자동 발송 연결) · <b>IMPACT.md</b>(지표 산출 근거) · <b>DEMO_SCRIPT.md</b>(데모 영상 대본)'
+});
+
+Object.assign(I18N.en, {
+  controlRoom:'Control room', controlRoomExit:'Exit control room',
+  controlRoomOn:'Control room — cameras fill the screen', controlRoomOff:'Left control room',
+  shortcutsShort:'Shortcuts', shortcutsEyebrow:'SHORTCUTS', shortcutsTitle:'Keyboard shortcuts',
+  scCamera:'Enlarge that camera',
+  scEdit:'Start / finish drawing the danger zone',
+  scFull:'Control room (full screen)',
+  scDemo:'Start / stop demo mode',
+  scMute:'Alarm sound on / off',
+  scTest:'Run the self-check',
+  scPoint:'(while drawing) select the next point',
+  scNudge:'(while drawing) move the selected point · hold Shift for bigger steps',
+  scHelp:'Open this help',
+  close:'Close',
+  sirenOn:'Alarm sound on', sirenOff:'Alarm sound off',
+  zonePointMoved:'Point {n} moved to {x}% across, {y}% down',
+  zonePointSelected:'Point {n} of {total} selected · {x}% across, {y}% down',
+
+  opsEyebrow:'OPERATION', opsTitle:'Operating settings',
+  hoursEnabled:'Alert only during watch hours',
+  hoursFrom:'From', hoursTo:'To',
+  hoursAlways:'Alerts sound around the clock.',
+  hoursInside:'Alerts sound only between {from} and {to}. Right now you are inside that window.',
+  hoursOutside:'Alerts sound only between {from} and {to}. You are outside that window, so sound and delivery are paused (detection and on-screen marks continue).',
+  hoursMuted:'{name} — outside watch hours, so sound and delivery were skipped (the event is still logged)',
+
+  voiceToggle:'Read alerts aloud',
+  voiceAlert:'{level}. {camera}, {count} in the danger zone, {seconds} seconds.',
+  voiceHere:'this view',
+
+  snapshotToggle:'Keep a picture of the alert moment',
+  snapshotEyebrow:'ALERT SNAPSHOT', snapshotTitle:'The moment of the alert',
+  snapshotAlt:'Screen at the moment of the {time} alert',
+  snapshotSave:'Save as image',
+  snapshotNote:'This picture stays on this device. It is never saved or sent anywhere, and it disappears when you reload.',
+
+  badgeOffline:'Offline',
+  offlineReady:'Ready · {n} files', offlineNotYet:'Not ready',
+  offlineUnsupported:'This browser cannot store files for offline use',
+  prepareOffline:'Get ready to work without internet',
+  prepareOfflineHelp:'Download once now and detection keeps working even when the connection drops.',
+  offlinePreparing:'Downloading…',
+  offlineStored:'Ready for offline use — {n} files stored',
+  offlineFailed:'Could not prepare for offline use — check your internet connection',
+  offlineUsedCache:'Loaded {what} from storage (no internet needed)',
+  offlineModel:'the AI model',
+  docLinks:'Full detail lives in the repository docs — <b>README.md</b> (problem framing, usage, impact, build log, roadmap) · <b>TECHNICAL.md</b> (AI pipeline, reliability, verification) · <b>AI_STACK.md</b> (detailed AI analysis) · <b>RELAY.md</b> (wiring up real SMS / e-mail) · <b>IMPACT.md</b> (how the figures are derived) · <b>DEMO_SCRIPT.md</b> (demo video script)'
 });
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1535,7 +1777,28 @@ const CONFIG = {
   reconnectBackoff: [1000, 2000, 4000, 8000],
   /* 로그 */
   maxEvents: 200, maxLogLines: 60,
+  /* 추적 유예 — 한 프레임 놓쳤다고 대상을 버리면 체류 시간이 초기화되어
+     긴급 승격이 영영 일어나지 않는다. 이 횟수만큼은 놓쳐도 같은 사람으로 본다. */
+  trackGraceFrames: 3,
+  riskGraceMs: 2200,
+  /* 스트림 정지 감시 — 죽은 영상이 마지막 프레임으로 얼어붙은 채
+     'LIVE' 로 보이는 것이 이 시스템에서 가장 위험한 실패다. */
+  streamStallMs: 6000,
+  /* 알림 전송 */
+  webhookTimeoutMs: 5000,
+  /* 음성 안내 — 같은 상황을 이 간격보다 자주 읽지 않는다 */
+  voiceRepeatMs: 9000,
+  /* 경보 스냅샷 — 메모리에만 남는다. 최근 몇 건만 이미지를 들고 있는다. */
+  snapshotWidth: 320,
+  maxSnapshots: 12,
+  /* 키보드로 구역 점 옮기기 (정규화 좌표) */
+  nudgeStep: 0.004,
+  nudgeStepBig: 0.02,
   /* 외부 스크립트 */
+  tfCdns: [
+    'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js',
+    'https://unpkg.com/@tensorflow/tfjs@4.22.0/dist/tf.min.js'
+  ],
   modelCdns: [
     'https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js',
     'https://unpkg.com/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js'
@@ -1607,7 +1870,7 @@ function createCamera(options) {
     points: site.line.map(p => ({ x: p.x, y: p.y })),
     zoneMode: 'line',          // 'line'(폴리라인) | 'polygon'(닫힌 구역)
     previousPeople: [], nextPersonId: 1,
-    riskSince: new Map(), riskCount: 0,
+    riskSince: new Map(), riskSeen: new Map(), riskCount: 0,
     alertLevel: 'none', lastAlertAt: 0, lastCriticalAt: 0,
     scene: 'clear', sceneLastCheck: 0,
     motion: { moving: false, signature: null, lastChangeAt: 0 },
@@ -1627,6 +1890,8 @@ const state = {
   backend: '',
   detecting: false,
   halted: false,
+  /* 마지막 실패 사유. 경보가 없을 때 사이드바에 계속 표시한다 */
+  lastError: '',
   editing: false,
   drag: -1,
   freehand: null,     // 드래그로 그리는 중인 궤적
@@ -2076,8 +2341,25 @@ function trackCandidates(candidates, previous, nextIdRef) {
                    areaRatio < CONFIG.trackSizeMax * CONFIG.trackSizeMax &&
                    prior.sizeStable !== false;
     }
-    return Object.assign({}, person, { id, hits, averageScore, sizeStable });
+    return Object.assign({}, person, { id, hits, averageScore, sizeStable, missed: 0 });
   });
+}
+
+/** 다음 프레임에 넘길 추적 기억을 만든다.
+ *  이번 프레임에 잡힌 대상 + '잠깐 놓친' 대상(유예 횟수 안)을 함께 남긴다.
+ *  파도에 잠겼다 나오는 사람이 매번 새 사람이 되어 체류 시간이 0으로
+ *  돌아가면, 정작 긴급으로 올라가야 할 상황에서 승격이 일어나지 않는다. */
+function carryTracks(tracked, previous, graceFrames) {
+  const grace = typeof graceFrames === 'number' ? graceFrames : CONFIG.trackGraceFrames;
+  const seen = new Set(tracked.map(p => p.id));
+  const kept = tracked.map(p => Object.assign({}, p, { bbox: p.bbox.slice(), missed: 0 }));
+  (previous || []).forEach(old => {
+    if (seen.has(old.id)) return;
+    const missed = (old.missed || 0) + 1;
+    if (missed > grace) return;
+    kept.push(Object.assign({}, old, { bbox: old.bbox.slice(), missed }));
+  });
+  return kept;
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -2207,6 +2489,423 @@ function activeThresholds(camera) {
     shape: site.shape
   };
 }
+/* ══════════════════════════════════════════════════════════════════
+   24. 오프라인 동작
+   해변·강가·저수지에는 안정적인 인터넷이 없는 곳이 많다. 그런데 이 시스템은
+   AI 라이브러리와 모델 가중치를 매번 인터넷에서 받아야 동작했다. 즉
+   "인터넷이 끊기면 감시가 아예 시작되지 않는" 구조였다.
+
+   해결: 처음 한 번 받은 파일을 브라우저 캐시(Cache Storage)에 넣어 두고,
+   이후에는 캐시에서 먼저 꺼낸다. 모델 가중치는 coco-ssd 내부에서 fetch 로
+   받으므로, 모델을 부르는 동안만 fetch 를 감싸 캐시를 먼저 확인하게 한다.
+
+   서비스 워커를 쓰지 않은 이유: 제출물은 index.html 파일 하나여야 하는데
+   서비스 워커는 별도 파일이 필요하고, file:// 에서는 등록조차 되지 않는다.
+   ══════════════════════════════════════════════════════════════════ */
+const OfflineCache = {
+  name: 'beach-watch-v1',
+  supported: (typeof caches !== 'undefined'),
+  ready: false,
+  hits: 0,
+  misses: 0,
+  patched: false,
+  originalFetch: null,
+
+  async open() {
+    if (!this.supported) return null;
+    try { return await caches.open(this.name); } catch (e) { return null; }
+  },
+
+  /** 캐시에 있으면 그대로, 없으면 받아서 넣고 돌려준다. */
+  async fetchThrough(request) {
+    const cache = await this.open();
+    const key = typeof request === 'string' ? request : request.url;
+    if (cache) {
+      try {
+        const hit = await cache.match(key);
+        if (hit) { this.hits += 1; return hit.clone(); }
+      } catch (e) { /* 캐시 조회 실패는 그냥 네트워크로 */ }
+    }
+    const response = await this.originalFetch.call(window, request);
+    this.misses += 1;
+    /* 부분 응답(206)이나 오류는 캐시하지 않는다 */
+    if (cache && response && response.ok && response.status === 200) {
+      try { await cache.put(key, response.clone()); } catch (e) { /* 용량 초과 등 */ }
+    }
+    return response;
+  },
+
+  /** 모델 로드 구간에서만 fetch 를 감싼다. 감시 중 웹훅 전송 같은 다른
+   *  요청까지 캐시에 걸리면 안 되므로 범위를 좁게 유지한다. */
+  patchFetch() {
+    if (this.patched || !this.supported || typeof window.fetch !== 'function') return;
+    this.originalFetch = window.fetch;
+    const self = this;
+    window.fetch = function (input, init) {
+      const url = typeof input === 'string' ? input : (input && input.url) || '';
+      const cacheable = /tfjs|tensorflow|coco-ssd|tfhub|storage\.googleapis\.com|\.bin(\?|$)|model\.json/i.test(url);
+      if (!cacheable || (init && init.method && init.method !== 'GET')) {
+        return self.originalFetch.call(window, input, init);
+      }
+      return self.fetchThrough(url).catch(() => self.originalFetch.call(window, input, init));
+    };
+    this.patched = true;
+  },
+
+  unpatchFetch() {
+    if (!this.patched) return;
+    window.fetch = this.originalFetch;
+    this.patched = false;
+  },
+
+  /** 외부 스크립트를 캐시에서 꺼내 인라인으로 실행한다.
+   *  캐시에 없으면 false 를 돌려주고 평소대로 네트워크에서 받게 한다. */
+  async runCachedScript(url) {
+    const cache = await this.open();
+    if (!cache) return false;
+    try {
+      const hit = await cache.match(url);
+      if (!hit) return false;
+      const code = await hit.text();
+      const script = document.createElement('script');
+      script.textContent = code;
+      document.head.append(script);
+      this.hits += 1;
+      return true;
+    } catch (e) { return false; }
+  },
+
+  /** 스크립트를 받아 캐시에 넣어 둔다(다음 실행을 위해). */
+  async storeScript(url) {
+    const cache = await this.open();
+    if (!cache) return false;
+    try {
+      const hit = await cache.match(url);
+      if (hit) return true;
+      const response = await (this.originalFetch || window.fetch).call(window, url, { mode: 'cors' });
+      if (!response.ok) return false;
+      await cache.put(url, response.clone());
+      return true;
+    } catch (e) { return false; }
+  },
+
+  async status() {
+    const cache = await this.open();
+    if (!cache) return { supported: false, entries: 0 };
+    try {
+      const keys = await cache.keys();
+      return { supported: true, entries: keys.length };
+    } catch (e) { return { supported: true, entries: 0 }; }
+  },
+
+  async clear() {
+    if (!this.supported) return false;
+    try { await caches.delete(this.name); return true; } catch (e) { return false; }
+  }
+};
+
+/** 오프라인 준비 상태를 배지에 표시한다. */
+async function refreshOfflineBadge() {
+  const badge = $('#offlineState');
+  if (!badge) return;
+  if (!OfflineCache.supported) { badge.textContent = tr('offlineUnsupported'); return; }
+  const info = await OfflineCache.status();
+  badge.textContent = info.entries > 0
+    ? tr('offlineReady', { n: info.entries })
+    : tr('offlineNotYet');
+}
+
+/** 사용자가 직접 누르는 '오프라인 준비' — 지금 인터넷이 될 때 미리 받아 둔다. */
+async function prepareOffline() {
+  const button = $('#prepareOffline');
+  if (!OfflineCache.supported) { Diagnostics.log(tr('offlineUnsupported'), 'warn'); return false; }
+  if (button) { button.disabled = true; button.textContent = tr('offlinePreparing'); }
+  OfflineCache.patchFetch();
+  let okCount = 0;
+  try {
+    for (const url of CONFIG.tfCdns.concat(CONFIG.modelCdns)) {
+      if (await OfflineCache.storeScript(url)) { okCount += 1; break; }
+    }
+    /* 라이브러리만 받아 두면 가중치가 없어 오프라인에서 실패한다.
+       모델을 한 번 실제로 불러 가중치까지 캐시에 채운다. */
+    const modelOk = await loadModel();
+    if (modelOk) okCount += 1;
+  } catch (e) {
+    Diagnostics.countError('offline prepare: ' + (e && e.message ? e.message : String(e)));
+  }
+  const info = await OfflineCache.status();
+  Diagnostics.log(info.entries > 0 ? tr('offlineStored', { n: info.entries }) : tr('offlineFailed'),
+                  info.entries > 0 ? 'ok' : 'warn');
+  if (button) { button.disabled = false; button.textContent = tr('prepareOffline'); }
+  await refreshOfflineBadge();
+  return info.entries > 0;
+}
+/* ══════════════════════════════════════════════════════════════════
+   25. 음성 안내
+   관제요원이 화면을 계속 볼 수 있다는 보장은 없다. 다른 일을 하고 있거나
+   현장을 보고 있을 때 경보음만으로는 "어느 카메라에서, 얼마나 급한지"를
+   알 수 없다. 그래서 경보를 말로도 읽어 준다.
+   브라우저 내장 음성 합성만 사용하므로 추가 비용도, 외부 전송도 없다.
+   ══════════════════════════════════════════════════════════════════ */
+const Speaker = {
+  supported: (typeof speechSynthesis !== 'undefined' && typeof SpeechSynthesisUtterance !== 'undefined'),
+  lastSpokenAt: 0,
+  lastKey: '',
+
+  enabled() {
+    const box = $('#voiceEnabled');
+    return this.supported && box && box.checked;
+  },
+
+  /** 같은 말을 몇 초 간격으로 반복하지 않는다. 다만 등급이 바뀌면 즉시 말한다. */
+  shouldSpeak(key, now) {
+    if (key !== this.lastKey) return true;
+    return now - this.lastSpokenAt >= CONFIG.voiceRepeatMs;
+  },
+
+  speak(text, key) {
+    if (!this.enabled() || !text) return false;
+    const now = Date.now();
+    if (!this.shouldSpeak(key || text, now)) return false;
+    try {
+      /* 이전 안내가 밀려 있으면 버리고 최신 상황만 읽는다.
+         경보는 쌓여서 늦게 나오면 의미가 없다. */
+      speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = state.language === 'en' ? 'en-US' : 'ko-KR';
+      utter.rate = 1.05;
+      utter.volume = 1;
+      speechSynthesis.speak(utter);
+      this.lastSpokenAt = now;
+      this.lastKey = key || text;
+      return true;
+    } catch (e) { return false; }
+  },
+
+  stop() { try { speechSynthesis.cancel(); } catch (e) {} }
+};
+
+/** 경보 한 건을 사람이 듣기 좋은 한 문장으로 만든다. */
+function buildVoiceMessage(camera, level, count, dwellSeconds) {
+  const where = camera && camera.name ? camera.name : tr('voiceHere');
+  const levelWord = tr(level === 'critical' ? 'levelCritical' : 'levelAlert');
+  return tr('voiceAlert', {
+    level: levelWord,
+    camera: where,
+    count: count,
+    seconds: Math.max(0, Math.round(dwellSeconds || 0))
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   26. 경보 순간 스냅샷
+   "그때 진짜 사람이었나, 파도였나"를 나중에 확인할 방법이 없었다.
+   경보가 뜬 순간의 화면을 작게 잘라 경보 기록에 붙인다.
+
+   개인정보: 이 이미지는 메모리에만 있고 저장·전송되지 않는다. 새로고침하면
+   사라지며, 웹훅으로도 보내지 않는다(웹훅 본문은 여전히 텍스트뿐이다).
+   ══════════════════════════════════════════════════════════════════ */
+const snapshotCanvas = document.createElement('canvas');
+
+function captureSnapshot(camera) {
+  if (!camera) return '';
+  const toggle = $('#snapshotEnabled');
+  if (toggle && !toggle.checked) return '';
+  try {
+    const source = sourceOf(camera);
+    if (!source.width || !source.height) return '';
+    const width = CONFIG.snapshotWidth;
+    snapshotCanvas.width = width;
+    snapshotCanvas.height = Math.round(width * source.height / source.width);
+    const context = snapshotCanvas.getContext('2d', { alpha: false });
+    context.drawImage(source.element, 0, 0, snapshotCanvas.width, snapshotCanvas.height);
+    return snapshotCanvas.toDataURL('image/jpeg', 0.6);
+  } catch (e) {
+    /* 다른 출처의 영상은 캔버스가 오염돼 캡처할 수 없다(브라우저 보안).
+       감시 자체에는 영향이 없으므로 조용히 넘어간다. */
+    return '';
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   27. 감시 시간대
+   야간에는 오탐이 늘어난다(AI_STACK.md 6장). 해수욕장은 개장 시간이
+   정해져 있으므로, 그 시간에만 경보를 울리게 하면 경보 피로를 크게 줄일 수 있다.
+   감지 자체는 계속 돌아가고 화면에도 표시된다 — 다만 소리와 발송만 멈춘다.
+   ══════════════════════════════════════════════════════════════════ */
+function parseHhMm(text) {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(String(text || '').trim());
+  if (!m) return null;
+  const h = Number(m[1]), mi = Number(m[2]);
+  if (h < 0 || h > 23 || mi < 0 || mi > 59) return null;
+  return h * 60 + mi;
+}
+
+/** 지금이 감시 시간대 안인가.
+ *  22:00~06:00 처럼 자정을 넘기는 구간도 지원한다. */
+function withinWatchHours(minutesNow, fromText, toText) {
+  const from = parseHhMm(fromText), to = parseHhMm(toText);
+  if (from === null || to === null || from === to) return true;   /* 설정이 없으면 항상 감시 */
+  return from < to
+    ? (minutesNow >= from && minutesNow < to)
+    : (minutesNow >= from || minutesNow < to);   /* 자정 넘김 */
+}
+
+function watchHoursActive(date) {
+  const toggle = $('#hoursEnabled');
+  if (!toggle || !toggle.checked) return true;
+  const now = date || new Date();
+  return withinWatchHours(now.getHours() * 60 + now.getMinutes(), $('#hoursFrom').value, $('#hoursTo').value);
+}
+
+function refreshWatchHours() {
+  const on = $('#hoursEnabled') && $('#hoursEnabled').checked;
+  const row = $('#hoursRow');
+  if (row) row.classList.toggle('on', !!on);
+  const note = $('#hoursNote');
+  if (note) {
+    note.textContent = !on ? tr('hoursAlways')
+      : (watchHoursActive() ? tr('hoursInside', { from: $('#hoursFrom').value, to: $('#hoursTo').value })
+                            : tr('hoursOutside', { from: $('#hoursFrom').value, to: $('#hoursTo').value }));
+    note.classList.toggle('muted-now', on && !watchHoursActive());
+  }
+  store.set('beachWatchHours', JSON.stringify({
+    on: !!on, from: $('#hoursFrom') ? $('#hoursFrom').value : '',
+    to: $('#hoursTo') ? $('#hoursTo').value : ''
+  }));
+}
+
+function restoreWatchHours() {
+  try {
+    const saved = JSON.parse(store.get('beachWatchHours', 'null'));
+    if (!saved) return;
+    if ($('#hoursEnabled')) $('#hoursEnabled').checked = !!saved.on;
+    if (saved.from && parseHhMm(saved.from) !== null) $('#hoursFrom').value = saved.from;
+    if (saved.to && parseHhMm(saved.to) !== null) $('#hoursTo').value = saved.to;
+  } catch (e) { /* 손상된 값은 무시 */ }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   28. 전체화면 관제 모드
+   실제 관제실에서는 설명 카드가 아니라 카메라 화면이 커야 한다.
+   사이드바와 설명을 접고 카메라 격자만 화면 가득 채운다.
+   ══════════════════════════════════════════════════════════════════ */
+function toggleControlRoom(force) {
+  const on = typeof force === 'boolean' ? force : !document.body.classList.contains('control-room');
+  document.body.classList.toggle('control-room', on);
+  const button = $('#controlRoom');
+  if (button) {
+    button.setAttribute('aria-pressed', String(on));
+    button.textContent = tr(on ? 'controlRoomExit' : 'controlRoom');
+  }
+  try {
+    if (on && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+    else if (!on && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+  } catch (e) { /* 전체화면을 막는 환경에서도 레이아웃 전환은 그대로 동작한다 */ }
+  /* 패널 크기가 바뀌었으므로 좌표계를 다시 그린다 */
+  requestAnimationFrame(() => { drawAllBoundaries(); refreshAllPanels(); });
+  Diagnostics.log(tr(on ? 'controlRoomOn' : 'controlRoomOff'), 'info');
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   29. 키보드 단축키 · 키보드로 구역 편집
+   마우스를 쓸 수 없는 상황(장갑, 트랙패드 없는 관제 PC)과 접근성을 위해
+   화살표키로 경계 구역의 점을 옮길 수 있게 한다.
+   ══════════════════════════════════════════════════════════════════ */
+let keyboardPointIndex = 0;
+
+function nudgeZonePoint(dx, dy, big) {
+  const camera = focusedCamera();
+  if (!camera || !camera.points.length) return false;
+  keyboardPointIndex = ((keyboardPointIndex % camera.points.length) + camera.points.length) % camera.points.length;
+  const step = (big ? CONFIG.nudgeStepBig : CONFIG.nudgeStep);
+  const point = camera.points[keyboardPointIndex];
+  point.x = clamp(point.x + dx * step, 0, 1);
+  point.y = clamp(point.y + dy * step, 0, 1);
+  drawBoundary(camera);
+  syncMobileLineControls();
+  persistBoundaries();
+  announce(tr('zonePointMoved', {
+    n: keyboardPointIndex + 1,
+    x: Math.round(point.x * 100),
+    y: Math.round(point.y * 100)
+  }));
+  return true;
+}
+
+function selectNextZonePoint(delta) {
+  const camera = focusedCamera();
+  if (!camera || !camera.points.length) return;
+  keyboardPointIndex = ((keyboardPointIndex + delta) % camera.points.length + camera.points.length) % camera.points.length;
+  const point = camera.points[keyboardPointIndex];
+  Array.from(camera.overlay.querySelectorAll('.handle')).forEach((el, i) =>
+    el.classList.toggle('selected', i === keyboardPointIndex));
+  announce(tr('zonePointSelected', {
+    n: keyboardPointIndex + 1, total: camera.points.length,
+    x: Math.round(point.x * 100), y: Math.round(point.y * 100)
+  }));
+}
+
+/** 입력 중인 칸에서는 단축키가 동작하면 안 된다. */
+function typingInField(target) {
+  if (!target) return false;
+  const tag = (target.tagName || '').toLowerCase();
+  return tag === 'input' || tag === 'select' || tag === 'textarea' || target.isContentEditable;
+}
+
+function handleShortcut(event) {
+  if (typingInField(event.target) || event.metaKey || event.ctrlKey || event.altKey) return;
+
+  /* 편집 중일 때는 화살표키로 점을 옮긴다 */
+  if (state.editing && event.key.indexOf('Arrow') === 0) {
+    const map = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+    const [dx, dy] = map[event.key];
+    if (nudgeZonePoint(dx, dy, event.shiftKey)) event.preventDefault();
+    return;
+  }
+  if (state.editing && (event.key === 'Tab')) {
+    selectNextZonePoint(event.shiftKey ? -1 : 1);
+    event.preventDefault();
+    return;
+  }
+
+  const key = event.key.toLowerCase();
+  if (key >= '1' && key <= '5') {
+    const camera = state.cameras[Number(key) - 1];
+    if (camera) { focusCamera(camera.id); event.preventDefault(); }
+    return;
+  }
+  if (key === 'e') { $('#editLine').click(); event.preventDefault(); }
+  else if (key === 'f') { toggleControlRoom(); event.preventDefault(); }
+  else if (key === 'd') { $('#simulate').click(); event.preventDefault(); }
+  else if (key === 't') { $('#runSelfTest').click(); event.preventDefault(); }
+  else if (key === 'm') { const s = $('#sirenEnabled'); if (s) { s.checked = !s.checked; announce(tr(s.checked ? 'sirenOn' : 'sirenOff')); } event.preventDefault(); }
+  else if (key === '?' || (key === '/' && event.shiftKey)) { $('#shortcutDialog').showModal(); event.preventDefault(); }
+  else if (key === 'escape' && document.body.classList.contains('control-room')) { toggleControlRoom(false); }
+}
+
+/** 스크린리더에 상황을 알린다. 화면 표시와 별개로 소리로도 전달되어야 한다. */
+function announce(text) {
+  const region = $('#liveRegion');
+  if (region) region.textContent = text;
+}
+
+/** 경보 스냅샷을 크게 본다. 오탐 판별은 작은 썸네일로는 어렵다. */
+function openSnapshot(entry) {
+  const dialog = $('#snapshotDialog');
+  if (!dialog || !entry || !entry.snapshot) return;
+  $('#snapshotImage').src = entry.snapshot;
+  $('#snapshotImage').alt = tr('snapshotAlt', { time: entry.label });
+  $('#snapshotCaption').textContent = entry.label + ' · ' + entry.message;
+  const save = $('#snapshotSave');
+  if (save) save.onclick = () => {
+    const link = document.createElement('a');
+    link.href = entry.snapshot;
+    link.download = 'beach-watch-' + String(entry.at || '').slice(0, 19).replace(/[:T]/g, '-') + '.jpg';
+    document.body.append(link); link.click(); link.remove();
+  };
+  try { dialog.showModal(); } catch (e) { /* dialog 미지원 브라우저 */ }
+}
 
 /* ══════════════════════════════════════════════════════════════════
    11. DOM 참조
@@ -2292,6 +2991,10 @@ function buildPanel(camera) {
 }
 
 function focusCamera(id) {
+  /* 경보가 나면 초점이 자동으로 옮겨간다. 그때 이전 카메라를 편집 중이었다면
+     state.drag(전역 인덱스)가 다른 카메라의 점 배열에 적용되어 엉뚱한 점이
+     움직인다. 초점이 바뀌는 순간 편집 상태를 정리한다. */
+  if (state.focusedId !== id) { state.drag = -1; state.freehand = null; }
   state.focusedId = id;
   state.cameras.forEach(c => c.panel && c.panel.classList.toggle('focused', c.id === id));
   renderCameraBar();
@@ -2440,6 +3143,10 @@ function renderSitePicker() {
 
 function setSiteType(key) {
   if (!SITE_PRESETS[key]) return;
+  if (key === state.siteType) return;
+  /* 구역은 장소별로 따로 저장된다. 바꾸기 전에 지금 장소의 구역을 저장하지
+     않으면, 해변에서 그린 구역이 다음 저장 때 강 구역을 덮어써 버린다. */
+  persistBoundaries();
   state.siteType = key;
   store.set('beachWatchSite', key);
   const site = activeSite();
@@ -2451,6 +3158,15 @@ function setSiteType(key) {
 
   const heading = $('.heading h1');
   if (heading) heading.textContent = tr(site.heading);
+  /* 새 장소에 저장돼 있던 구역을 불러온다. 없으면 그 장소의 기본 경계선. */
+  const site2 = SITE_PRESETS[key];
+  state.cameras.concat([state.detached]).forEach(camera => {
+    camera.points = site2.line.map(p => ({ x: p.x, y: p.y }));
+    camera.zoneMode = 'line';
+    restoreBoundaryFor(camera);
+  });
+  drawAllBoundaries();
+  refreshZoneCard();
   renderSitePicker();
   refreshTunerLabels();
   refreshBadges();
@@ -2529,6 +3245,18 @@ function drawBoundary(camera) {
 
 /** 점 하나당 핸들 하나. 개수가 바뀌므로 매번 다시 만든다(점은 많아야 수십 개). */
 function renderZoneHandles(camera) {
+  /* 드래그 중에는 손잡이를 다시 만들지 않는다. 잡고 있는 요소를 지우면
+     포인터 캡처가 풀려 패널 밖에서 손을 뗐을 때 pointerup 을 못 받고,
+     그 뒤로 버튼을 누르지 않아도 점이 커서를 따라다니게 된다. */
+  if (state.drag >= 0 && camera.id === state.focusedId) {
+    const handle = camera.overlay.querySelector('.handle[data-index="' + state.drag + '"]');
+    const point = camera.points[state.drag];
+    if (handle && point) {
+      handle.style.left = (point.x * 100) + '%';
+      handle.style.top = (point.y * 100) + '%';
+      return;
+    }
+  }
   Array.from(camera.overlay.querySelectorAll('.handle')).forEach(el => el.remove());
   if (camera.id !== state.focusedId) return;
   if (state.freehand && state.freehand.active) return;   /* 그리는 중에는 손잡이를 숨긴다 */
@@ -2553,8 +3281,12 @@ function persistBoundaries() {
   const payload = {};
   /* 예비 카메라(연결 전 상태)의 경계도 함께 저장한다. 카메라를 붙이기 전에
      미리 구역을 잡아 두는 흐름을 지원하기 위한 것이다. */
+  /* 키는 반드시 카메라 id 로 잡는다. 이름으로 저장하면 (1) 언어를 바꿨을 때
+     'カメラ 1' ↔ 'Camera 1' 이 어긋나 그린 구역이 사라진 것처럼 보이고,
+     (2) 카메라를 지웠다 새로 붙이면 이름이 겹쳐 두 패널이 같은 구역을
+     덮어쓴다. 이름은 사람이 읽기 위한 참고값으로만 함께 남긴다. */
   state.cameras.concat([state.detached]).forEach(c => {
-    payload[c.name || c.id] = { points: c.points, mode: c.zoneMode };
+    payload[c.id] = { points: c.points, mode: c.zoneMode, name: c.name || '' };
   });
   store.set(boundaryStorageKey(), JSON.stringify(payload));
 }
@@ -2564,7 +3296,8 @@ function restoreBoundaryFor(camera) {
   if (!raw) return;
   try {
     const parsed = JSON.parse(raw);
-    const saved = parsed[camera.name] || parsed[camera.id];
+    /* 구버전은 이름을 키로 썼다. 기존 사용자의 구역을 잃지 않도록 둘 다 본다. */
+    const saved = parsed[camera.id] || (camera.name ? parsed[camera.name] : null);
     if (!saved) return;
     /* 구버전은 배열만 저장했다. 형식이 바뀌어도 기존 설정을 잃지 않게 둘 다 받는다. */
     const points = Array.isArray(saved) ? saved : saved.points;
@@ -2601,7 +3334,9 @@ function bindBoundaryPointer(camera) {
     if (event.target.classList.contains('handle')) {
       state.drag = Number(event.target.dataset.index);
       event.target.classList.add('dragging');
-      event.target.setPointerCapture(event.pointerId);
+      /* 캡처는 오버레이에 건다. 손잡이 요소는 다시 그려질 수 있어서
+         거기에 걸면 캡처가 조용히 풀린다. */
+      try { overlay.setPointerCapture(event.pointerId); } catch (e) {}
       event.preventDefault();
       return;
     }
@@ -2683,6 +3418,15 @@ function bindBoundaryPointer(camera) {
   overlay.addEventListener('pointercancel', () => {
     state.drag = -1;
     state.freehand = null;
+    Array.from(overlay.querySelectorAll('.handle.dragging')).forEach(el => el.classList.remove('dragging'));
+    drawBoundary(camera);
+  });
+  /* 캡처가 어떤 이유로든 풀리면(요소 제거, 창 전환) 편집 상태도 함께 푼다.
+     그렇지 않으면 손을 뗐는데도 점이 커서를 계속 따라다닌다. */
+  overlay.addEventListener('lostpointercapture', () => {
+    if (state.drag >= 0) { state.drag = -1; persistBoundaries(); }
+    if (state.freehand) { state.freehand = null; }
+    Array.from(overlay.querySelectorAll('.handle.dragging')).forEach(el => el.classList.remove('dragging'));
     drawBoundary(camera);
   });
 
@@ -2803,6 +3547,10 @@ function refreshZoneCard() {
 
   const pointsTag = $('#zonePoints');
   if (pointsTag) pointsTag.textContent = tr('zonePointCount', { n: cam.points.length });
+  /* 사이드바 통계도 함께 갱신한다. 예전에는 HTML 에 '2'가 박힌 채 한 번도
+     갱신되지 않아, 23점짜리 곡선을 그려도 계속 2로 표시됐다. */
+  const lineInfo = $('#lineInfo');
+  if (lineInfo) lineInfo.textContent = String(cam.points.length);
   const modeTag = $('#zoneModeTag');
   if (modeTag) modeTag.textContent = tr(isPolygon ? 'zoneModePolygon' : 'zoneModeLine');
   const camTag = $('#zoneCameraTag');
@@ -2832,7 +3580,8 @@ function refreshZoneCard() {
 
 function syncMobileLineControls() {
   const points = focusedCamera().points;
-  if (points.length !== 2) { refreshZoneCard(); return; }
+  refreshZoneCard();
+  if (points.length !== 2) return;
   const average = Math.round((points[0].y + points[1].y) * 50);
   const tilt = clamp(Math.round((points[1].y - points[0].y) * 100), -50, 50);
   $('#boundaryHeight').value = average;
@@ -2887,7 +3636,7 @@ async function detectPeople(camera) {
 
   /* 2) 겹침 타일 추론 — 원거리 대상의 유효 해상도를 끌어올린다 */
   const tilesX = camera.activeTiles.x, tilesY = camera.activeTiles.y;
-  if (tilesX * tilesY > 1) {
+  if (tilesX * tilesY > 1 || thresholds.filter !== 'none') {
     const tileWidth = source.width / (tilesX - (tilesX - 1) * CONFIG.overlap);
     const tileHeight = source.height / (tilesY - (tilesY - 1) * CONFIG.overlap);
     const stepX = tileWidth * (1 - CONFIG.overlap);
@@ -2931,7 +3680,9 @@ async function detectPeople(camera) {
   const idRef = { value: camera.nextPersonId };
   const tracked = trackCandidates(candidates, camera.previousPeople, idRef);
   camera.nextPersonId = idRef.value;
-  camera.previousPeople = tracked.map(p => Object.assign({}, p, { bbox: p.bbox.slice() }));
+  /* 잠깐 놓친 대상도 몇 프레임은 기억에 남긴다 — 그래야 파도에 잠겼다 나오는
+     사람의 체류 시간이 초기화되지 않고 긴급까지 올라갈 수 있다. */
+  camera.previousPeople = carryTracks(tracked, camera.previousPeople);
 
   const people = tracked.filter(p =>
     p.hits >= thresholds.confirmFrames &&
@@ -2958,12 +3709,16 @@ function adaptWorkload(camera, latency) {
 
 let consecutiveErrors = 0;
 let loopTimer = null;
+/** 루프가 이미 돌고 있는지. 탭 복귀 때마다 detectLoop() 를 새로 부르면
+ *  추론이 진행 중일 때는 취소할 타이머가 없어 루프가 하나씩 늘어난다. */
+let loopRunning = false;
 
 /** 카메라들을 번갈아 처리한다(라운드로빈).
  *  모델 인스턴스는 하나를 공유하므로 GPU 메모리는 카메라 수와 무관하다.
  *  대신 카메라당 감시 주기는 대수에 비례해 늘어나며, 그 값을 진단 패널에 그대로 노출한다. */
 async function detectLoop() {
-  if (!state.detecting) return;
+  if (!state.detecting) { loopRunning = false; return; }
+  loopRunning = true;
   const active = activeCameras().filter(cameraReady);
 
   if (active.length && (state.model || active.some(c => c.simulating))) {
@@ -2982,6 +3737,7 @@ async function detectLoop() {
       const latency = nowMs() - started;
       renderCamera(camera, result.people, sourceOf(camera));
       consecutiveErrors = 0;
+      camera.errorStreak = 0;
 
       camera.metrics.latency = Math.round(latency);
       camera.metrics.raw = result.raw;
@@ -2991,15 +3747,32 @@ async function detectLoop() {
       if (!camera.simulating) adaptWorkload(camera, latency);
       updateAggregateMetrics(active, latency);
     } catch (error) {
+      /* 오류는 카메라별로 센다. 한 대가 고장 났다고 나머지 네 대의 감시까지
+         멈추면, 정작 멀쩡한 구역이 감시 공백이 된다. */
+      camera.errorStreak = (camera.errorStreak || 0) + 1;
       consecutiveErrors += 1;
       Diagnostics.countError(camera.name + ' detect: ' + (error && error.message ? error.message : String(error)));
-      if (consecutiveErrors >= CONFIG.maxConsecutiveErrors) {
-        state.detecting = false;
-        state.halted = true;
-        setHealth('healthError', 'bad');
-        statusTitle.textContent = tr('loopHalted');
-        Diagnostics.log(tr('loopHalted'), 'error');
-        return;
+
+      if (camera.errorStreak >= CONFIG.maxConsecutiveErrors) {
+        /* 이 카메라만 감시에서 내린다. 조치를 했으므로 전역 카운터도 되돌린다 */
+        camera.errorStreak = 0;
+        consecutiveErrors = 0;
+        camera.error = (error && error.message) ? error.message : String(error);
+        handleStreamLoss(camera, 'detect error');
+        Diagnostics.log(tr('cameraDropped', { name: camera.name }), 'error');
+
+        /* 남은 카메라가 하나도 없을 때만 전체 정지로 알린다 */
+        if (!activeCameras().filter(cameraReady).length) {
+          state.halted = true;
+          setHealth('healthError', 'bad');
+          state.lastError = tr('loopHaltedHelp');
+          statusTitle.textContent = tr('loopHalted');
+          statusText.textContent = tr('loopHaltedHelp');
+          Diagnostics.log(tr('loopHalted'), 'error');
+        } else {
+          state.lastError = tr('cameraDropped', { name: camera.name });
+          setHealth('healthRecovering', 'warn');
+        }
       }
     }
   }
@@ -3007,6 +3780,8 @@ async function detectLoop() {
   if (state.detecting) {
     const interval = document.hidden ? CONFIG.backgroundInterval : CONFIG.baseInterval;
     loopTimer = setTimeout(detectLoop, interval);
+  } else {
+    loopRunning = false;
   }
 }
 
@@ -3071,11 +3846,22 @@ function renderCamera(camera, people, source) {
     if (crossed) riskIds.add(person.id);
   });
 
-  /* 위험 대상 체류 시간 갱신 — 사라진 대상은 즉시 정리한다 */
-  riskIds.forEach(id => { if (!camera.riskSince.has(id)) camera.riskSince.set(id, now); });
-  Array.from(camera.riskSince.keys()).forEach(id => { if (!riskIds.has(id)) camera.riskSince.delete(id); });
+  /* 위험 대상 체류 시간 갱신.
+     사라졌다고 즉시 지우면 한 프레임만 놓쳐도 체류 시간이 0으로 돌아가
+     긴급 승격이 영영 일어나지 않는다. 짧은 유예를 두고 정리한다. */
+  riskIds.forEach(id => {
+    if (!camera.riskSince.has(id)) camera.riskSince.set(id, now);
+    camera.riskSeen.set(id, now);
+  });
+  Array.from(camera.riskSince.keys()).forEach(id => {
+    const lastSeen = camera.riskSeen.get(id) || 0;
+    if (now - lastSeen > CONFIG.riskGraceMs) {
+      camera.riskSince.delete(id);
+      camera.riskSeen.delete(id);
+    }
+  });
 
-  camera.riskCount = riskIds.size;
+  camera.riskCount = camera.riskSince.size;
   let maxDwell = 0;
   camera.riskSince.forEach(since => { maxDwell = Math.max(maxDwell, (now - since) / 1000); });
   updateCameraAlert(camera, camera.riskCount, maxDwell);
@@ -3132,6 +3918,16 @@ function updateAggregateAlert() {
   const prefix = state.cameras.length > 1 && worst.name ? worst.name + ' · ' : '';
 
   if (worst.alertLevel === 'none') {
+    /* 경보가 없을 때는 마지막 실패 사유를 계속 보여 준다. 예전에는 감지
+       루프가 매 프레임 이 자리를 '감시 중'으로 덮어써서, 카메라 권한 거부나
+       잘못된 주소 같은 안내가 한 프레임 만에 사라졌다. */
+    if (state.lastError) {
+      stateChip.textContent = tr('levelWatch');
+      stateChip.className = 'state watch';
+      statusTitle.textContent = tr('needsAttention');
+      statusText.textContent = state.lastError;
+      return;
+    }
     stateChip.textContent = state.detecting ? 'LIVE' : tr('ready');
     stateChip.className = 'state';
     statusTitle.textContent = tr(state.detecting ? 'monitoring' : 'waiting');
@@ -3170,11 +3966,23 @@ function raiseAlert(camera, level, count, dwellSeconds) {
   refreshMetrics();
 
   const levelLabel = tr(level === 'critical' ? 'levelCritical' : 'levelAlert');
+  /* 경보가 뜬 순간의 화면을 함께 남긴다 — 나중에 오탐이었는지 확인하기 위해서다.
+     이 이미지는 메모리에만 있고 저장·전송되지 않는다. */
+  const snapshot = captureSnapshot(camera);
   pushEvent(camera.name + ' · ' + tr('eventAlert', { level: levelLabel, count }),
     level === 'critical' ? 'error' : 'warn',
-    { level, count, dwell: Math.round(dwellSeconds), camera: camera.name });
+    { level, count, dwell: Math.round(dwellSeconds), camera: camera.name, snapshot });
   liveRegion.textContent = camera.name + ' ' + tr('adminAlertBody', { level: levelLabel, count });
+
+  /* 감시 시간대 밖이면 화면 표시와 기록은 남기되 소리·발송은 하지 않는다.
+     야간 오탐으로 경보 피로가 쌓이면 정작 필요한 경보까지 무시하게 된다. */
+  if (!watchHoursActive()) {
+    Diagnostics.log(tr('hoursMuted', { name: camera.name }), 'info');
+    return;
+  }
+
   playSiren(level);
+  Speaker.speak(buildVoiceMessage(camera, level, count, dwellSeconds), camera.id + ':' + level);
   notifyRecipients(camera, level, levelLabel, count, dwellSeconds, false);
 }
 
@@ -3270,13 +4078,24 @@ function buildAlertPayload(camera, level, count, dwellSeconds, contact, isTest) 
 
 function sendWebhook(contact, payload) {
   if (!contact.webhook) return Promise.resolve(false);
-  return fetch(contact.webhook, {
+  /* Content-Type 을 application/json 으로 두면 브라우저가 먼저 OPTIONS
+     사전 요청을 보내는데, Slack·Discord 웹훅은 여기에 응답하지 않아 실제
+     경보가 전부 실패한다. text/plain 은 사전 요청이 없고 받는 쪽은
+     본문 JSON 을 그대로 읽는다.
+     그리고 응답 없는 서버에 요청이 무한정 매달리지 않도록 시간 제한을 둔다. */
+  const options = {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
     body: JSON.stringify(payload),
     mode: 'cors',
     keepalive: true
-  }).then(response => {
+  };
+  try {
+    if (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) {
+      options.signal = AbortSignal.timeout(CONFIG.webhookTimeoutMs);
+    }
+  } catch (e) { /* 구형 브라우저는 시간 제한 없이 진행 */ }
+  return fetch(contact.webhook, options).then(response => {
     if (!response.ok) throw new Error('HTTP ' + response.status);
     Diagnostics.log(tr('notifyWebhookOk', { name: contact.name }), 'ok');
     return true;
@@ -3328,8 +4147,12 @@ function notifyRecipients(camera, level, levelLabel, count, dwellSeconds, isTest
   }
 
   targets.forEach(contact => {
-    contact.lastSentAt = now;
-    contact.lastLevelRank = LEVEL_RANK[level] || 0;
+    /* 시험 발송은 실제 경보의 중복 방지 시계를 건드리면 안 된다.
+       테스트 직후 진짜 경고가 뜨면 그 사람만 못 받게 되기 때문이다. */
+    if (!isTest) {
+      contact.lastSentAt = now;
+      contact.lastLevelRank = LEVEL_RANK[level] || 0;
+    }
     Diagnostics.log(tr(isTest ? 'notifyTestSent' : 'notifySent', { name: contact.name }), 'info');
     if (contact.webhook) sendWebhook(contact, buildAlertPayload(camera, level, count, dwellSeconds, contact, isTest));
   });
@@ -3582,6 +4405,8 @@ function pushEvent(message, kind, extra) {
     message, kind: kind || 'info'
   }, extra || {}));
   if (state.events.length > CONFIG.maxEvents) state.events.length = CONFIG.maxEvents;
+  /* 스냅샷은 용량이 크다. 최근 것만 이미지를 들고 나머지는 텍스트만 남긴다. */
+  state.events.forEach((e, i) => { if (i >= CONFIG.maxSnapshots && e.snapshot) e.snapshot = ''; });
   eventText.textContent = state.events[0].label + ' · ' + message;
   renderEventLog();
 }
@@ -3592,8 +4417,18 @@ function renderEventLog() {
   box.innerHTML = '';
   state.events.slice(0, 20).forEach(entry => {
     const p = document.createElement('p');
-    p.className = entry.kind;
+    p.className = entry.kind + (entry.snapshot ? ' has-shot' : '');
     p.textContent = entry.label + '  ' + entry.message;
+    if (entry.snapshot) {
+      /* 경보 순간의 화면. 누르면 크게 볼 수 있다. */
+      const shot = document.createElement('img');
+      shot.className = 'event-shot';
+      shot.src = entry.snapshot;
+      shot.alt = tr('snapshotAlt', { time: entry.label });
+      shot.loading = 'lazy';
+      shot.addEventListener('click', () => openSnapshot(entry));
+      p.append(shot);
+    }
     box.append(p);
   });
   if (!state.events.length) eventText.textContent = tr('noEvents');
@@ -3756,6 +4591,11 @@ function removeCamera(id) {
 
 function teardownSource(camera) {
   clearTimeout(camera.reconnectTimer);
+  if (camera.stallTimer) { clearInterval(camera.stallTimer); camera.stallTimer = null; }
+  /* 연결 중 취소된 경우를 대비해 세대 번호를 올린다. 뒤늦게 도착한
+     getUserMedia 결과가 이미 지운 카메라에 붙어 웹캠 LED 가 계속 켜져
+     있는 문제를 막는다. */
+  camera.connectSeq = (camera.connectSeq || 0) + 1;
   if (camera.stream) { camera.stream.getTracks().forEach(t => t.stop()); camera.stream = null; }
   if (camera.hls) { try { camera.hls.destroy(); } catch (e) {} camera.hls = null; }
   if (camera.mjpeg) { camera.mjpeg.raf && cancelAnimationFrame(camera.mjpeg.raf); camera.mjpeg.img.src = ''; camera.mjpeg = null; }
@@ -3774,7 +4614,32 @@ function attachStreamWatchdog(camera) {
   });
 }
 
+/** 네트워크 영상(HLS · MJPEG · 일반 영상)이 '조용히 멈추는' 것을 감시한다.
+ *  중계 서버가 죽어도 마지막 프레임이 화면에 그대로 남으면 관제 화면은
+ *  정상으로 보이고 AI 는 정지 화면을 계속 분석한다. 인명 안전 시스템에서
+ *  가장 위험한 실패이므로, 새 프레임이 일정 시간 오지 않으면 끊김으로 본다. */
+function attachStallWatchdog(camera) {
+  if (camera.stallTimer) { clearInterval(camera.stallTimer); camera.stallTimer = null; }
+  const video = camera.video;
+  if (video && !video.dataset.stallBound) {
+    video.dataset.stallBound = '1';
+    video.addEventListener('timeupdate', () => { camera.lastFrameAt = Date.now(); });
+    ['error', 'stalled', 'ended', 'emptied'].forEach(type => {
+      video.addEventListener(type, () => {
+        if (camera.kind === 'stream' && camera.online) handleStreamLoss(camera, 'video ' + type);
+      });
+    });
+  }
+  camera.stallTimer = setInterval(() => {
+    if (!camera.online || camera.kind !== 'stream') return;
+    if (Date.now() - (camera.lastFrameAt || 0) > CONFIG.streamStallMs) {
+      handleStreamLoss(camera, 'stream stalled');
+    }
+  }, 2000);
+}
+
 function handleStreamLoss(camera, reason) {
+  if (camera.stallTimer) { clearInterval(camera.stallTimer); camera.stallTimer = null; }
   if (!camera.online) return;
   camera.online = false;
   Diagnostics.log(camera.name + ' stream lost (' + reason + ')', 'warn');
@@ -3809,12 +4674,20 @@ async function connectCamera(camera, isRetry) {
   requestNotificationPermission();
   Diagnostics.log(tr('camConnecting', { name: camera.name }), 'info');
 
+  /* 권한 창이 떠 있는 동안 사용자가 이 카메라를 지울 수 있다. 그 뒤에
+     '허용'을 누르면 스트림이 사라진 카메라에 붙어 웹캠 표시등이 계속 켜져
+     있게 된다. 세대 번호로 그런 결과를 즉시 폐기한다. */
+  const seq = (camera.connectSeq = (camera.connectSeq || 0) + 1);
+  const stale = () => camera.connectSeq !== seq || !state.cameras.includes(camera);
+
   try {
     if (camera.stream) camera.stream.getTracks().forEach(t => t.stop());
     const constraints = { width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 24, max: 30 } };
     if (camera.deviceId) constraints.deviceId = { exact: camera.deviceId };
 
-    camera.stream = await navigator.mediaDevices.getUserMedia({ video: constraints, audio: false });
+    const stream = await navigator.mediaDevices.getUserMedia({ video: constraints, audio: false });
+    if (stale()) { stream.getTracks().forEach(t => t.stop()); return false; }
+    camera.stream = stream;
     attachStreamWatchdog(camera);
     camera.video.srcObject = camera.stream;
     await camera.video.play();
@@ -3823,6 +4696,7 @@ async function connectCamera(camera, isRetry) {
     camera.error = null;
     camera.reconnectAttempt = 0;
     state.halted = false;
+    state.lastError = '';
     Diagnostics.log(tr('camConnected', { name: camera.name, resolution: camera.video.videoWidth + 'x' + camera.video.videoHeight }), 'ok');
     if (isRetry) pushEvent(camera.name + ' · ' + tr('eventCameraBack'), 'ok', { camera: camera.name });
 
@@ -3835,7 +4709,9 @@ async function connectCamera(camera, isRetry) {
     camera.online = false;
     camera.error = error && error.message ? error.message : String(error);
     Diagnostics.countError(tr('camFailed', { name: camera.name, reason: camera.error }));
-    statusText.textContent = tr('cameraPermissionHelp');
+    state.lastError = tr('cameraPermissionHelp');
+    statusTitle.textContent = tr('needsAttention');
+    statusText.textContent = state.lastError;
     setHealth('healthError', 'bad');
     refreshAllPanels(); renderCameraBar();
     if (isRetry) scheduleReconnect(camera);
@@ -3889,6 +4765,9 @@ async function connectStream(camera, isRetry) {
     camera.online = true;
     camera.error = null;
     camera.reconnectAttempt = 0;
+    camera.lastFrameAt = Date.now();
+    state.lastError = '';
+    attachStallWatchdog(camera);
     Diagnostics.log(tr('camConnected', {
       name: camera.name,
       resolution: (camera.usesCanvas ? camera.canvas.width + 'x' + camera.canvas.height
@@ -3903,6 +4782,12 @@ async function connectStream(camera, isRetry) {
     camera.online = false;
     camera.error = error && error.message ? error.message : String(error);
     Diagnostics.countError(tr('camFailed', { name: camera.name, reason: camera.error }));
+    /* 주소를 잘못 넣었을 때 아무 안내도 없이 패널만 꺼지던 문제를 막는다 */
+    state.lastError = tr('streamFailedHelp', { name: camera.name, reason: camera.error });
+    statusTitle.textContent = tr('needsAttention');
+    statusText.textContent = state.lastError;
+    setHealth('healthError', 'bad');
+    teardownSource(camera);
     refreshAllPanels(); renderCameraBar();
     if (isRetry) scheduleReconnect(camera);
     return false;
@@ -3947,6 +4832,9 @@ function connectMjpeg(camera) {
     const context = camera.canvas.getContext('2d', { alpha: false });
     let settled = false;
 
+    /* 게이트웨이가 죽으면 img 는 마지막 프레임을 그대로 들고 있는다.
+       그리기만 계속하면 화면은 멀쩡해 보이지만 실제로는 정지 화면을 감시하게
+       된다. decode 완료 시각을 남겨 두어 정지 감시가 이를 알아채게 한다. */
     const pump = () => {
       if (!camera.mjpeg) return;
       if (img.naturalWidth) {
@@ -3958,6 +4846,8 @@ function connectMjpeg(camera) {
       }
       camera.mjpeg.raf = requestAnimationFrame(pump);
     };
+    /* multipart 스트림은 새 파트가 도착할 때마다 load 가 다시 발생한다 */
+    img.addEventListener('load', () => { camera.lastFrameAt = Date.now(); });
 
     img.onload = () => {
       if (settled) return;
@@ -4005,13 +4895,41 @@ function loadScript(url) {
   });
 }
 
+/** coco-ssd 는 tf 전역 없이는 동작하지 않는다. 페이지 상단의 script 태그가
+ *  막힌 망(사내망·학교망)에서 실패했다면 여기서 대체 CDN 으로 tfjs 부터 다시
+ *  받아야 한다. 이것이 없으면 모델 재시도 3회가 전부 같은 이유로 실패한다. */
+async function ensureTf() {
+  if (typeof tf !== 'undefined') return;
+  /* 인터넷이 없어도 지난번에 받아 둔 것이 있으면 그것으로 시작한다 */
+  for (const url of CONFIG.tfCdns) {
+    if (await OfflineCache.runCachedScript(url)) {
+      Diagnostics.log(tr('offlineUsedCache', { what: 'tensorflow.js' }), 'ok');
+      if (typeof tf !== 'undefined') return;
+    }
+  }
+  for (let i = 0; i < CONFIG.tfCdns.length; i++) {
+    try {
+      Diagnostics.log('tfjs fallback CDN #' + (i + 1), 'warn');
+      await loadScript(CONFIG.tfCdns[i]);
+      if (typeof tf !== 'undefined') { OfflineCache.storeScript(CONFIG.tfCdns[i]); return; }
+    } catch (e) { /* 다음 CDN 시도 */ }
+  }
+  throw new Error('tensorflow.js unavailable');
+}
+
 async function ensureCocoSsd() {
   if (window.cocoSsd) return;
-  for (let i = 1; i < CONFIG.modelCdns.length; i++) {
-    try {
-      Diagnostics.log('coco-ssd fallback CDN #' + i, 'warn');
-      await loadScript(CONFIG.modelCdns[i]);
+  for (const url of CONFIG.modelCdns) {
+    if (await OfflineCache.runCachedScript(url)) {
+      Diagnostics.log(tr('offlineUsedCache', { what: 'coco-ssd' }), 'ok');
       if (window.cocoSsd) return;
+    }
+  }
+  for (let i = 0; i < CONFIG.modelCdns.length; i++) {
+    try {
+      if (i > 0) Diagnostics.log('coco-ssd fallback CDN #' + i, 'warn');
+      await loadScript(CONFIG.modelCdns[i]);
+      if (window.cocoSsd) { OfflineCache.storeScript(CONFIG.modelCdns[i]); return; }
     } catch (e) { /* 다음 CDN 시도 */ }
   }
   throw new Error('coco-ssd unavailable');
@@ -4023,12 +4941,17 @@ async function loadModel() {
   statusTitle.textContent = tr('modelPreparing');
   for (let attempt = 1; attempt <= CONFIG.modelRetries; attempt++) {
     try {
+      /* 모델 가중치도 캐시에서 먼저 찾도록 이 구간만 fetch 를 감싼다 */
+      OfflineCache.patchFetch();
+      await ensureTf();
       await ensureCocoSsd();
       await tf.ready();
       state.model = await cocoSsd.load({ base: 'mobilenet_v2' });
       state.backend = (tf.getBackend && tf.getBackend()) || 'unknown';
       Diagnostics.log(tr('modelReady', { backend: state.backend }), 'ok');
+      if (OfflineCache.hits > 0) Diagnostics.log(tr('offlineUsedCache', { what: tr('offlineModel') }), 'ok');
       refreshBadges();
+      refreshOfflineBadge();
       return true;
     } catch (error) {
       Diagnostics.countError('model load #' + attempt + ': ' + (error && error.message ? error.message : String(error)));
@@ -4051,8 +4974,25 @@ async function loadModel() {
  *  시뮬레이션만 있을 때는 모델 없이도 동작한다. */
 async function ensureDetectionRunning() {
   const needsModel = activeCameras().some(c => !c.simulating);
-  if (needsModel) await loadModel();
+  if (needsModel) {
+    const ready = await loadModel();
+    /* 모델을 못 받았는데 루프만 돌리면 화면은 'LIVE · 감시 중'인데 실제로는
+       아무것도 감지하지 않는 상태가 된다. 이 시스템에서 가장 위험한 실패이므로
+       여기서 멈추고 실패 상태를 그대로 남긴다. */
+    if (!ready) {
+      state.lastError = tr('modelLoadFailed');
+      stopDetection(false);
+      setHealth('healthError', 'bad');
+      statusTitle.textContent = tr('modelLoadFailed');
+      statusText.textContent = tr('modelLoadFailedHelp');
+      stateChip.textContent = 'ERROR';
+      stateChip.className = 'state alert';
+      return false;
+    }
+    state.lastError = '';
+  }
   if (!state.detecting) resumeDetection();
+  return true;
 }
 
 function resumeDetection() {
@@ -4063,6 +5003,7 @@ function resumeDetection() {
   state.cameras.forEach(c => {
     c.previousPeople = [];
     c.riskSince.clear();
+    c.riskSeen.clear();
     c.activeTiles = { x: CONFIG.tilesX, y: CONFIG.tilesY };
     c.metrics.latencyAvg = 0;
   });
@@ -4079,6 +5020,7 @@ function stopDetection(resetUi) {
   state.cameras.forEach(c => {
     c.previousPeople = [];
     c.riskSince.clear();
+    c.riskSeen.clear();
     c.riskCount = 0;
     c.alertLevel = 'none';
     if (c.detections) c.detections.innerHTML = '';
@@ -4198,6 +5140,7 @@ function startSimulation(camera) {
   camera.sim.begin();
   state.metrics.startedAt = state.metrics.startedAt || Date.now();
   camera.riskSince.clear();
+  camera.riskSeen.clear();
   setHealth('healthGood', 'good');
   pushEvent(camera.name + ' · ' + tr('eventSimStart'), 'info', { camera: camera.name });
   refreshAllPanels(); renderCameraBar(); drawBoundary(camera); refreshBadges();
@@ -4728,6 +5671,145 @@ SelfTest.add('저장: 경계선 직렬화/복원 왕복', () => {
   return ok || 'round-trip failed';
 });
 
+/* — v6: 안정성 회귀 — */
+SelfTest.add('추적 유예: 한 프레임 놓쳐도 같은 사람으로 남는다', () => {
+  const prev = [{ id: 7, bbox: [10, 10, 20, 40], score: .8, hits: 5, averageScore: .8, sizeStable: true, missed: 0 }];
+  const kept = carryTracks([], prev);
+  return (kept.length === 1 && kept[0].id === 7 && kept[0].missed === 1) || 'lost track after one miss';
+});
+
+SelfTest.add('추적 유예: 유예 횟수를 넘기면 버린다', () => {
+  let prev = [{ id: 7, bbox: [10, 10, 20, 40], score: .8, hits: 5, averageScore: .8, sizeStable: true, missed: 0 }];
+  for (let i = 0; i <= CONFIG.trackGraceFrames; i++) prev = carryTracks([], prev);
+  return prev.length === 0 || 'ghost track never expires';
+});
+
+SelfTest.add('추적 유예: 다시 잡히면 누적 관측 수가 이어진다', () => {
+  const prev = carryTracks([], [{ id: 3, bbox: [10, 10, 20, 40], score: .8, hits: 4, averageScore: .8, sizeStable: true, missed: 0 }]);
+  const idRef = { value: 99 };
+  const again = trackCandidates([{ bbox: [11, 11, 20, 40], score: .8, class: 'person' }], prev, idRef);
+  return (again[0].id === 3 && again[0].hits === 5 && again[0].missed === 0) || 'hits reset after brief miss';
+});
+
+SelfTest.add('저장: 경계선은 이름이 아니라 카메라 id로 저장된다', () => {
+  const cam = focusedCamera();
+  const backup = cam.points.map(p => ({ x: p.x, y: p.y })), name = cam.name;
+  cam.points = [{ x: 0.3, y: 0.4 }, { x: 0.7, y: 0.6 }];
+  persistBoundaries();
+  const saved = JSON.parse(store.get(boundaryStorageKey(), '{}'));
+  const byId = !!saved[cam.id];
+  /* 이름이 바뀌어도(=언어 전환) 복원된다 */
+  cam.name = name + ' renamed';
+  cam.points = [{ x: 0, y: 0 }, { x: 1, y: 1 }];
+  restoreBoundaryFor(cam);
+  const restored = Math.abs(cam.points[0].x - 0.3) < 1e-9;
+  cam.name = name; cam.points = backup; persistBoundaries(); drawBoundary(cam);
+  return (byId && restored) || ('id key ' + byId + ', restore ' + restored);
+});
+
+SelfTest.add('알림: 시험 발송은 실제 경보의 중복 방지 시계를 건드리지 않는다', () => {
+  const backup = state.contacts;
+  const c = normalizeContact({ name: '점검용', phone: '01000000000', minLevel: 'alert', onDuty: true });
+  state.contacts = [c];
+  notifyRecipients(null, 'alert', 'ALERT', 1, 2, true, c);
+  const ok = !c.lastSentAt && shouldSendNow(c, 'alert', Date.now());
+  state.contacts = backup;
+  return ok || 'test send consumed the real throttle';
+});
+
+SelfTest.add('설정: tfjs 대체 CDN이 준비되어 있다', () =>
+  (Array.isArray(CONFIG.tfCdns) && CONFIG.tfCdns.length >= 2) || 'no tfjs fallback');
+
+SelfTest.add('설정: 웹훅에 시간 제한이 설정되어 있다', () =>
+  (CONFIG.webhookTimeoutMs > 0 && CONFIG.webhookTimeoutMs <= 15000) || 'webhook has no timeout');
+
+SelfTest.add('설정: 영상 정지 감시 시간이 합리적 범위', () =>
+  (CONFIG.streamStallMs >= 3000 && CONFIG.streamStallMs <= 30000) || 'bad stall window');
+
+/* — v7: 감시 시간대 · 음성 · 스냅샷 · 오프라인 — */
+SelfTest.add('시간대: 09:00–19:00 안팎을 정확히 가른다', () => {
+  const at = (h, m) => h * 60 + (m || 0);
+  return (withinWatchHours(at(12), '09:00', '19:00') &&
+          !withinWatchHours(at(8, 59), '09:00', '19:00') &&
+          withinWatchHours(at(9), '09:00', '19:00') &&
+          !withinWatchHours(at(19), '09:00', '19:00')) || 'daytime window wrong';
+});
+
+SelfTest.add('시간대: 자정을 넘기는 구간(22:00–06:00)도 맞다', () => {
+  const at = h => h * 60;
+  return (withinWatchHours(at(23), '22:00', '06:00') &&
+          withinWatchHours(at(2), '22:00', '06:00') &&
+          !withinWatchHours(at(12), '22:00', '06:00')) || 'overnight window wrong';
+});
+
+SelfTest.add('시간대: 설정이 없거나 잘못되면 항상 감시', () =>
+  (withinWatchHours(600, '', '') && withinWatchHours(600, '25:00', '19:00') &&
+   withinWatchHours(600, '09:00', '09:00')) || 'should default to always-on');
+
+SelfTest.add('시간대: 시각 문자열 파싱', () =>
+  (parseHhMm('09:30') === 570 && parseHhMm('00:00') === 0 && parseHhMm('23:59') === 1439 &&
+   parseHhMm('24:00') === null && parseHhMm('9:5') === null && parseHhMm('') === null) || 'parse failed');
+
+SelfTest.add('음성: 안내 문장에 등급·카메라·인원이 모두 들어간다', () => {
+  const text = buildVoiceMessage({ name: '북측 1구역' }, 'critical', 2, 7.4);
+  return (text.indexOf('북측 1구역') >= 0 && text.indexOf('2') >= 0 && text.indexOf('7') >= 0)
+    || ('voice text incomplete: ' + text);
+});
+
+SelfTest.add('음성: 같은 상황은 반복해서 읽지 않는다', () => {
+  const now = Date.now();
+  Speaker.lastKey = 'cam1:alert'; Speaker.lastSpokenAt = now;
+  const same = Speaker.shouldSpeak('cam1:alert', now + 1000);
+  const escalated = Speaker.shouldSpeak('cam1:critical', now + 1000);
+  const later = Speaker.shouldSpeak('cam1:alert', now + CONFIG.voiceRepeatMs + 10);
+  Speaker.lastKey = ''; Speaker.lastSpokenAt = 0;
+  return (!same && escalated && later) || 'repeat rule wrong';
+});
+
+SelfTest.add('스냅샷: 끄면 캡처하지 않는다', () => {
+  const box = $('#snapshotEnabled');
+  const was = box.checked;
+  box.checked = false;
+  const off = captureSnapshot(focusedCamera());
+  box.checked = was;
+  return off === '' || 'captured while disabled';
+});
+
+SelfTest.add('스냅샷: 오래된 기록의 이미지는 메모리에서 비운다', () => {
+  const backup = state.events.slice();
+  state.events = [];
+  for (let i = 0; i < CONFIG.maxSnapshots + 5; i++) {
+    pushEvent('test ' + i, 'info', { snapshot: 'data:image/jpeg;base64,AAAA' });
+  }
+  const withShots = state.events.filter(e => e.snapshot).length;
+  state.events = backup; renderEventLog();
+  return withShots <= CONFIG.maxSnapshots || ('kept ' + withShots + ' snapshots');
+});
+
+SelfTest.add('오프라인: 캐시 모듈이 준비되어 있다', () =>
+  (typeof OfflineCache === 'object' && typeof OfflineCache.runCachedScript === 'function' &&
+   typeof OfflineCache.fetchThrough === 'function') || 'offline cache missing');
+
+SelfTest.add('키보드: 화살표로 점을 옮기면 0–1 범위를 벗어나지 않는다', () => {
+  const cam = focusedCamera();
+  const backup = cam.points.map(p => ({ x: p.x, y: p.y }));
+  cam.points[0] = { x: 0.001, y: 0.001 };
+  for (let i = 0; i < 20; i++) nudgeZonePoint(-1, -1, true);
+  const p = cam.points[0];
+  const ok = p.x >= 0 && p.x <= 1 && p.y >= 0 && p.y <= 1;
+  cam.points = backup; drawBoundary(cam); persistBoundaries();
+  return ok || ('out of range: ' + JSON.stringify(p));
+});
+
+SelfTest.add('단축키: 입력 칸에 타이핑 중일 때는 동작하지 않는다', () =>
+  (typingInField({ tagName: 'INPUT' }) && typingInField({ tagName: 'TEXTAREA' }) &&
+   !typingInField({ tagName: 'BUTTON' })) || 'shortcut guard wrong');
+
+SelfTest.add('접근성: 단축키 안내에 모든 키 설명이 있다', () => {
+  const items = document.querySelectorAll('#shortcutDialog .shortcut-list li');
+  return items.length >= 8 || ('only ' + items.length + ' shortcuts documented');
+});
+
 /* ══════════════════════════════════════════════════════════════════
    23. 부하 테스트
    ══════════════════════════════════════════════════════════════════ */
@@ -4779,6 +5861,7 @@ function runStressTest(objectCount) {
   if (hasPanel) {
     camera.detections.innerHTML = '';
     camera.riskSince.clear();
+    camera.riskSeen.clear();
     camera.riskCount = 0;
     camera.alertLevel = 'none';
     camera.panel.classList.remove('critical');
@@ -4931,6 +6014,22 @@ function bindUi() {
   $('#runSelfTest').addEventListener('click', () => SelfTest.run());
   $('#runStress').addEventListener('click', () => runStressTest(200));
 
+  /* ── v7: 관제 모드 · 단축키 · 감시 시간대 · 오프라인 · 음성 ── */
+  $('#controlRoom').addEventListener('click', () => toggleControlRoom());
+  $('#shortcutHelp').addEventListener('click', () => { try { $('#shortcutDialog').showModal(); } catch (e) {} });
+  document.addEventListener('keydown', handleShortcut);
+  /* 브라우저 전체화면을 사용자가 직접 빠져나온 경우에도 레이아웃을 되돌린다 */
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && document.body.classList.contains('control-room')) toggleControlRoom(false);
+  });
+
+  ['#hoursEnabled', '#hoursFrom', '#hoursTo'].forEach(sel =>
+    $(sel).addEventListener('change', refreshWatchHours));
+  $('#prepareOffline').addEventListener('click', prepareOffline);
+
+  /* 음성을 끄면 읽고 있던 안내도 즉시 멈춘다 */
+  $('#voiceEnabled').addEventListener('change', e => { if (!e.target.checked) Speaker.stop(); });
+
   /* 튜너 */
   $('#envPreset').addEventListener('change', e => {
     state.presetMode = e.target.value;
@@ -4959,7 +6058,9 @@ function bindUi() {
 
   /* 탭이 다시 보이면 즉시 한 사이클 돌려 지연을 회복한다 */
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && state.detecting) { clearTimeout(loopTimer); detectLoop(); }
+    /* 이미 루프가 돌고 있으면 새로 부르지 않는다. 추론이 진행 중일 때는
+       취소할 타이머가 없어서, 부를 때마다 루프가 하나씩 늘어난다. */
+    if (!document.hidden && state.detecting && !loopRunning) { clearTimeout(loopTimer); detectLoop(); }
   });
 
   /* 창 크기가 바뀌면 박스 좌표계가 어긋나므로 즉시 지운다 */
@@ -4994,6 +6095,7 @@ function restoreSettings() {
   $('#tunerFrames').value = state.userFrames;
   $('#tunerEscalate').value = state.escalateSeconds;
   state.detached.points = activeSite().line.map(p => ({ x: p.x, y: p.y }));
+  restoreWatchHours();
 }
 
 function startClock() {
@@ -5019,8 +6121,10 @@ function init() {
   renderContacts();
   refreshAlertToggle();
   refreshZoneCard();
+  refreshWatchHours();
+  refreshOfflineBadge();
   listCameras();
-  Diagnostics.log('Beach Watch v4 ready · ' + SelfTest.cases.length + ' self-test cases · up to ' +
+  Diagnostics.log('Beach Watch v7 ready · ' + SelfTest.cases.length + ' self-test cases · up to ' +
     CONFIG.maxCameras + ' cameras · ' + state.contacts.length + ' recipients', 'ok');
 }
 
@@ -5029,13 +6133,18 @@ window.BeachWatch = {
   state, CONFIG, IMPACT, PRESETS, SITE_PRESETS,
   selfTest: () => SelfTest.run(),
   stressTest: count => runStressTest(count),
+  carryTracks,
   computeImpact, crossesAboveLine, isInDangerZone, pointInPolygon, abovePolyline,
   polylineYAt, simplifyPoints, insertIndexFor, setZoneMode, applyZoneToAll, polygonToPolyline, smoothPath,
   normalizeContact, contactsForLevel, buildAlertPayload, shouldSendNow,
   clusterObservations, suppressDuplicates, shouldMergeObservations, trackCandidates,
   classifyScene: stats => SceneAnalyzer.classify(stats),
   addCamera, removeCamera, focusCamera, setSiteType,
-  resolveStreamKind, validateStreamUrl
+  resolveStreamKind, validateStreamUrl,
+  /* v7 */
+  withinWatchHours, parseHhMm, watchHoursActive, buildVoiceMessage, typingInField,
+  toggleControlRoom, nudgeZonePoint, selectNextZonePoint,
+  OfflineCache, prepareOffline, Speaker, captureSnapshot
 };
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
