@@ -432,6 +432,28 @@
       body.control-room .stage-grid .stage{height:auto;aspect-ratio:16/9}
       .shortcut-list li{font-size:12.5px}
     }
+
+    /* ── 화면 위 그리기 안내문 (닫기 가능) ───────────────────────── */
+    .hint{display:none;align-items:flex-start;gap:8px;max-width:min(420px,calc(100% - 30px));
+          padding-right:8px;line-height:1.5}
+    .hint.on{display:flex}
+    .hint .hint-text{flex:1;min-width:0}
+    .hint .hint-close{flex:none;margin:-3px -3px 0 0;padding:0;width:22px;height:22px;
+                      border:1px solid #ffffff40;border-radius:7px;background:#ffffff1f;
+                      color:#eafcff;font:700 12px/1 Arial;cursor:pointer;pointer-events:auto;
+                      transition:.15s background,.15s transform}
+    .hint .hint-close:hover{background:#ffffff38;transform:none}
+    .hint .hint-close:focus-visible{outline:3px solid #ffca40;outline-offset:2px}
+    /* 안내문은 본래 클릭을 통과시키지만, 닫기 버튼은 눌려야 한다 */
+    .hint.on{pointer-events:none}
+    .hint-restore{margin-top:9px;padding:7px 11px;font-size:12px;border-radius:10px}
+
+    /* ── 버튼 설명 한 줄 ─────────────────────────────────────────── */
+    .zone-tip{margin:9px 0 0;padding:9px 11px;border-radius:11px;background:#f2fafa;
+              border:1px solid #dcecec;color:#4e727c;font-size:12px;line-height:1.6;min-height:38px}
+
+    /* 회전 슬라이더는 값이 세 자리(360°)까지 간다 */
+    .mobile-line-control output{min-width:44px;text-align:right}
   </style>
 </head>
 <body>
@@ -495,6 +517,7 @@
           <button id="resetLine">기본 모양</button>
           <button id="zoneApplyAll" data-i18n="zoneApplyAll">모든 카메라에 적용</button>
         </div>
+        <p class="zone-tip" id="zoneTip" data-i18n="zoneTipDefault">버튼 위에 마우스를 올리면 각각 어떤 일을 하는지 알려 줍니다.</p>
 
         <div class="zone-stat">
           <span id="zonePoints">점 2개</span>
@@ -502,10 +525,11 @@
           <span id="zoneCameraTag">—</span>
         </div>
         <div class="zone-hint" id="zoneHint"></div>
+        <button class="hint-restore" id="hintRestore" type="button" hidden data-i18n="hintRestore">화면 위 안내 다시 보기</button>
 
         <div class="zone-sliders" id="zoneSliders">
           <label class="mobile-line-control"><span data-i18n="height">높이</span><input id="boundaryHeight" type="range" min="5" max="95" step="1" value="66"><output id="boundaryHeightValue">66%</output></label>
-          <label class="mobile-line-control"><span data-i18n="tilt">기울기</span><input id="boundaryTilt" type="range" min="-50" max="50" step="1" value="0"><output id="boundaryTiltValue">0%</output></label>
+          <label class="mobile-line-control"><span data-i18n="tilt">회전</span><input id="boundaryTilt" type="range" min="0" max="360" step="1" value="0"><output id="boundaryTiltValue">0°</output></label>
         </div>
       </section>
 
@@ -1634,6 +1658,19 @@ Object.assign(I18N.ko, {
   offlineFailed:'오프라인 준비 실패 — 인터넷 연결을 확인해 주세요',
   offlineUsedCache:'{what} 를 저장해 둔 것에서 불러왔습니다 (인터넷 불필요)',
   offlineModel:'AI 모델',
+  /* 화면 위 안내문 · 회전 */
+  hintCloseLabel:'화면 위 안내 닫기',
+  hintDismissed:'화면 위 안내를 닫았습니다. 같은 설명은 아래 그리기 카드에 그대로 있습니다.',
+  hintRestore:'화면 위 안내 다시 보기',
+  tilt:'회전',
+  /* 그리기 버튼 설명 — 마우스를 올리거나 초점이 가면 아래 줄에 뜬다 */
+  zoneTipDefault:'버튼 위에 마우스를 올리면 각각 어떤 일을 하는지 알려 줍니다.',
+  tipEdit:'그리기 시작 — 화면 위에서 위험 구역을 직접 그릴 수 있게 합니다. 그리는 동안에는 감시가 계속됩니다.',
+  tipUndo:'한 점 되돌리기 — 방금 찍은 점 하나만 없앱니다. 잘못 눌러 생긴 점을 지울 때 씁니다. 여러 번 누르면 하나씩 거슬러 올라갑니다. 전부 지우려면 처음 모양으로를 쓰세요.',
+  tipSimplify:'선 다듬기 — 모양은 그대로 두고 점 개수만 줄입니다. 손으로 그리면 점이 수십 개 생기는데, 점이 많으면 손잡이가 촘촘해 고치기 어렵습니다. 한 번 눌러 정리한 뒤 손보세요.',
+  tipReset:'처음 모양으로 — 이 장소의 기본 경계선으로 되돌립니다. 그린 것이 모두 사라집니다.',
+  tipApplyAll:'다른 카메라에도 똑같이 — 지금 카메라의 구역을 나머지 카메라에 그대로 복사합니다. 같은 지형을 여러 대가 나눠 볼 때 씁니다.',
+  zoneSimplifyNoChange:'이미 충분히 단순합니다 — 줄일 점이 없습니다.',
   docLinks:'자세한 내용은 저장소 문서에 있습니다 — <b>README.md</b>(문제 정의·사용법·임팩트·개발 기록·로드맵) · <b>TECHNICAL.md</b>(AI 파이프라인·안정성·검증 전략) · <b>AI_STACK.md</b>(AI 기술 상세 분석) · <b>RELAY.md</b>(문자·이메일 자동 발송 연결) · <b>IMPACT.md</b>(지표 산출 근거) · <b>DEMO_SCRIPT.md</b>(데모 영상 대본)'
 });
 
@@ -1683,6 +1720,17 @@ Object.assign(I18N.en, {
   offlineFailed:'Could not prepare for offline use — check your internet connection',
   offlineUsedCache:'Loaded {what} from storage (no internet needed)',
   offlineModel:'the AI model',
+  hintCloseLabel:'Close the on-screen tip',
+  hintDismissed:'On-screen tip closed. The same guidance stays in the drawing card below.',
+  hintRestore:'Show the on-screen tip again',
+  tilt:'Rotate',
+  zoneTipDefault:'Hover a button to see what it does.',
+  tipEdit:'Start drawing — lets you draw the danger zone straight onto the view. Monitoring keeps running while you draw.',
+  tipUndo:'Undo one point — removes just the point you added last. Use it for a stray tap. Press repeatedly to step back one point at a time; to clear everything use Reset shape.',
+  tipSimplify:'Tidy the line — keeps the shape but cuts the number of points. Drawing by hand leaves dozens of points, and crowded handles are hard to adjust. Tidy once, then fine-tune.',
+  tipReset:'Reset shape — returns to this site\'s default boundary. Everything you drew is discarded.',
+  tipApplyAll:'Copy to other cameras — applies this zone to every other camera. Handy when several cameras watch the same shoreline.',
+  zoneSimplifyNoChange:'Already simple enough — nothing to remove.',
   docLinks:'Full detail lives in the repository docs — <b>README.md</b> (problem framing, usage, impact, build log, roadmap) · <b>TECHNICAL.md</b> (AI pipeline, reliability, verification) · <b>AI_STACK.md</b> (detailed AI analysis) · <b>RELAY.md</b> (wiring up real SMS / e-mail) · <b>IMPACT.md</b> (how the figures are derived) · <b>DEMO_SCRIPT.md</b> (demo video script)'
 });
 
@@ -1740,6 +1788,11 @@ const CONFIG = {
   containment: 0.60,          // 소면적 기준 포함률
   containmentAreaFloor: 0.18, // 포함률만으로 병합할 때 요구하는 최소 면적비
   crossCenterFactor: 0.45,
+  crossMinOverlap: 0.12,      // 거리만으로 병합할 때 요구하는 최소 겹침(소면적 기준)
+  /* 한 번에 찾아낼 대상 수 상한. 성수기 해수욕장은 화면에 수십 명이 뜨므로
+     상한이 낮으면 '멀리 있는 사람'부터 잘려 나가 인원이 적게 세어진다. */
+  maxDetectionsFull: 100,
+  maxDetectionsTile: 50,
   crossRatioMin: 0.35, crossRatioMax: 2.8,
   /* 중복 병합 — 같은 소스(모델이 한 사람을 두 번 낸 경우) */
   sameSourceIou: 0.55, sameSourceIos: 0.82,
@@ -1870,7 +1923,10 @@ function createCamera(options) {
     points: site.line.map(p => ({ x: p.x, y: p.y })),
     zoneMode: 'line',          // 'line'(폴리라인) | 'polygon'(닫힌 구역)
     previousPeople: [], nextPersonId: 1,
-    riskSince: new Map(), riskSeen: new Map(), riskCount: 0,
+    riskSince: new Map(), riskSeen: new Map(), riskCount: 0, riskTracked: 0, lastAlertCount: 0,
+    /* 회전은 '원래 모양(zoneBase) + 각도'로 관리한다. 각도를 누적해서 돌리면
+       반올림 오차가 쌓여 슬라이더를 되돌려도 원래 모양으로 돌아오지 않는다. */
+    zoneBase: null, zoneAngle: 0,
     alertLevel: 'none', lastAlertAt: 0, lastCriticalAt: 0,
     scene: 'clear', sceneLastCheck: 0,
     motion: { moving: false, signature: null, lastChangeAt: 0 },
@@ -1892,6 +1948,8 @@ const state = {
   halted: false,
   /* 마지막 실패 사유. 경보가 없을 때 사이드바에 계속 표시한다 */
   lastError: '',
+  /* 화면 위 그리기 안내문을 사용자가 닫았는가 */
+  hintDismissed: false,
   editing: false,
   drag: -1,
   freehand: null,     // 드래그로 그리는 중인 궤적
@@ -1948,6 +2006,13 @@ function setLabel(selector, key) {
   if (element) element.textContent = tr(key);
 }
 
+/** 버튼 툴팁도 언어에 맞춰 갱신한다 */
+function refreshButtonTips() {
+  document.querySelectorAll('[data-tip-key]').forEach(el => { el.title = tr(el.dataset.tipKey); });
+  const tip = document.querySelector('#zoneTip');
+  if (tip && !tip.dataset.sticky) tip.textContent = tr('zoneTipDefault');
+}
+
 function applyLanguage(language, persist) {
   state.language = I18N[language] ? language : 'ko';
   document.documentElement.lang = state.language;
@@ -1974,6 +2039,7 @@ function applyLanguage(language, persist) {
   refreshAllPanels();
   drawAllBoundaries();
   refreshZoneCard();
+  refreshButtonTips();
   refreshStatusPanel();
   refreshBadges();
   refreshTunerLabels();
@@ -2220,6 +2286,12 @@ function shouldMergeObservations(a, b) {
     if (areaRatio >= CONFIG.containmentAreaFloor) return true;
   }
 
+  /* 마지막 기준: 중심이 아주 가까우면 같은 사람으로 본다.
+     단, 바다에는 여러 사람이 나란히 떠 있는 경우가 많다. 서로 조금도 겹치지
+     않는 두 박스를 거리만 보고 합치면 두 사람이 한 명으로 세어진다.
+     그래서 '최소한 이만큼은 겹칠 것'을 함께 요구한다. */
+  if (ios < CONFIG.crossMinOverlap) return false;
+
   const distance = centerDistance(a, b);
   const span = Math.min(Math.max(a.bbox[2], a.bbox[3]), Math.max(b.bbox[2], b.bbox[3]));
   const widthRatio = a.bbox[2] / b.bbox[2];
@@ -2319,6 +2391,71 @@ function isSameCandidate(a, b) {
   return distance < tolerance &&
          widthRatio > 0.4 && widthRatio < 2.5 &&
          heightRatio > 0.4 && heightRatio < 2.5;
+}
+
+/* ── 구역 회전 (0–360°) ─────────────────────────────────────────────
+   실제 설치 현장의 파도선·수심 경계는 수평이 아니다. 카메라를 비스듬히 달면
+   경계가 세로에 가깝게 보이기도 한다. 그래서 기울기를 ±50% 로 제한하지 않고
+   완전한 360° 회전을 지원한다.
+
+   좌표가 0–1 로 정규화돼 있으므로 그대로 회전하면 화면 비율(16:9) 때문에
+   각도가 찌그러진다. 화면 비율을 곱해 픽셀 비례 공간에서 돌린 뒤 되돌린다. */
+
+function centroidOf(points) {
+  if (!points || !points.length) return { x: 0.5, y: 0.5 };
+  let sx = 0, sy = 0;
+  points.forEach(p => { sx += p.x; sy += p.y; });
+  return { x: sx / points.length, y: sy / points.length };
+}
+
+/** @param aspect 화면의 가로/세로 비 (예: 16/9). 각도가 찌그러지지 않게 한다. */
+function rotatePoints(points, degrees, aspect) {
+  if (!points || points.length < 2) return (points || []).map(p => ({ x: p.x, y: p.y }));
+  const ratio = (typeof aspect === 'number' && aspect > 0) ? aspect : 16 / 9;
+  const c = centroidOf(points);
+  const rad = degrees * Math.PI / 180;
+  const cos = Math.cos(rad), sin = Math.sin(rad);
+  return points.map(p => {
+    const px = (p.x - c.x) * ratio, py = p.y - c.y;
+    return { x: c.x + (px * cos - py * sin) / ratio, y: c.y + (px * sin + py * cos) };
+  });
+}
+
+/** 회전한 모양이 화면 밖으로 나가면, 각도는 그대로 둔 채 중심 기준으로
+ *  균일하게 줄여 안으로 넣는다. 점마다 잘라 넣으면 각도가 망가진다. */
+function fitPointsInView(points) {
+  if (!points || !points.length) return [];
+  const c = centroidOf(points);
+  let scale = 1;
+  points.forEach(p => {
+    const dx = p.x - c.x, dy = p.y - c.y;
+    if (dx < 0 && p.x < 0) scale = Math.min(scale, (0 - c.x) / dx);
+    if (dx > 0 && p.x > 1) scale = Math.min(scale, (1 - c.x) / dx);
+    if (dy < 0 && p.y < 0) scale = Math.min(scale, (0 - c.y) / dy);
+    if (dy > 0 && p.y > 1) scale = Math.min(scale, (1 - c.y) / dy);
+  });
+  scale = clamp(scale, 0.05, 1);
+  return points.map(p => ({
+    x: clamp(c.x + (p.x - c.x) * scale, 0, 1),
+    y: clamp(c.y + (p.y - c.y) * scale, 0, 1)
+  }));
+}
+
+/** 구역 전체를 세로로 옮긴다. 모양은 그대로 유지된다. */
+function translatePointsToHeight(points, targetY) {
+  if (!points || !points.length) return [];
+  const c = centroidOf(points);
+  const minY = Math.min.apply(null, points.map(p => p.y));
+  const maxY = Math.max.apply(null, points.map(p => p.y));
+  const delta = clamp(targetY - c.y, -minY, 1 - maxY);
+  return points.map(p => ({ x: p.x, y: clamp(p.y + delta, 0, 1) }));
+}
+
+/** 각도를 0–359 로 정규화한다. */
+function normalizeAngle(degrees) {
+  const d = Number(degrees);
+  if (!isFinite(d)) return 0;
+  return ((d % 360) + 360) % 360;
 }
 
 /** 이전 프레임 결과와 대응시켜 ID·누적 관측 수·평균 신뢰도·크기 안정성을 계산한다. */
@@ -2822,6 +2959,7 @@ function nudgeZonePoint(dx, dy, big) {
   const point = camera.points[keyboardPointIndex];
   point.x = clamp(point.x + dx * step, 0, 1);
   point.y = clamp(point.y + dy * step, 0, 1);
+  resetZoneBase(camera);
   drawBoundary(camera);
   syncMobileLineControls();
   persistBoundaries();
@@ -2957,7 +3095,8 @@ function buildPanel(camera) {
     '<div class="camera-meta"><span class="cam-name"></span><b>REC</b></div>' +
     '<div class="cam-tag"><span class="cam-level"></span></div>' +
     '<button class="cam-close" type="button">✕</button>' +
-    '<div class="hint"></div>';
+    '<div class="hint"><span class="hint-text"></span>' +
+      '<button class="hint-close" type="button" aria-label="close">✕</button></div>';
 
   camera.panel = panel;
   camera.video = $('video', panel);
@@ -2974,6 +3113,17 @@ function buildPanel(camera) {
   camera.nameEl = $('.cam-name', panel);
   camera.levelEl = $('.cam-level', panel);
   camera.hintEl = $('.hint', panel);
+  camera.hintTextEl = $('.hint-text', panel);
+  /* 안내문이 카메라 화면을 가린다는 지적이 있었다. 직접 닫을 수 있게 하고,
+     한 번 닫으면 그 뒤로는 다시 뜨지 않게 기억한다. */
+  $('.hint-close', panel).addEventListener('click', event => {
+    event.stopPropagation();
+    state.hintDismissed = true;
+    store.set('beachWatchHintDismissed', '1');
+    /* 카드 쪽 '다시 보기' 버튼도 함께 나타나야 한다 */
+    refreshZoneCard();
+    Diagnostics.log(tr('hintDismissed'), 'info');
+  });
 
   panel.addEventListener('click', event => {
     if (event.target.closest('.cam-close')) return;
@@ -3053,9 +3203,7 @@ function refreshAllPanels() {
     camera.lineLabel.textContent = tr('dangerBoundary');
     camera.simFlag.textContent = tr('simulationFlag');
     camera.motionFlag.textContent = tr('motionFlag');
-    camera.hintEl.innerHTML = camera.id === state.focusedId && state.editing
-      ? (touchLayout() ? tr('zoneHintTouch') : tr('zoneHintEdit'))
-      : '';
+    setPanelHint(camera);
     $('.cam-close', camera.panel).setAttribute('aria-label', tr('camRemoveLabel'));
     camera.panel.classList.toggle('offline', !(camera.online || camera.simulating));
     camera.panel.classList.toggle('has-video', Boolean(camera.online) && !camera.usesCanvas && !camera.simulating);
@@ -3286,7 +3434,8 @@ function persistBoundaries() {
      (2) 카메라를 지웠다 새로 붙이면 이름이 겹쳐 두 패널이 같은 구역을
      덮어쓴다. 이름은 사람이 읽기 위한 참고값으로만 함께 남긴다. */
   state.cameras.concat([state.detached]).forEach(c => {
-    payload[c.id] = { points: c.points, mode: c.zoneMode, name: c.name || '' };
+    payload[c.id] = { points: c.points, mode: c.zoneMode, name: c.name || '',
+                      base: c.zoneBase, angle: c.zoneAngle || 0 };
   });
   store.set(boundaryStorageKey(), JSON.stringify(payload));
 }
@@ -3306,6 +3455,11 @@ function restoreBoundaryFor(camera) {
         points.every(p => p && typeof p.x === 'number' && typeof p.y === 'number')) {
       camera.points = points.slice(0, CONFIG.maxZonePoints).map(p => ({ x: clamp(p.x, 0, 1), y: clamp(p.y, 0, 1) }));
       camera.zoneMode = isValidZone(camera.points, mode) ? mode : 'line';
+      /* 회전 상태도 함께 되살린다. 없으면 지금 모양이 기준이 된다. */
+      camera.zoneAngle = normalizeAngle(saved && saved.angle);
+      camera.zoneBase = (saved && Array.isArray(saved.base) && saved.base.length === camera.points.length)
+        ? saved.base.map(p => ({ x: clamp(p.x, 0, 1), y: clamp(p.y, 0, 1) }))
+        : camera.points.map(p => ({ x: p.x, y: p.y }));
     }
   } catch (e) { /* 손상된 저장값은 무시하고 기본값을 쓴다 */ }
 }
@@ -3377,6 +3531,7 @@ function bindBoundaryPointer(camera) {
     /* 점 옮기기 종료 */
     if (state.drag >= 0) {
       state.drag = -1;
+      resetZoneBase(camera);
       Array.from(overlay.querySelectorAll('.handle.dragging')).forEach(el => el.classList.remove('dragging'));
       persistBoundaries();
       return;
@@ -3409,6 +3564,7 @@ function bindBoundaryPointer(camera) {
         Diagnostics.log(tr('zoneMinPoints'), 'warn');
       }
     }
+    resetZoneBase(camera);
     drawBoundary(camera);
     syncMobileLineControls();
     persistBoundaries();
@@ -3445,6 +3601,7 @@ function removeZonePoint(camera, index) {
     return false;
   }
   camera.points.splice(index, 1);
+  resetZoneBase(camera);
   drawBoundary(camera);
   syncMobileLineControls();
   persistBoundaries();
@@ -3497,6 +3654,12 @@ function simplifyZone() {
   const before = cam.points.length;
   const simplified = simplifyPoints(cam.points, CONFIG.simplifyTolerance);
   if (simplified.length < zoneMinPoints(cam.zoneMode)) return;
+  /* 아무 변화가 없으면 그렇다고 말해 준다. 눌렀는데 아무 일도 안 일어나면
+     고장인지 이미 단순한 것인지 알 수 없다. */
+  if (simplified.length === before) {
+    Diagnostics.log(tr('zoneSimplifyNoChange'), 'info');
+    return;
+  }
   cam.points = simplified;
   drawBoundary(cam);
   syncMobileLineControls();
@@ -3528,15 +3691,21 @@ function applyZoneToAll() {
   Diagnostics.log(tr('zoneApplied', { n: applied }), applied ? 'ok' : 'warn');
 }
 
-function refreshPanelHints() {
-  state.cameras.forEach(c => {
-    if (!c.hintEl) return;
-    /* 안내문에는 강조 태그가 들어 있다. 사전 값은 저자가 통제하는 상수다. */
-    c.hintEl.innerHTML = c.id === state.focusedId && state.editing
-      ? (touchLayout() ? tr('zoneHintTouch') : tr('zoneHintEdit'))
-      : '';
-  });
+/** 화면 위 그리기 안내문. 사용자가 닫았으면 다시 띄우지 않는다. */
+function setPanelHint(camera) {
+  if (!camera || !camera.hintEl) return;
+  const show = camera.id === state.focusedId && state.editing && !state.hintDismissed;
+  camera.hintEl.classList.toggle('on', show);
+  if (!camera.hintTextEl) return;
+  /* 안내문에는 강조 태그가 들어 있다. 사전 값은 저자가 통제하는 상수다. */
+  camera.hintTextEl.innerHTML = show
+    ? (touchLayout() ? tr('zoneHintTouch') : tr('zoneHintEdit'))
+    : '';
+  const close = $('.hint-close', camera.panel);
+  if (close) close.setAttribute('aria-label', tr('hintCloseLabel'));
 }
+
+function refreshPanelHints() { state.cameras.forEach(setPanelHint); }
 
 function refreshZoneCard() {
   const cam = focusedCamera();
@@ -3559,11 +3728,19 @@ function refreshZoneCard() {
   const hint = $('#zoneHint');
   if (hint) hint.innerHTML = !state.editing ? tr('zoneHintView')
     : (touchLayout() ? tr('zoneHintTouch') : tr('zoneHintEdit'));
+  /* 화면 위 안내문을 닫았더라도 이 카드에는 같은 설명이 그대로 남아 있으므로
+     정보를 잃지 않는다. 닫은 뒤 다시 보고 싶을 때를 위한 버튼도 둔다. */
+  const restore = $('#hintRestore');
+  if (restore) {
+    restore.hidden = !state.hintDismissed;
+    restore.textContent = tr('hintRestore');
+  }
   refreshPanelHints();
 
-  /* 높이·기울기 슬라이더는 점이 정확히 2개인 단순 직선일 때만 의미가 있다. */
+  /* 높이·회전은 선이든 곡선이든 영역이든 똑같이 의미가 있으므로
+     점이 2개 이상이면 항상 쓸 수 있게 한다. */
   const sliders = $('#zoneSliders');
-  if (sliders) sliders.classList.toggle('on', !isPolygon && cam.points.length === 2);
+  if (sliders) sliders.classList.toggle('on', cam.points.length >= 2);
 
   const undo = $('#zoneUndo');
   if (undo) undo.disabled = cam.points.length <= zoneMinPoints(cam.zoneMode);
@@ -3579,42 +3756,67 @@ function refreshZoneCard() {
 }
 
 function syncMobileLineControls() {
-  const points = focusedCamera().points;
+  const cam = focusedCamera();
   refreshZoneCard();
-  if (points.length !== 2) return;
-  const average = Math.round((points[0].y + points[1].y) * 50);
-  const tilt = clamp(Math.round((points[1].y - points[0].y) * 100), -50, 50);
-  $('#boundaryHeight').value = average;
-  $('#boundaryTilt').value = tilt;
-  $('#boundaryHeightValue').textContent = average + '%';
-  $('#boundaryTiltValue').textContent = tilt + '%';
+  if (!cam || cam.points.length < 2) return;
+  const height = Math.round(clamp(centroidOf(cam.points).y, 0, 1) * 100);
+  const angle = normalizeAngle(cam.zoneAngle || 0);
+  $('#boundaryHeight').value = height;
+  $('#boundaryTilt').value = angle;
+  $('#boundaryHeightValue').textContent = height + '%';
+  $('#boundaryTiltValue').textContent = Math.round(angle) + '°';
 }
 
+/** 패널의 실제 가로/세로 비. 회전 각도가 찌그러지지 않게 하는 데 쓴다. */
+function panelAspect(camera) {
+  const cam = camera || focusedCamera();
+  if (!cam || !cam.overlay) return 16 / 9;
+  const rect = viewRect(cam);
+  return (rect.width > 0 && rect.height > 0) ? rect.width / rect.height : 16 / 9;
+}
+
+/** 회전의 기준이 되는 '원래 모양'을 확보한다.
+ *  손으로 점을 옮기거나 다시 그리면 그 모양이 새로운 기준이 된다. */
+function ensureZoneBase(camera) {
+  if (!camera.zoneBase || camera.zoneBase.length !== camera.points.length) {
+    camera.zoneBase = camera.points.map(p => ({ x: p.x, y: p.y }));
+    camera.zoneAngle = 0;
+  }
+  return camera.zoneBase;
+}
+
+/** 사용자가 구역을 직접 고쳤다 — 지금 모양을 새 기준으로 삼고 각도를 0으로 되돌린다. */
+function resetZoneBase(camera) {
+  const cam = camera || focusedCamera();
+  if (!cam) return;
+  cam.zoneBase = cam.points.map(p => ({ x: p.x, y: p.y }));
+  cam.zoneAngle = 0;
+}
+
+/** 구역 전체를 세로로 옮긴다. 선이든 곡선이든 영역이든 모양은 그대로. */
 function moveLineToHeight(value) {
   const cam = focusedCamera();
-  if (cam.points.length !== 2 || cam.zoneMode === 'polygon') return;
-  const target = value / 100;
-  const current = (cam.points[0].y + cam.points[1].y) / 2;
-  const minY = Math.min(cam.points[0].y, cam.points[1].y);
-  const maxY = Math.max(cam.points[0].y, cam.points[1].y);
-  const delta = clamp(target - current, -minY, 1 - maxY);
-  cam.points = cam.points.map(p => ({ x: p.x, y: p.y + delta }));
+  if (!cam || cam.points.length < 2) return;
+  cam.points = translatePointsToHeight(cam.points, value / 100);
+  /* 옮긴 위치가 이후 회전의 기준이 되어야 제자리에서 돈다 */
+  cam.zoneBase = rotatePoints(cam.points, -normalizeAngle(cam.zoneAngle), panelAspect(cam));
   drawBoundary(cam); syncMobileLineControls(); persistBoundaries();
 }
 
-function setLineTilt(value) {
+/** 구역을 0–360° 로 돌린다.
+ *  각도는 절대값이다. 슬라이더를 0 으로 되돌리면 원래 모양 그대로 돌아온다. */
+function setZoneAngle(degrees) {
   const cam = focusedCamera();
-  if (cam.points.length !== 2 || cam.zoneMode === 'polygon') return;
-  const average = (cam.points[0].y + cam.points[1].y) / 2;
-  const half = value / 200;
-  let y0 = average - half, y1 = average + half;
-  if (y0 < 0) { y1 -= y0; y0 = 0; }
-  if (y1 < 0) { y0 -= y1; y1 = 0; }
-  if (y0 > 1) { y1 -= y0 - 1; y0 = 1; }
-  if (y1 > 1) { y0 -= y1 - 1; y1 = 1; }
-  cam.points = [{ x: cam.points[0].x, y: clamp(y0, 0, 1) }, { x: cam.points[1].x, y: clamp(y1, 0, 1) }];
+  if (!cam || cam.points.length < 2) return;
+  const base = ensureZoneBase(cam);
+  const angle = normalizeAngle(degrees);
+  cam.zoneAngle = angle;
+  cam.points = fitPointsInView(rotatePoints(base, angle, panelAspect(cam)));
   drawBoundary(cam); syncMobileLineControls(); persistBoundaries();
 }
+
+/* 이전 이름을 유지한다(자가 진단·외부 API 호환) */
+function setLineTilt(value) { setZoneAngle(value); }
 
 /* ══════════════════════════════════════════════════════════════════
    14. 감지 파이프라인
@@ -3630,7 +3832,7 @@ async function detectPeople(camera) {
   SceneAnalyzer.update(camera, source.element);
 
   /* 1) 전체 프레임 1회 */
-  const found = (await state.model.detect(source.element, 50, thresholds.fullScore))
+  const found = (await state.model.detect(source.element, CONFIG.maxDetectionsFull, thresholds.fullScore))
     .filter(p => p.class === 'person')
     .map(p => Object.assign({}, p, { source: 'full', clipped: false }));
 
@@ -3651,7 +3853,7 @@ async function detectPeople(camera) {
         const sx = Math.min(col * stepX, source.width - tileWidth);
         const sy = Math.min(row * stepY, source.height - tileHeight);
         tileContext.drawImage(source.element, sx, sy, tileWidth, tileHeight, 0, 0, tileCanvas.width, tileCanvas.height);
-        const tilePeople = (await state.model.detect(tileCanvas, 30, thresholds.tileScore))
+        const tilePeople = (await state.model.detect(tileCanvas, CONFIG.maxDetectionsTile, thresholds.tileScore))
           .filter(p => p.class === 'person');
         const scaleX = tileWidth / tileCanvas.width;
         const scaleY = tileHeight / tileCanvas.height;
@@ -3861,18 +4063,27 @@ function renderCamera(camera, people, source) {
     }
   });
 
-  camera.riskCount = camera.riskSince.size;
+  /* 위험 구역 인원 수 = 지금 화면에 그려진 박스 중 구역 안에 있는 것의 개수.
+     바다에서는 멀리 있는 여러 사람이 각각 하나의 박스로 잡히므로, 박스 개수가
+     그대로 인원 수가 되어야 "2명 있습니다"가 화면과 일치한다. */
+  camera.riskCount = riskIds.size;
+  /* 유예를 포함한 수. 한 프레임 놓쳤을 때 상황이 끝난 것으로 오판하지 않기 위해
+     '아직 진행 중인가'를 판단할 때만 쓴다. */
+  camera.riskTracked = camera.riskSince.size;
   let maxDwell = 0;
   camera.riskSince.forEach(since => { maxDwell = Math.max(maxDwell, (now - since) / 1000); });
-  updateCameraAlert(camera, camera.riskCount, maxDwell);
+  updateCameraAlert(camera, camera.riskCount, maxDwell, camera.riskTracked);
   updateAggregateAlert();
 }
 
 /** none → watch → alert → critical.
  *  단발 오탐이 곧바로 사이렌으로 이어지지 않게 하는 것이 이 단계의 목적이다. */
-function updateCameraAlert(camera, count, dwellSeconds) {
+function updateCameraAlert(camera, count, dwellSeconds, trackedCount) {
+  /* 등급은 유예를 포함한 수로 판단한다(한 프레임 깜빡였다고 상황이 끝난 것이
+     아니다). 반면 사람 수는 화면의 박스 개수를 그대로 쓴다. */
+  const ongoing = typeof trackedCount === 'number' ? trackedCount : count;
   let level = 'none';
-  if (count > 0) {
+  if (ongoing > 0) {
     if (dwellSeconds >= state.escalateSeconds) level = 'critical';
     else if (dwellSeconds * 1000 >= CONFIG.watchToAlertMs) level = 'alert';
     else level = 'watch';
@@ -3883,15 +4094,22 @@ function updateCameraAlert(camera, count, dwellSeconds) {
     /* 상황이 해소되면 수신자별 등급 기억을 초기화한다. 다음 사건의 첫 경고가
        직전 사건 때문에 억제되지 않도록. */
     state.contacts.forEach(c => { c.lastLevelRank = 0; });
+    camera.lastAlertCount = 0;
   }
   camera.alertLevel = level;
   camera.lastDwell = dwellSeconds;
   updatePanelLevel(camera);
 
-  if (level === 'alert' && (changed || Date.now() - camera.lastAlertAt > CONFIG.alertCooldownMs)) {
-    raiseAlert(camera, 'alert', count, dwellSeconds);
-  } else if (level === 'critical' && (changed || Date.now() - camera.lastCriticalAt > CONFIG.criticalRepeatMs)) {
-    raiseAlert(camera, 'critical', count, dwellSeconds);
+  /* 사람이 더 늘어난 것은 새로운 사건이다. 등급이 그대로라는 이유로 알림을
+     억제하면, 화면에는 2명인데 담당자는 "1명"이라고만 전달받게 된다.
+     늘어났을 때만 다시 보내고, 줄어들 때는 보내지 않는다(경보 피로 방지). */
+  const grew = count > (camera.lastAlertCount || 0);
+  const reported = Math.max(count, 1);
+
+  if (level === 'alert' && (changed || grew || Date.now() - camera.lastAlertAt > CONFIG.alertCooldownMs)) {
+    raiseAlert(camera, 'alert', reported, dwellSeconds);
+  } else if (level === 'critical' && (changed || grew || Date.now() - camera.lastCriticalAt > CONFIG.criticalRepeatMs)) {
+    raiseAlert(camera, 'critical', reported, dwellSeconds);
   }
 
   /* 경보가 난 카메라는 자동으로 크게 띄운다 — 관제요원이 찾아 헤매지 않도록. */
@@ -3961,6 +4179,7 @@ function updateAggregateAlert() {
 function raiseAlert(camera, level, count, dwellSeconds) {
   const now = Date.now();
   camera.lastAlertAt = now;
+  camera.lastAlertCount = count;
   if (level === 'critical') camera.lastCriticalAt = now;
   state.metrics.alerts += 1;
   refreshMetrics();
@@ -5295,6 +5514,46 @@ SelfTest.add('병합: 최고 점수가 클러스터 점수로 남는다', () => 
   return (kept.length === 1 && Math.abs(kept[0].score - 0.91) < 1e-9) || 'score ' + (kept[0] && kept[0].score);
 });
 
+
+/* — 여러 명을 여러 명으로 세기 (바다 원거리 상황) — */
+SelfTest.add('여러 명: 겹치지 않는 두 사람은 거리만으로 합치지 않는다', () => {
+  /* 서로 다른 타일에서 나온, 바짝 붙었지만 겹치지는 않는 두 사람 */
+  const a = box(100, 100, 16, 22, { source: 'tile-0-0' });
+  const b = box(117, 100, 16, 22, { source: 'tile-0-1' });
+  return shouldMergeObservations(a, b) === false || 'two swimmers merged into one';
+});
+
+SelfTest.add('여러 명: 같은 사람이 두 타일에 걸치면 여전히 하나로 합친다', () => {
+  const a = box(100, 100, 16, 22, { source: 'tile-0-0' });
+  const b = box(103, 101, 15, 23, { source: 'tile-0-1' });
+  return shouldMergeObservations(a, b) === true || 'same person left split';
+});
+
+SelfTest.add('여러 명: 나란히 떠 있는 8명이 8명으로 남는다', () => {
+  const crowd = [];
+  for (let i = 0; i < 8; i++) crowd.push(box(60 + i * 26, 140, 18, 24, { source: 'full' }));
+  const merged = clusterObservations(crowd).length;
+  return merged === 8 || ('8 people collapsed into ' + merged);
+});
+
+SelfTest.add('여러 명: 크기가 제각각인 원거리 무리도 개수가 보존된다', () => {
+  const crowd = [
+    box(40, 150, 10, 14, { source: 'full' }),
+    box(70, 148, 14, 19, { source: 'full' }),
+    box(105, 152, 9, 13, { source: 'full' }),
+    box(132, 145, 16, 22, { source: 'full' }),
+    box(170, 150, 11, 15, { source: 'full' })
+  ];
+  const merged = clusterObservations(crowd).length;
+  return merged === 5 || ('5 people collapsed into ' + merged);
+});
+
+SelfTest.add('여러 명: 검출 상한이 혼잡 장면을 감당할 만큼 크다', () =>
+  (CONFIG.maxDetectionsFull >= 100 && CONFIG.maxDetectionsTile >= 50) ||
+  ('caps too low: ' + CONFIG.maxDetectionsFull + '/' + CONFIG.maxDetectionsTile));
+
+SelfTest.add('여러 명: 겹침 하한이 설정되어 있다', () =>
+  (CONFIG.crossMinOverlap > 0 && CONFIG.crossMinOverlap < 0.4) || 'crossMinOverlap missing');
 /* — 형태 필터 — */
 SelfTest.add('형태 필터: 지나치게 납작한 박스는 사람이 아님(파도)', () =>
   isPlausiblePerson(box(0, 0, 90, 10)) === false || 'expected false');
@@ -5810,6 +6069,115 @@ SelfTest.add('접근성: 단축키 안내에 모든 키 설명이 있다', () =>
   return items.length >= 8 || ('only ' + items.length + ' shortcuts documented');
 });
 
+/* — v8: 인원 수 · 360° 회전 · 안내문 닫기 — */
+SelfTest.add('인원 수: 구역 안 박스 개수가 그대로 인원 수가 된다', () => {
+  const cam = focusedCamera();
+  if (!cam.detections || !cam.canvas) return true;    /* 카메라가 없으면 건너뛴다 */
+  const backup = { pts: cam.points.slice(), mode: cam.zoneMode };
+  cam.points = [{ x: 0, y: 0.6 }, { x: 1, y: 0.6 }]; cam.zoneMode = 'line';
+  cam.riskSince.clear(); cam.riskSeen.clear();
+  const src = { element: cam.canvas, width: 1000, height: 1000 };
+  const p = (id, x) => ({ id, bbox: [x, 300, 30, 45], score: .8, hits: 5, averageScore: .8, sizeStable: true, missed: 0 });
+  renderCamera(cam, [p(1, 100), p(2, 300), p(3, 500)], src);
+  const three = cam.riskCount;
+  const boxes = cam.detections.querySelectorAll('.detection-box').length;
+  cam.points = backup.pts; cam.zoneMode = backup.mode;
+  cam.riskSince.clear(); cam.riskSeen.clear();
+  return (three === 3 && boxes === 3) || ('count ' + three + ', boxes ' + boxes);
+});
+
+SelfTest.add('인원 수: 떨어져 있는 여러 사람은 한 명으로 합쳐지지 않는다', () => {
+  const mk = (x, y, src) => ({ bbox: [x, y, 18, 26], score: .7, class: 'person', source: src || 'full' });
+  const apart = clusterObservations([mk(100, 100), mk(200, 100), mk(300, 100), mk(400, 100)]).length;
+  const near = clusterObservations([mk(100, 100, 'tile-0-0'), mk(122, 100, 'tile-0-1')]).length;
+  return (apart === 4 && near === 2) || ('apart ' + apart + ', near ' + near);
+});
+
+SelfTest.add('인원 수: 사람이 늘면 알림을 다시 보낸다', () => {
+  const cam = focusedCamera();
+  const before = cam.lastAlertCount || 0;
+  cam.lastAlertCount = 1;
+  const growsOnTwo = 2 > (cam.lastAlertCount || 0);
+  const notOnOne = !(1 > (cam.lastAlertCount || 0));
+  cam.lastAlertCount = before;
+  return (growsOnTwo && notOnOne) || 'growth rule wrong';
+});
+
+SelfTest.add('회전: 90도를 돌리면 가로선이 세로선이 된다', () => {
+  const line = [{ x: 0.2, y: 0.5 }, { x: 0.8, y: 0.5 }];
+  const turned = rotatePoints(line, 90, 1);            /* 정사각 화면 기준 */
+  const dx = Math.abs(turned[1].x - turned[0].x);
+  const dy = Math.abs(turned[1].y - turned[0].y);
+  return (dx < 1e-6 && Math.abs(dy - 0.6) < 1e-6) || ('dx ' + dx.toFixed(4) + ', dy ' + dy.toFixed(4));
+});
+
+SelfTest.add('회전: 360도를 돌리면 원래 자리로 돌아온다', () => {
+  const shape = [{ x: 0.2, y: 0.4 }, { x: 0.5, y: 0.7 }, { x: 0.8, y: 0.45 }];
+  const back = rotatePoints(shape, 360, 16 / 9);
+  const same = shape.every((p, i) => Math.abs(p.x - back[i].x) < 1e-9 && Math.abs(p.y - back[i].y) < 1e-9);
+  return same || 'full turn did not return to origin';
+});
+
+SelfTest.add('회전: 어떤 각도에서도 길이(모양)가 보존된다', () => {
+  const line = [{ x: 0.25, y: 0.5 }, { x: 0.75, y: 0.5 }];
+  const aspect = 16 / 9;
+  const lengthOf = pts => Math.hypot((pts[1].x - pts[0].x) * aspect, pts[1].y - pts[0].y);
+  const base = lengthOf(line);
+  for (let deg = 0; deg < 360; deg += 15) {
+    if (Math.abs(lengthOf(rotatePoints(line, deg, aspect)) - base) > 1e-9) return 'length changed at ' + deg;
+  }
+  return true;
+});
+
+SelfTest.add('회전: 화면을 벗어나면 각도를 유지한 채 안으로 넣는다', () => {
+  const line = [{ x: 0.02, y: 0.5 }, { x: 0.98, y: 0.5 }];
+  const turned = fitPointsInView(rotatePoints(line, 90, 16 / 9));
+  const inside = turned.every(p => p.x >= -1e-9 && p.x <= 1 + 1e-9 && p.y >= -1e-9 && p.y <= 1 + 1e-9);
+  const stillVertical = Math.abs(turned[1].x - turned[0].x) < 1e-6;
+  return (inside && stillVertical) || ('inside ' + inside + ', vertical ' + stillVertical);
+});
+
+SelfTest.add('회전: 각도는 0–359 로 정규화된다', () =>
+  (normalizeAngle(370) === 10 && normalizeAngle(-90) === 270 &&
+   normalizeAngle(0) === 0 && normalizeAngle('abc') === 0) || 'angle normalize wrong');
+
+SelfTest.add('높이: 세로로 옮겨도 모양이 그대로 유지된다', () => {
+  const shape = [{ x: 0.2, y: 0.4 }, { x: 0.5, y: 0.7 }, { x: 0.8, y: 0.45 }];
+  const moved = translatePointsToHeight(shape, 0.3);
+  const dy = moved[0].y - shape[0].y;
+  const parallel = moved.every((p, i) => Math.abs((p.y - shape[i].y) - dy) < 1e-9 && p.x === shape[i].x);
+  const inside = moved.every(p => p.y >= 0 && p.y <= 1);
+  return (parallel && inside) || ('parallel ' + parallel + ', inside ' + inside);
+});
+
+SelfTest.add('중심: 여러 점의 중심을 정확히 구한다', () => {
+  const c = centroidOf([{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 1, y: 1 }, { x: 0, y: 1 }]);
+  return (Math.abs(c.x - 0.5) < 1e-9 && Math.abs(c.y - 0.5) < 1e-9) || 'centroid wrong';
+});
+
+SelfTest.add('안내문: 닫으면 화면에서 사라지고 설명은 카드에 남는다', () => {
+  const cam = focusedCamera();
+  if (!cam.hintEl) return true;                       /* 패널이 없는 상태면 건너뛴다 */
+  const wasEditing = state.editing, wasDismissed = state.hintDismissed;
+  state.editing = true; state.hintDismissed = false;
+  setPanelHint(cam);
+  const shown = cam.hintEl.classList.contains('on');
+  state.hintDismissed = true;
+  setPanelHint(cam);
+  const hidden = !cam.hintEl.classList.contains('on');
+  const cardStillHasText = tr('zoneHintEdit').length > 0;
+  state.editing = wasEditing; state.hintDismissed = wasDismissed;
+  setPanelHint(cam); refreshZoneCard();
+  return (shown && hidden && cardStillHasText) || ('shown ' + shown + ', hidden ' + hidden);
+});
+
+SelfTest.add('안내문: 닫기 버튼에 접근 가능한 이름이 있다', () => {
+  const cam = focusedCamera();
+  if (!cam.panel) return true;
+  const close = $('.hint-close', cam.panel);
+  return (!close || (close.getAttribute('aria-label') || '').length > 0) || 'hint close has no label';
+});
+
 /* ══════════════════════════════════════════════════════════════════
    23. 부하 테스트
    ══════════════════════════════════════════════════════════════════ */
@@ -5976,7 +6344,7 @@ function bindUi() {
 
   /* 경계 구역 편집 */
   $('#boundaryHeight').addEventListener('input', e => moveLineToHeight(Number(e.target.value)));
-  $('#boundaryTilt').addEventListener('input', e => setLineTilt(Number(e.target.value)));
+  $('#boundaryTilt').addEventListener('input', e => setZoneAngle(Number(e.target.value)));
   $('#zoneModeLine').addEventListener('click', () => setZoneMode('line'));
   $('#zoneModePolygon').addEventListener('click', () => setZoneMode('polygon'));
   $('#zoneUndo').addEventListener('click', undoZonePoint);
@@ -6026,6 +6394,27 @@ function bindUi() {
   ['#hoursEnabled', '#hoursFrom', '#hoursTo'].forEach(sel =>
     $(sel).addEventListener('change', refreshWatchHours));
   $('#prepareOffline').addEventListener('click', prepareOffline);
+
+  /* 버튼마다 '무엇을 하는 버튼인가'를 한 줄로 알려 준다.
+     이름만으로는 한 점 되돌리기와 선 다듬기의 차이를 알기 어렵다. */
+  [['#editLine', 'tipEdit'], ['#zoneUndo', 'tipUndo'], ['#zoneSimplify', 'tipSimplify'],
+   ['#resetLine', 'tipReset'], ['#zoneApplyAll', 'tipApplyAll']].forEach(([sel, key]) => {
+    const button = $(sel);
+    if (!button) return;
+    const show = () => { const tip = $('#zoneTip'); if (tip) tip.textContent = tr(key); };
+    const clear = () => { const tip = $('#zoneTip'); if (tip) tip.textContent = tr('zoneTipDefault'); };
+    button.addEventListener('mouseenter', show);
+    button.addEventListener('focus', show);
+    button.addEventListener('mouseleave', clear);
+    button.addEventListener('blur', clear);
+    button.title = tr(key);          /* 터치 기기·스크린리더용 */
+    button.dataset.tipKey = key;
+  });
+  $('#hintRestore').addEventListener('click', () => {
+    state.hintDismissed = false;
+    store.set('beachWatchHintDismissed', '0');
+    refreshZoneCard();
+  });
 
   /* 음성을 끄면 읽고 있던 안내도 즉시 멈춘다 */
   $('#voiceEnabled').addEventListener('change', e => { if (!e.target.checked) Speaker.stop(); });
@@ -6096,6 +6485,7 @@ function restoreSettings() {
   $('#tunerEscalate').value = state.escalateSeconds;
   state.detached.points = activeSite().line.map(p => ({ x: p.x, y: p.y }));
   restoreWatchHours();
+  state.hintDismissed = store.get('beachWatchHintDismissed', '0') === '1';
 }
 
 function startClock() {
@@ -6104,6 +6494,57 @@ function startClock() {
       state.language === 'en' ? 'en-US' : 'ko-KR',
       { dateStyle: 'short', timeStyle: 'medium', hour12: false }
     ).format(new Date());
+  };
+  tick(); setInterval(tick, 1000);
+}
+
+function init() {
+  restoreSettings();
+  restoreContacts();
+  restoreBoundaryFor(state.detached);
+  bindUi();
+  applyLanguage(store.get('beachWatchLanguage', 'ko'), false);
+  startClock();
+  setHealth('healthIdle', '');
+  refreshMetrics();
+  updateGridCount();
+  renderContacts();
+  refreshAlertToggle();
+  refreshZoneCard();
+  refreshWatchHours();
+  refreshOfflineBadge();
+  listCameras();
+  Diagnostics.log('Beach Watch v7 ready · ' + SelfTest.cases.length + ' self-test cases · up to ' +
+    CONFIG.maxCameras + ' cameras · ' + state.contacts.length + ' recipients', 'ok');
+}
+
+/* 개발자 도구·자동화 테스트에서 접근할 수 있도록 최소한만 노출한다. */
+window.BeachWatch = {
+  state, CONFIG, IMPACT, PRESETS, SITE_PRESETS,
+  selfTest: () => SelfTest.run(),
+  stressTest: count => runStressTest(count),
+  carryTracks,
+  computeImpact, crossesAboveLine, isInDangerZone, pointInPolygon, abovePolyline,
+  polylineYAt, simplifyPoints, insertIndexFor, setZoneMode, applyZoneToAll, polygonToPolyline, smoothPath,
+  normalizeContact, contactsForLevel, buildAlertPayload, shouldSendNow,
+  clusterObservations, suppressDuplicates, shouldMergeObservations, trackCandidates,
+  classifyScene: stats => SceneAnalyzer.classify(stats),
+  addCamera, removeCamera, focusCamera, setSiteType,
+  resolveStreamKind, validateStreamUrl,
+  /* v7 */
+  withinWatchHours, parseHhMm, watchHoursActive, buildVoiceMessage, typingInField,
+  setZoneAngle, rotatePoints, fitPointsInView, translatePointsToHeight, centroidOf, normalizeAngle,
+  setPanelHint, resetZoneBase,
+  toggleControlRoom, nudgeZonePoint, selectNextZonePoint,
+  OfflineCache, prepareOffline, Speaker, captureSnapshot
+};
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+</script>
+</body>
+</html>
+
   };
   tick(); setInterval(tick, 1000);
 }
