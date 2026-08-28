@@ -378,6 +378,9 @@
     .hours-note.muted-now{color:#b4541f;font-weight:600}
 
     /* ── 오프라인 준비 ───────────────────────────────────────── */
+    .privacy-box{margin-top:14px;padding-top:13px;border-top:1px solid #e2f0ef}
+    .privacy-box button{width:100%;color:#b8382e;border-color:#e6b7b2}
+    .privacy-box p{margin:7px 0 0;font-size:12px;color:#5f7d85;line-height:1.55}
     .offline-box{margin-top:14px;padding-top:13px;border-top:1px solid #e2f0ef}
     .offline-box button{width:100%}
     .offline-box p{margin:7px 0 0;font-size:12px;color:#5f7d85;line-height:1.55}
@@ -447,6 +450,29 @@
     /* 안내문은 본래 클릭을 통과시키지만, 닫기 버튼은 눌려야 한다 */
     .hint.on{pointer-events:none}
     .hint-restore{margin-top:9px;padding:7px 11px;font-size:12px;border-radius:10px}
+
+    /* ── 팀 미션 한 줄 (푸터) ───────────────────────────────────── */
+    .team-mission{margin:0 0 14px;padding:13px 16px;border-radius:13px;
+                  background:#f2fafa;border:1px solid #dcecec;line-height:1.65}
+    .team-mission b{display:block;font-size:10.5px;letter-spacing:1.4px;color:#008a9d;margin-bottom:5px}
+    .team-mission span{display:block;font-size:14px;font-weight:700;color:#0b4b5c}
+    .team-mission em{display:block;margin-top:5px;font-size:12px;font-style:normal;color:#5f7d85}
+
+    /* ── 북극성 지표 ─────────────────────────────────────────────── */
+    .northstar{margin:2px 0 14px;padding:14px 16px;border-radius:14px;
+               background:linear-gradient(120deg,#062434,#0a4a5e);color:#eafcff;
+               box-shadow:0 10px 22px #06303c1f}
+    .northstar .ns-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+    .northstar .ns-tag{font-size:10.5px;letter-spacing:1.4px;font-weight:700;color:#72ddd2}
+    .northstar b{font-size:34px;line-height:1;letter-spacing:-1.5px;font-variant-numeric:tabular-nums}
+    .northstar .ns-label{margin-top:6px;font-size:12px;color:#b7e6ea}
+    .northstar .ns-note{margin:9px 0 0;font-size:11.5px;line-height:1.6;color:#8fc9d2}
+    .northstar .ns-note.good{color:#7cf0c8}
+
+    /* 경보 창의 '확인했습니다' */
+    .toast-ack{margin-left:auto;padding:7px 13px;border:0;border-radius:10px;
+               background:#ffffff;color:#8a2b22;font:700 12px Arial;cursor:pointer}
+    .toast-ack:hover{transform:translateY(-1px)}
 
     /* ── 버튼 설명 한 줄 ─────────────────────────────────────────── */
     .zone-tip{margin:9px 0 0;padding:9px 11px;border-radius:11px;background:#f2fafa;
@@ -570,6 +596,14 @@
         <div class="eyebrow" data-i18n="diagnosticsEyebrow">DIAGNOSTICS</div>
         <h2 data-i18n="diagnosticsTitle">시스템 진단</h2>
         <p data-i18n="diagnosticsLede">추론 지연과 오류를 실시간으로 계측해 성능 저하를 스스로 감지합니다.</p>
+        <div class="northstar" id="northStarBox">
+          <div class="ns-head">
+            <span class="ns-tag" data-i18n="nsTag">북극성 지표</span>
+            <b id="mNorthStar">—</b>
+          </div>
+          <div class="ns-label" data-i18n="nsLabel">위험 구역 진입 → 담당자 확인까지 (중앙값)</div>
+          <p class="ns-note" id="northStarNote" data-i18n="nsNoData">아직 확인된 경보가 없습니다. 경보 창의 「확인했습니다」를 누르면 이 숫자가 쌓입니다.</p>
+        </div>
         <div class="diag">
           <div><b id="mFps">0.0</b><small data-i18n="mFpsLabel">분석 FPS</small></div>
           <div><b id="mLatency">0</b><small data-i18n="mLatencyLabel">추론 지연 (ms)</small></div>
@@ -647,6 +681,11 @@
         </div>
         <p class="hours-note" id="hoursNote" data-i18n="hoursAlways">지금은 하루 종일 경보를 울립니다.</p>
 
+        <div class="privacy-box">
+          <button id="wipeData" type="button" data-i18n="wipeData">이 기기에 저장된 내 정보 지우기</button>
+          <p data-i18n="wipeDataHelp">담당자 연락처·위험 구역·설정이 이 브라우저에 저장되어 있습니다. 공용 PC에서 쓴 뒤에는 눌러서 지우세요.</p>
+        </div>
+
         <div class="offline-box">
           <button id="prepareOffline" type="button" data-i18n="prepareOffline">인터넷 없이 쓸 수 있게 준비</button>
           <p data-i18n="prepareOfflineHelp">지금 한 번 받아 두면, 다음부터는 인터넷이 끊겨도 감지가 그대로 동작합니다.</p>
@@ -662,6 +701,7 @@
           <label><span data-i18n="sirenToggle">경보음</span><input id="sirenEnabled" type="checkbox" checked></label>
           <label><span data-i18n="voiceToggle">음성으로 읽어 주기</span><input id="voiceEnabled" type="checkbox" checked></label>
           <label><span data-i18n="snapshotToggle">경보 순간 화면 남기기</span><input id="snapshotEnabled" type="checkbox" checked></label>
+          <label><span data-i18n="childMode">어린이도 확실히 잡기</span><input id="childMode" type="checkbox" checked></label>
         </fieldset>
       </section>
 
@@ -674,6 +714,10 @@
   </div>
 
   <footer class="site-foot">
+    <p class="team-mission"><b data-i18n="missionTag">팀 미션</b>
+      <span data-i18n="missionText">8주 뒤, 해수욕장 안전요원이 위험 구역 진입을 20초가 아니라 5초 안에 알게 된다.</span>
+      <em data-i18n="missionMetric">북극성 지표 — 진입에서 담당자 확인까지 걸린 시간(중앙값) 21.8초 → 5초 이하</em>
+    </p>
     <div class="lic">
       <span data-i18n="licProject">이 프로젝트 · MIT License</span>
       <span>TensorFlow.js · Apache-2.0</span>
@@ -821,7 +865,7 @@
       <div><div class="eyebrow" data-i18n="preferences">PREFERENCES</div><h2 id="settingsTitle" data-i18n="settingsTitle">환경 설정</h2></div>
       <button class="dialog-close" value="cancel" aria-label="Close">&#10005;</button>
       <label class="settings-field"><span data-i18n="language">언어</span>
-        <select id="languageSelect"><option value="ko">한국어</option><option value="en">English</option></select>
+        <select id="languageSelect"><option value="ko">한국어</option><option value="en">English</option><option value="zh">简体中文</option></select>
         <small data-i18n="languageHelp">선택한 언어는 다음 접속 시에도 유지됩니다.</small>
       </label>
       <div class="dialog-actions"><button value="cancel" data-i18n="cancel">취소</button><button class="primary" id="saveSettings" value="default" data-i18n="saveSettings">설정 저장</button></div>
@@ -1671,7 +1715,28 @@ Object.assign(I18N.ko, {
   tipReset:'처음 모양으로 — 이 장소의 기본 경계선으로 되돌립니다. 그린 것이 모두 사라집니다.',
   tipApplyAll:'다른 카메라에도 똑같이 — 지금 카메라의 구역을 나머지 카메라에 그대로 복사합니다. 같은 지형을 여러 대가 나눠 볼 때 씁니다.',
   zoneSimplifyNoChange:'이미 충분히 단순합니다 — 줄일 점이 없습니다.',
-  docLinks:'자세한 내용은 저장소 문서에 있습니다 — <b>README.md</b>(문제 정의·사용법·임팩트·개발 기록·로드맵) · <b>TECHNICAL.md</b>(AI 파이프라인·안정성·검증 전략) · <b>AI_STACK.md</b>(AI 기술 상세 분석) · <b>RELAY.md</b>(문자·이메일 자동 발송 연결) · <b>IMPACT.md</b>(지표 산출 근거) · <b>DEMO_SCRIPT.md</b>(데모 영상 대본)'
+  /* 북극성 지표 — 인지까지 걸린 시간 */
+  nsTag:'북극성 지표',
+  nsLabel:'위험 구역 진입 → 담당자 확인까지 (중앙값)',
+  nsNoData:'아직 확인된 경보가 없습니다. 경보 창의 「확인했습니다」를 누르면 이 숫자가 쌓입니다.',
+  nsSummary:'최근 {n}건의 중앙값입니다. 사람 눈만으로는 평균 {baseline}초가 걸립니다. 8주 목표는 {target}초 이하입니다.',
+  nsAckButton:'확인했습니다',
+  nsAcknowledged:'담당자 확인 — 진입부터 {seconds}초 걸렸습니다',
+  nsEventAck:'담당자가 확인했습니다 — {seconds}초',
+  nsResetDone:'북극성 지표 기록을 지웠습니다.',
+  /* 팀 미션 */
+  missionTag:'팀 미션',
+  missionText:'8주 뒤, 해수욕장 안전요원이 위험 구역 진입을 20초가 아니라 5초 안에 알게 된다.',
+  missionMetric:'북극성 지표 — 진입에서 담당자 확인까지 걸린 시간(중앙값) 21.8초 → 5초 이하',
+  /* 어린이 안전 · 개인정보 */
+  childMode:'어린이도 확실히 잡기',
+  childModeOn:'어린이 우선 — 작은 사람도 인정하도록 크기 기준을 낮췄습니다(대신 확인 횟수 +1)',
+  childModeOff:'어린이 우선을 껐습니다 — 크기 기준이 어른 기준으로 돌아갑니다',
+  wipeData:'이 기기에 저장된 내 정보 지우기',
+  wipeDataHelp:'담당자 연락처·위험 구역·설정이 이 브라우저에 저장되어 있습니다. 공용 PC에서 쓴 뒤에는 눌러서 지우세요.',
+  wipeConfirm:'담당자 연락처와 모든 설정을 이 브라우저에서 지웁니다. 되돌릴 수 없습니다. 계속할까요?',
+  wipeDone:'이 기기에 저장된 정보를 모두 지웠습니다.',
+  docLinks:'자세한 내용은 저장소 문서에 있습니다 — <b>README.md</b>(문제 정의·사용법·임팩트·개발 기록·로드맵) · <b>TECHNICAL.md</b>(AI 파이프라인·안정성·검증 전략) · <b>AI_STACK.md</b>(AI 기술 상세 분석) · <b>TEAM.md</b>(팀 미션·북극성 지표·팀 규칙·주간 리듬) · <b>DATASET_PLAN.md</b>(데이터셋·모델 개선 계획) · <b>RELAY.md</b>(문자·이메일 자동 발송 연결) · <b>IMPACT.md</b>(지표 산출 근거) · <b>DEMO_SCRIPT.md</b>(데모 영상 대본)'
 });
 
 Object.assign(I18N.en, {
@@ -1731,8 +1796,307 @@ Object.assign(I18N.en, {
   tipReset:'Reset shape — returns to this site\'s default boundary. Everything you drew is discarded.',
   tipApplyAll:'Copy to other cameras — applies this zone to every other camera. Handy when several cameras watch the same shoreline.',
   zoneSimplifyNoChange:'Already simple enough — nothing to remove.',
-  docLinks:'Full detail lives in the repository docs — <b>README.md</b> (problem framing, usage, impact, build log, roadmap) · <b>TECHNICAL.md</b> (AI pipeline, reliability, verification) · <b>AI_STACK.md</b> (detailed AI analysis) · <b>RELAY.md</b> (wiring up real SMS / e-mail) · <b>IMPACT.md</b> (how the figures are derived) · <b>DEMO_SCRIPT.md</b> (demo video script)'
+  nsTag:'NORTH STAR',
+  nsLabel:'Zone entry → staff acknowledgement (median)',
+  nsNoData:'No acknowledged alerts yet. Press “Acknowledged” in the alert popup and this number starts building.',
+  nsSummary:'Median of the last {n}. Human eyes alone take about {baseline}s. The 8-week target is {target}s or less.',
+  nsAckButton:'Acknowledged',
+  nsAcknowledged:'Acknowledged — {seconds}s from entry',
+  nsEventAck:'Staff acknowledged — {seconds}s',
+  nsResetDone:'North Star history cleared.',
+  missionTag:'TEAM MISSION',
+  missionText:'In 8 weeks, a lifeguard learns that someone entered the danger zone in 5 seconds instead of 20.',
+  missionMetric:'North Star — median time from zone entry to staff acknowledgement: 21.8s → 5s or less',
+  childMode:'Catch children too',
+  childModeOn:'Child priority on — smaller bodies now count as people (re-check count +1 to compensate)',
+  childModeOff:'Child priority off — size limits return to adult scale',
+  wipeData:'Erase my data from this device',
+  wipeDataHelp:'Contacts, danger zones and settings are stored in this browser. Press this after using a shared computer.',
+  wipeConfirm:'This erases all contacts and settings from this browser. It cannot be undone. Continue?',
+  wipeDone:'Everything stored on this device has been erased.',
+  docLinks:'Full detail lives in the repository docs — <b>README.md</b> (problem framing, usage, impact, build log, roadmap) · <b>TECHNICAL.md</b> (AI pipeline, reliability, verification) · <b>AI_STACK.md</b> (detailed AI analysis) · <b>TEAM.md</b> (mission, North Star, team rules, weekly rhythm) · <b>DATASET_PLAN.md</b> (dataset & model plan) · <b>RELAY.md</b> (wiring up real SMS / e-mail) · <b>IMPACT.md</b> (how the figures are derived) · <b>DEMO_SCRIPT.md</b> (demo video script)'
 });
+/* 중국어(간체) 사전 — 세 번째 지원 언어.
+ *
+ * ko·en 은 여러 파일에 나뉘어 뒤 파일이 앞 문구를 덮어쓰는 구조지만,
+ * 중국어는 처음부터 최종 문구로 한 벌만 작성했다. 그래서 이 파일 하나만
+ * 보면 화면에 실제로 뜨는 중국어 전부를 확인할 수 있다.
+ *
+ * 번역 원칙
+ *   - 한국어판과 같은 '쉬운 말' 기조를 지킨다. 전문용어(折线·多边形 등)를 피한다.
+ *   - 치환 변수({count}, {name} …)는 반드시 그대로 남긴다. 자가 진단이 검사한다.
+ *   - 안전 고지·한계 문구는 뜻을 줄이지 않는다. 축약이 곧 과장이 되기 때문이다.
+ */
+I18N.zh = {
+  skipToMonitor:'跳转到监控画面',
+  settings:'设置', preferences:'偏好设置', settingsTitle:'偏好设置',
+  language:'语言', languageHelp:'所选语言会在下次访问时保留。',
+  cancel:'取消', saveSettings:'保存设置',
+  badgeEngine:'运算引擎', badgeEnvironment:'环境', badgeHealth:'状态',
+  badgeOnDevice:'视频仅在本设备处理', badgeLicense:'任何人可自由使用的开源项目',
+  envUnknown:'尚未判断', envClear:'白天 · 晴', envHaze:'阴天 · 雾', envNight:'夜间 · 昏暗',
+  envGlare:'强烈反光', envCrowd:'人多',
+  healthIdle:'待机', healthGood:'正常', healthError:'有问题', healthRecovering:'正在重新连接',
+  monitoringEyebrow:'实时安全监控', mainTitle:'海滩安全监控摄像头',
+  dangerBoundary:'危险区域',
+  initialHint:'点击画面，放置边界线的两个端点。',
+  simulationFlag:'体验模式 · 并非真实影像',
+  boundaryControl:'边界调整',
+  mobileLineHelp:'请使用下方滑块，不要直接拖动视频。',
+  height:'高度', tilt:'旋转', saveBoundary:'保存边界', saved:'已保存',
+  cameraSelect:'选择摄像头', editBoundary:'调整边界', resetBoundary:'恢复默认边界',
+  runSimulation:'开始体验模式',
+  cameraPreview:'摄像头画面', cameraNotConnected:'没有摄像头',
+  safetyStatus:'安全状态', ready:'待机', waiting:'等待开始监控',
+  readyText:'连接摄像头后即开始监控危险区域。没有摄像头时，可用体验模式查看运行方式。',
+  boundaryPoints:'区域点数', peopleAbove:'危险区域内人数',
+  monitoringText:'同时查看整幅画面和放大后的分块，连远处的人也不会漏掉。',
+  latestEvent:'最近警报', alertLog:'警报记录', noEvents:'还没有发生警报。',
+  exportEvents:'下载警报记录',
+  lineAlert:'进入危险区域',
+  levelWatch:'注意', levelAlert:'警告', levelCritical:'紧急',
+  watchTitle:'正在确认是否进入危险区域',
+  watchText:'有 {count} 人进入危险区域，正在确认是否为真人。',
+  alertTitle:'危险区域内有人',
+  alertCount:'危险区域内有 {count} 人。',
+  criticalTitle:'紧急 · 滞留过久',
+  criticalText:'{count} 人已在危险区域停留 {seconds} 秒，请立即确认。',
+  adminAlertTitle:'危险警报',
+  adminAlertBody:'[{level}] 危险区域内有 {count} 人。',
+  eventAlert:'[{level}] 危险区域内 {count} 人',
+  eventCameraLost:'摄像头断开，正在重新连接',
+  eventCameraBack:'摄像头已重新连接',
+  eventSimStart:'体验模式已开始',
+  automation:'自动动作',
+  boundaryDetection:'危险区域检测', adminNotification:'发送危险通知',
+  warningLight:'屏幕警示灯', sirenToggle:'警报声',
+  tuningEyebrow:'检测设置', tuningTitle:'检测设置',
+  tuningLede:'根据现场情况，在「减少误报」和「不漏过任何人」之间调整。',
+  envPreset:'天气 · 亮度',
+  presetAuto:'自动调整', presetClear:'白天 · 晴', presetHaze:'阴天 · 雾',
+  presetNight:'夜间 · 昏暗', presetCrowd:'人多',
+  envPresetHelp:'选择自动调整后，系统会自己查看画面亮度并判断当前状况。',
+  tunerConfidence:'检测灵敏度',
+  tunerConfidenceHelp:'调低可以发现更远处的人；调高则不易把浪花误认成人。',
+  tunerFrames:'重复确认次数',
+  tunerFramesHelp:'只有连续多次出现的目标才算作人。这正是浪花不会触发警报的原因。',
+  tunerEscalate:'升级为紧急的时间',
+  tunerEscalateHelp:'如果有人在危险区域停留超过这个时间，警报会升级为紧急。',
+  unitSeconds:'秒',
+  diagnosticsEyebrow:'系统状态', diagnosticsTitle:'系统状态',
+  diagnosticsLede:'持续测量分析速度和错误，因此变慢时系统会自己察觉。',
+  mFpsLabel:'每秒分析次数', mLatencyLabel:'单次分析耗时(ms)', mCycleLabel:'轮询一圈的时间(秒)',
+  mTilesLabel:'放大分析分块', mUptimeLabel:'运行时间', mErrorsLabel:'自行修复的错误',
+  mAlertsLabel:'已发送警报', mPeakLabel:'单次最多检测',
+  runSelfTest:'自我检查', runStress:'速度测试',
+  selfTestRunning:'正在检查…',
+  selfTestPass:'检查通过 — {passed}/{total} 项',
+  selfTestFail:'检查失败 — {failed} 项未通过（{passed}/{total} 通过）',
+  stressRunning:'正在进行速度测试…',
+  stressDone:'速度测试完成 — 测试目标 {objects} 个，合并重叠 {dedupe}ms，跟踪 {track}ms，绘制 {render}ms，合计 {total}ms',
+  modelPreparing:'正在准备检测功能',
+  modelRetry:'正在重新下载检测功能 {attempt}/{max}',
+  modelLoadFailed:'无法加载检测功能 — 请检查网络连接',
+  modelReady:'检测准备就绪 · 运算引擎 {backend}',
+  cameraPermissionHelp:'请确认已允许使用摄像头，并确认网址为 localhost 或 https。',
+  cameraUnsupported:'此浏览器不支持摄像头。',
+  degradedTiles:'分析变慢，已将放大分析分块减少到 {tiles} 个',
+  restoredTiles:'性能恢复，已将放大分析分块调回 {tiles} 个',
+  loopHalted:'分析持续失败，已安全停止。请重新连接摄像头。',
+  nightWarning:'判断为夜间／昏暗。仅靠普通摄像头很难发现远处的人。',
+  noEventsToExport:'没有可下载的警报记录。',
+  noticeTitle:'本系统是辅助监控工具，不能代替安全员。',
+  noticeText:'危险警报应结合 AI 检测结果与现场人员的确认。视频仅在本设备处理，不会传出设备之外。',
+  backendUnloaded:'尚未准备', backendUnavailable:'不可用', unitSecondsShort:'秒',
+  licProject:'本项目 · 任何人可自由使用（MIT）',
+  licDataset:'COCO Dataset · CC BY 4.0',
+  footText:'Beach Watch — 基于 AI 的海滩实时安全监控。源代码以 MIT 许可证公开，任何人都可以自由使用、修改和再分发。本系统是辅助救生人员的工具，本身并不保证任何人的安全。视频仅在用户的浏览器内处理。',
+  addCamera:'＋ 添加摄像头', connectFirst:'连接摄像头', disconnectAll:'全部关闭',
+  cameraCountLabel:'{active} / {max}',
+  camSlotDevice:'本机', camSlotStream:'网络', camSlotSim:'体验',
+  camDefaultName:'摄像头 {n}',
+  camLimitReached:'最多可同时连接 {max} 台摄像头。',
+  camAdded:'已添加 {name}', camRemoved:'已移除 {name}',
+  camConnecting:'正在连接 {name}…',
+  camConnected:'{name} 已连接 · {resolution}',
+  camFailed:'{name} 连接失败 — {reason}',
+  camOfflineTag:'已关闭',
+  camFocusHint:'点击其他摄像头即可放大查看。',
+  camRemoveLabel:'移除这台摄像头',
+  camAlertFocus:'{name} 发生警报 — 已自动放大',
+  noCameras:'没有已连接的摄像头。请点击「＋ 添加摄像头」开始。',
+  addCameraEyebrow:'添加摄像头', addCameraTitle:'添加摄像头', addCameraConfirm:'添加',
+  srcDevice:'本机摄像头', srcStream:'网络摄像头', srcSim:'体验模式',
+  srcDevicePick:'选择摄像头',
+  srcDeviceHelp:'USB 摄像头、笔记本内置摄像头，以及通过 OBS 等软件转入的无人机画面都会显示在这里。如果列表为空，请先连接一次并允许使用摄像头。',
+  srcStreamUrl:'摄像头地址', srcStreamKind:'视频格式',
+  srcAuto:'自动识别', srcVideo:'普通视频 (MP4 / WebM)',
+  srcStreamHelp:'无人机和监控摄像头通常使用浏览器无法直接打开的格式。请填写能把视频转换为 <code>HLS</code>、<code>普通视频</code> 或 <code>MJPEG</code> 的中转地址。中转服务器需要允许外部访问。',
+  srcSimHelp:'即使没有摄像头，也能完整展示检测和警报升级过程的模拟画面。用于演示，屏幕上会始终标注为体验模式。',
+  srcName:'摄像头名称',
+  errNeedUrl:'请输入摄像头地址。',
+  errBadUrl:'地址不正确，必须以 http:// 或 https:// 开头。',
+  errInsecure:'安全（https）页面无法加载 http:// 地址。请将中转地址改为 https。',
+  errHlsUnsupported:'此浏览器无法直接播放该格式，播放器下载也失败了。请检查网络连接，或改用普通视频／MJPEG 格式。',
+  errStreamLoad:'无法打开视频。请检查地址和中转服务器状态。',
+  errPickDevice:'请选择一台摄像头。',
+  siteEyebrow:'安装场所', siteTitle:'安装在什么地方',
+  siteLede:'不同场所的危险性质不同。选择类型后，检测设置和警报时间会一并调整。',
+  siteBeach:'海水浴场', siteRiver:'河流 · 溪谷', siteLake:'湖泊 · 水库',
+  sitePool:'游泳池', siteDrone:'无人机航拍',
+  siteBeachNote:'海浪和离岸流是最大的危险。请沿浪线绘制危险区域，并把重复确认次数保持在 2 次以上，以免把浪花误认成人。近五年韩国戏水死亡事故中有 42% 发生在海边。',
+  siteRiverNote:'急流可能在几秒内把人冲走，因此升级为紧急的时间缩短到 4 秒。遇到弯曲的水道，请拖动画面画出曲线。58% 的戏水死亡事故发生在河流和溪谷。',
+  siteLakeNote:'水面平静，误报较少，但水深骤变处很危险。既然干扰少，可以把检测灵敏度稍微调低一些，看得更远。',
+  sitePoolNote:'人离得近、看起来大，容易被发现。但人多时同一个人可能被数两次，请提高重复确认次数。危险区域请对准水深分界或跳水区。',
+  siteDroneNote:'从空中俯视时人看起来非常小，因此已调整为把小目标也认作人。无人机移动后，按屏幕坐标绘制的区域就失去意义，所以画面大幅变化时会自动暂停区域判定。',
+  headingBeach:'海滩安全监控', headingRiver:'河流 · 溪谷安全监控',
+  headingLake:'湖泊安全监控', headingPool:'游泳池安全监控',
+  headingDrone:'无人机航拍安全监控',
+  motionFlag:'摄像头移动中 · 区域判定暂停',
+  motionPaused:'{name}：画面大幅变化，暂停区域判定',
+  motionResumed:'{name}：画面已稳定，恢复区域判定',
+  mMergeLabel:'检测数 → 人数', mCamsLabel:'开启的摄像头',
+  docLinks:'详细内容请见仓库文档 — <b>README.md</b>（问题定义·使用方法·影响·开发记录·路线图） · <b>TECHNICAL.md</b>（AI 流程·稳定性·验证策略） · <b>AI_STACK.md</b>（AI 技术详细分析） · <b>TEAM.md</b>（团队使命·北极星指标·团队规则·每周节奏） · <b>DATASET_PLAN.md</b>（数据集·模型改进计划） · <b>RELAY.md</b>（短信·邮件自动发送对接） · <b>IMPACT.md</b>（指标计算依据） · <b>DEMO_SCRIPT.md</b>（演示视频脚本）',
+  cycleShared:'轮流查看 {count} 台摄像头。每台摄像头每 {seconds} 秒被重新查看一次。',
+  dedupeReport:'合并重叠：检测 {raw} 处 → 人数 {merged} 人',
+  person:'人', distantPerson:'远处的人', monitoring:'正在监控危险区域',
+  zoneEyebrow:'危险区域', zoneTitle:'绘制危险区域',
+  zoneLede:'浪线和禁游区域并不是直线。<b>像用手扫过一样拖动画面</b>，直接画出你想要的曲线。',
+  zoneModeLine:'画线', zoneModeLineHelp:'人在线的外侧（水的一侧）即为危险',
+  zoneModePolygon:'涂区域', zoneModePolygonHelp:'人进入涂色区域内即为危险',
+  zoneEdit:'开始绘制', zoneEditDone:'结束绘制',
+  zoneUndo:'撤销一个点', zoneReset:'恢复初始形状',
+  zoneSimplify:'整理线条', zoneApplyAll:'其他摄像头也一样',
+  zonePointCount:'{n} 个点', zoneModeTag:'{mode}',
+  zoneHintEdit:'<b>拖动画面即可像手绘一样画出曲线</b>。单击添加一个点，拖动点可移动，双击点即可删除。',
+  zoneHintView:'点击「开始绘制」，即可直接在画面上添加、移动或删除点。',
+  zoneHintTouch:'<b>用手指划过即可画出曲线</b>。单击添加点，拖动点移动，双击删除。',
+  zoneMinPoints:'线至少需要 2 个点，区域至少需要 3 个点。',
+  zoneApplied:'已把当前危险区域同样应用到 {n} 台摄像头。',
+  zoneSimplified:'已把 {before} 个点整理为 {after} 个。',
+  zoneSwitched:'已切换为「{mode}」方式。',
+  sliderNote:'只有正好 2 个点的直线才能使用高度和倾斜滑块。',
+  emptyTitle:'请添加要监控的摄像头',
+  emptyLede:'最多可连接 5 台摄像头。手边没有设备时，体验模式可以完整展示检测和三级警报。',
+  step1:'1. 选择安装场所',
+  step1b:'在海水浴场、河流、湖泊、游泳池、无人机中选择，检测设置会随之调整。',
+  step2:'2. 连接摄像头',
+  step2b:'可选择本机摄像头、无人机／监控摄像头地址，或体验模式。',
+  step3:'3. 绘制危险区域',
+  step3b:'拖动画面，沿浪线或禁游区域画出曲线。',
+  quickSim:'用体验模式查看', quickDevice:'使用本机摄像头', quickStream:'使用网络摄像头',
+  contactsEyebrow:'接收通知的人', contactsTitle:'接收通知的人',
+  contactsLede:'系统会按危险程度向登记的负责人发送通知，只发给正在值班的人。',
+  contactsEmpty:'尚未登记任何人。登记负责人后，警报不会只显示在屏幕上，而会直接送达本人。',
+  addContact:'＋ 登记负责人', editContact:'修改', removeContact:'删除', testContact:'试发送',
+  contactOnDuty:'值班中', contactOffDuty:'待命', contactToggle:'切换值班状态',
+  contactDialogTitle:'登记负责人', contactDialogEditTitle:'修改负责人', contactSave:'保存',
+  fieldName:'姓名', fieldRole:'职责 · 负责区域', fieldPhone:'手机', fieldEmail:'邮箱',
+  fieldWebhook:'接收通知的服务器地址（可选）',
+  fieldMinLevel:'从哪一级开始接收',
+  levelAlertOnly:'警告及以上', levelCriticalOnly:'仅紧急',
+  fieldWebhookHelp:'仅靠浏览器无法自动发送短信或邮件。自动发送只能通过<b>通知服务器地址</b>实现 — 填入任何能接收通知的地址（自建服务器、Slack、消息推送对接等），危险情况就会自动送达。填写手机和邮箱后，警报窗口会出现拨号／短信／邮件按钮，可一键联系。',
+  errContactName:'请输入姓名。',
+  errContactWebhook:'服务器地址必须以 http:// 或 https:// 开头。',
+  errContactChannel:'手机、邮箱、服务器地址中至少填写一项。',
+  contactAdded:'已登记 {name}', contactUpdated:'已修改 {name} 的信息',
+  contactRemoved:'已删除 {name}',
+  contactDutyOn:'{name} 开始值班', contactDutyOff:'{name} 转为待命',
+  notifySent:'已通知 {name}',
+  notifyWebhookOk:'已成功自动发送给 {name}',
+  notifyWebhookFail:'向 {name} 自动发送失败 — {reason}（接收服务器可能需要允许外部访问）',
+  notifyNoRecipients:'没有正在值班的负责人，仅显示屏幕警报',
+  notifyTestSent:'已向 {name} 发送测试通知',
+  toastRecipients:'接收人：{names}',
+  actionCall:'拨号', actionSms:'短信', actionMail:'邮件',
+  testAlertBody:'[测试] 这是确认通知能否送达的消息，并非真实情况。',
+  healthDegraded:'变慢',
+  simCameraName:'体验画面', simLiveStatus:'体验模式进行中',
+  cameraOffline:'摄像头已关闭', cameraLive:'实时摄像头',
+  cameraConnected:'摄像头已连接 · {resolution}',
+  eventSimStop:'体验模式已结束', stopSimulation:'关闭体验模式',
+  zoneDrawn:'已画出曲线 — {n} 个点',
+  zoneTooManyPoints:'最多只能放置 {max} 个点。请点击「整理线条」精简一下。',
+  cameraConnectFailed:'摄像头连接失败',
+  loopHaltedHelp:'所有已连接的摄像头都没有响应。请点击「全部关闭」后重新连接。',
+  modelLoadFailedHelp:'未能下载检测功能，因此没有开始监控。请检查网络连接并重新连接摄像头。（想在没有摄像头的情况下查看效果，请使用体验模式。）',
+  needsAttention:'需要确认',
+  cameraDropped:'{name} 持续失败，已从监控中移除。其余摄像头继续监控。',
+  streamFailedHelp:'{name} 连接失败 — 请检查地址。（{reason}）',
+  enableAlerts:'🔔 开启通知', alertsEnabled:'🔔 通知已开启', alertsBlocked:'🔕 通知被阻止',
+  enableAlertsHelp:'开启浏览器通知后，即使正在看别的窗口，危险情况也会立刻弹出。',
+  alertsGranted:'已开启浏览器通知。现在即使在其他窗口，危险情况也会显示出来。',
+  alertsDenied:'浏览器已阻止通知。请在地址栏左侧的锁形图标中允许通知。',
+  controlRoom:'监控模式', controlRoomExit:'关闭监控模式',
+  controlRoomOn:'监控模式 — 摄像头铺满整个屏幕', controlRoomOff:'已退出监控模式',
+  shortcutsShort:'快捷键', shortcutsEyebrow:'快捷键', shortcutsTitle:'键盘快捷键',
+  scCamera:'放大显示该编号的摄像头',
+  scEdit:'开始／结束绘制危险区域',
+  scFull:'监控模式（铺满屏幕）',
+  scDemo:'开始／关闭体验模式',
+  scMute:'开启／关闭警报声',
+  scTest:'自我检查',
+  scPoint:'（绘制中）选择下一个点',
+  scNudge:'（绘制中）移动选中的点 · 按住 Shift 可大幅移动',
+  scHelp:'打开这个帮助',
+  close:'关闭',
+  sirenOn:'已开启警报声', sirenOff:'已关闭警报声',
+  zonePointMoved:'已把第 {n} 个点移动到横向 {x}%、纵向 {y}%',
+  zonePointSelected:'已选中第 {n} 个点（共 {total} 个） · 横向 {x}%、纵向 {y}%',
+  opsEyebrow:'运行', opsTitle:'运行设置',
+  hoursEnabled:'仅在监控时段发出警报',
+  hoursFrom:'开始', hoursTo:'结束',
+  hoursAlways:'目前全天都会发出警报。',
+  hoursInside:'仅在 {from}–{to} 之间发出警报。现在处于该时段内。',
+  hoursOutside:'仅在 {from}–{to} 之间发出警报。现在处于该时段之外，声音和通知发送已暂停（检测和屏幕显示仍在继续）。',
+  hoursMuted:'{name} — 处于监控时段之外，已跳过声音和通知发送（记录仍会保留）',
+  voiceToggle:'用语音朗读',
+  voiceAlert:'{level}。{camera}，危险区域内 {count} 人，已经 {seconds} 秒。',
+  voiceHere:'当前画面',
+  snapshotToggle:'保留警报瞬间的画面',
+  snapshotEyebrow:'警报画面', snapshotTitle:'警报瞬间的画面',
+  snapshotAlt:'{time} 警报瞬间的画面',
+  snapshotSave:'保存为图片',
+  snapshotNote:'这张画面只存在于本设备。既不会被保存，也不会发送到任何地方，刷新后即消失。',
+  badgeOffline:'离线',
+  offlineReady:'准备完成 · {n} 个文件', offlineNotYet:'尚未准备',
+  offlineUnsupported:'此浏览器不支持离线存储',
+  prepareOffline:'准备为无网络可用',
+  prepareOfflineHelp:'现在下载一次，之后即使断网，检测也能照常运行。',
+  offlinePreparing:'正在下载…',
+  offlineStored:'离线准备完成 — 已保存 {n} 个文件',
+  offlineFailed:'离线准备失败 — 请检查网络连接',
+  offlineUsedCache:'已从保存的内容中加载{what}（无需联网）',
+  offlineModel:'AI 模型',
+  hintCloseLabel:'关闭画面上的提示',
+  hintDismissed:'已关闭画面上的提示。同样的说明仍保留在下方的绘制卡片中。',
+  hintRestore:'重新显示画面上的提示',
+  zoneTipDefault:'把鼠标移到按钮上，就会告诉你各自的作用。',
+  tipEdit:'开始绘制 — 让你可以直接在画面上绘制危险区域。绘制过程中监控仍在继续。',
+  tipUndo:'撤销一个点 — 只删除刚才添加的那一个点。用于消除误触产生的点。连续点击可逐个往回退。想全部清除请用「恢复初始形状」。',
+  tipSimplify:'整理线条 — 保持形状不变，只减少点的数量。手绘会产生几十个点，点太多时手柄挤在一起很难调整。先整理一次，再细调。',
+  tipReset:'恢复初始形状 — 回到该场所的默认边界，你画的内容会全部消失。',
+  tipApplyAll:'其他摄像头也一样 — 把当前摄像头的区域原样复制到其余摄像头。多台摄像头分看同一片水域时很方便。',
+  zoneSimplifyNoChange:'已经足够简洁 — 没有可以减少的点。',
+  nsTag:'北极星指标',
+  nsLabel:'进入危险区域 → 负责人确认（中位数）',
+  nsNoData:'还没有已确认的警报。点击警报窗口中的「已确认」，这个数字就会开始累积。',
+  nsSummary:'最近 {n} 次的中位数。仅靠人眼平均需要 {baseline} 秒。8 周目标是 {target} 秒以内。',
+  nsAckButton:'已确认',
+  nsAcknowledged:'负责人已确认 — 从进入到确认用了 {seconds} 秒',
+  nsEventAck:'负责人已确认 — {seconds} 秒',
+  nsResetDone:'已清除北极星指标记录。',
+  missionTag:'团队使命',
+  missionText:'8 周后，海滩安全员将在 5 秒而不是 20 秒内得知有人进入危险区域。',
+  missionMetric:'北极星指标 — 从进入到负责人确认的时间（中位数）21.8 秒 → 5 秒以内',
+  childMode:'儿童也要可靠识别',
+  childModeOn:'儿童优先已开启 — 已放宽尺寸下限以识别更小的身形（重复确认次数 +1 作为补偿）',
+  childModeOff:'已关闭儿童优先 — 尺寸下限恢复为成人标准',
+  wipeData:'清除本设备上保存的我的信息',
+  wipeDataHelp:'负责人联系方式、危险区域和设置保存在此浏览器中。在公用电脑上使用后请点击清除。',
+  wipeConfirm:'将从此浏览器中清除所有联系方式和设置，且无法恢复。要继续吗？',
+  wipeDone:'已清除本设备上保存的全部信息。'
+};
 
 /* ══════════════════════════════════════════════════════════════════
    2. 설정 상수
@@ -1844,6 +2208,11 @@ const CONFIG = {
   /* 경보 스냅샷 — 메모리에만 남는다. 최근 몇 건만 이미지를 들고 있는다. */
   snapshotWidth: 320,
   maxSnapshots: 12,
+  /* 어린이 우선 — 형태 하한에 곱하는 배수. 작을수록 작은 사람까지 받아들인다. */
+  childShapeScale: 0.62,
+  /* 북극성 지표 — 인지까지 걸린 시간(TTA) */
+  northStarSamples: 50,           // 최근 이만큼만 보관해 중앙값을 낸다
+  northStarTargetSeconds: 5,      // 8주 목표: 중앙값 5초 이하
   /* 키보드로 구역 점 옮기기 (정규화 좌표) */
   nudgeStep: 0.004,
   nudgeStepBig: 0.02,
@@ -1891,10 +2260,24 @@ function formatDuration(ms) {
   return String(Math.floor(total / 60)).padStart(2, '0') + ':' + String(total % 60).padStart(2, '0');
 }
 
+/** 지원 언어별 로케일·표기 규칙을 한 곳에 모아 둔다.
+ *  언어를 하나 더 늘릴 때 고쳐야 할 자리를 이 표 하나로 줄이기 위한 것이다. */
+const LOCALES = {
+  ko: { locale: 'ko-KR', voice: 'ko-KR', title: 'Beach Watch · AI 수변 안전 관제',
+        hundredMillion: '억', tenThousand: '만', currencyZero: '0원' },
+  en: { locale: 'en-US', voice: 'en-US', title: 'Beach Watch · AI Water Safety Monitoring',
+        hundredMillion: ' × 100M', tenThousand: 'k', currencyZero: '0 KRW' },
+  zh: { locale: 'zh-CN', voice: 'zh-CN', title: 'Beach Watch · AI 水域安全监控',
+        hundredMillion: '亿', tenThousand: '万', currencyZero: '0 韩元' }
+};
+
+function activeLocale() { return LOCALES[state.language] || LOCALES.ko; }
+
 function formatWon(value) {
   if (!isFinite(value) || value <= 0) return '0';
-  if (value >= 1e8) return (value / 1e8).toFixed(1) + (state.language === 'en' ? ' × 100M' : '억');
-  if (value >= 1e4) return Math.round(value / 1e4).toLocaleString() + (state.language === 'en' ? 'k' : '만');
+  const L = activeLocale();
+  if (value >= 1e8) return (value / 1e8).toFixed(1) + L.hundredMillion;
+  if (value >= 1e4) return Math.round(value / 1e4).toLocaleString() + L.tenThousand;
   return Math.round(value).toLocaleString();
 }
 
@@ -2016,9 +2399,7 @@ function refreshButtonTips() {
 function applyLanguage(language, persist) {
   state.language = I18N[language] ? language : 'ko';
   document.documentElement.lang = state.language;
-  document.title = state.language === 'en'
-    ? 'Beach Watch · AI Water Safety Monitoring'
-    : 'Beach Watch · AI 수변 안전 관제';
+  document.title = activeLocale().title;
 
   /* 사전 값은 저자가 통제하는 상수이므로 HTML 조각(<b>, <sup>, <code>)을 허용한다. */
   document.querySelectorAll('[data-i18n]').forEach(element => {
@@ -2057,7 +2438,7 @@ function applyLanguage(language, persist) {
 const Diagnostics = {
   lines: [],
   log(message, kind) {
-    const stamp = new Date().toLocaleTimeString(state.language === 'en' ? 'en-US' : 'ko-KR', { hour12: false });
+    const stamp = new Date().toLocaleTimeString(activeLocale().locale, { hour12: false });
     this.lines.unshift({ stamp, message, kind: kind || 'info' });
     if (this.lines.length > CONFIG.maxLogLines) this.lines.length = CONFIG.maxLogLines;
     this.render();
@@ -2613,17 +2994,45 @@ function activeSite() {
   return SITE_PRESETS[state.siteType] || SITE_PRESETS.beach;
 }
 
+/** 어린이 우선 모드일 때의 형태 하한.
+ *
+ *  왜 필요한가 — 익수 사고의 피해자는 어린이 비중이 높은데, 어린이는 어른보다
+ *  화면에서 작게 잡힌다. 형태 필터의 최소 크기가 어른 기준이면 멀리 있는 아이가
+ *  '사람이 아님'으로 걸러져 경보가 아예 울리지 않는다. 이것이 이 시스템에서
+ *  가장 조용하고 가장 위험한 실패다.
+ *
+ *  대신 작은 것을 받아들이면 파도 조각도 함께 들어온다. 그래서 크기 하한을 낮추는
+ *  만큼 '연속으로 몇 번 보여야 사람으로 인정하는가'를 한 번 더 요구해 상쇄한다.
+ *  민감도가 아니라 시간으로 오탐을 거르는 이 시스템의 원칙을 그대로 따른 것이다. */
+function childAwareShape(shape) {
+  const scale = CONFIG.childShapeScale;
+  return {
+    minW: Math.max(2, Math.round(shape.minW * scale)),
+    minH: Math.max(2, Math.round(shape.minH * scale)),
+    minArea: Math.max(6, Math.round(shape.minArea * scale * scale)),
+    /* 아이는 어른보다 가로세로 비가 작다(키가 작고 통통하다). 위에서 볼수록 더 그렇다. */
+    aspectMax: shape.aspectMax
+  };
+}
+
+function childModeOn() {
+  const box = $('#childMode');
+  return !box || box.checked;      /* 기본값은 켜짐 — 안전 쪽으로 기운다 */
+}
+
 function activeThresholds(camera) {
   const preset = activePreset(camera);
   const site = activeSite();
   const full = clamp(state.userThreshold * preset.scoreScale * site.scoreScale, 0.08, 0.85);
+  const child = childModeOn();
   return {
     fullScore: full,
     tileScore: clamp(full * 0.75, 0.06, 0.85),
     minAverageScore: clamp(full * 0.90, 0.06, 0.85),
-    confirmFrames: Math.max(state.userFrames, preset.minFrames, site.minFrames),
+    confirmFrames: Math.max(state.userFrames, preset.minFrames, site.minFrames) + (child ? 1 : 0),
     filter: preset.filter,
-    shape: site.shape
+    shape: child ? childAwareShape(site.shape) : site.shape,
+    childMode: child
   };
 }
 /* ══════════════════════════════════════════════════════════════════
@@ -2809,7 +3218,7 @@ const Speaker = {
          경보는 쌓여서 늦게 나오면 의미가 없다. */
       speechSynthesis.cancel();
       const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = state.language === 'en' ? 'en-US' : 'ko-KR';
+      utter.lang = activeLocale().voice;
       utter.rate = 1.05;
       utter.volume = 1;
       speechSynthesis.speak(utter);
@@ -3043,6 +3452,158 @@ function openSnapshot(entry) {
     document.body.append(link); link.click(); link.remove();
   };
   try { dialog.showModal(); } catch (e) { /* dialog 미지원 브라우저 */ }
+}
+/* ══════════════════════════════════════════════════════════════════
+   30. 북극성 지표 — 인지까지 걸린 시간 (Time to Awareness, TTA)
+
+   이 팀이 8주 동안 하나의 숫자로 추적하는 값이다.
+
+     "사람이 위험 구역에 들어간 순간부터
+      담당자가 그 사실을 실제로 확인할 때까지 걸린 시간(초)의 중앙값"
+
+   왜 이 숫자인가
+     - 문제 정의와 정확히 같은 축이다. 훈련된 안전요원조차 한 구역을 다시 보기까지
+       평균 19.2–24.4초가 걸린다(연구 [3]). 우리가 줄이려는 것이 바로 이 공백이다.
+     - 감지 정확도·경보 전달·화면 설계가 모두 이 하나의 숫자를 움직인다.
+       어느 하나만 좋아져도 숫자가 좋아지지 않는다는 점이 중요하다.
+     - 제품이 스스로 측정한다. 발표 자료의 주장이 아니라 계측값이다.
+
+   측정 방법
+     진입 시각  : riskSince 에 그 사람이 처음 기록된 순간
+     확인 시각  : 담당자가 경보 창의 '확인했습니다'를 누른 순간
+     TTA        : 확인 시각 − 진입 시각
+
+   중앙값을 쓰는 이유: 한 건의 예외적으로 늦은 확인이 평균을 통째로 흔들기 때문이다.
+   ══════════════════════════════════════════════════════════════════ */
+const NorthStar = {
+  /* 아직 확인되지 않은 경보들 — 카메라별로 '진입 시각'을 들고 있는다 */
+  pending: new Map(),
+  /* 확인까지 걸린 시간(초) 기록. 최근 것부터 유지한다. */
+  samples: [],
+
+  /** 경보가 떴다. 아직 아무도 확인하지 않았다. */
+  open(camera, enteredAt) {
+    if (!camera) return;
+    if (!this.pending.has(camera.id)) {
+      this.pending.set(camera.id, enteredAt || Date.now());
+    }
+  },
+
+  /** 담당자가 확인했다. 진입 시각부터 지금까지가 이번 건의 TTA 다. */
+  acknowledge(now) {
+    const at = now || Date.now();
+    if (!this.pending.size) return null;
+    let earliest = Infinity;
+    this.pending.forEach(enteredAt => { earliest = Math.min(earliest, enteredAt); });
+    this.pending.clear();
+    if (!isFinite(earliest)) return null;
+    const seconds = Math.max(0, (at - earliest) / 1000);
+    this.samples.unshift(seconds);
+    if (this.samples.length > CONFIG.northStarSamples) this.samples.length = CONFIG.northStarSamples;
+    this.save();
+    return seconds;
+  },
+
+  /** 상황이 해소되어 아무도 위험 구역에 없다 — 확인 대기도 지운다. */
+  clear(camera) {
+    if (camera) this.pending.delete(camera.id);
+    else this.pending.clear();
+  },
+
+  median() {
+    if (!this.samples.length) return null;
+    const sorted = this.samples.slice().sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  },
+
+  count() { return this.samples.length; },
+  waiting() { return this.pending.size > 0; },
+
+  save() {
+    store.set('beachWatchNorthStar', JSON.stringify(this.samples.slice(0, CONFIG.northStarSamples)));
+  },
+
+  restore() {
+    try {
+      const saved = JSON.parse(store.get('beachWatchNorthStar', '[]'));
+      if (Array.isArray(saved)) {
+        this.samples = saved.filter(n => typeof n === 'number' && isFinite(n) && n >= 0)
+                            .slice(0, CONFIG.northStarSamples);
+      }
+    } catch (e) { /* 손상된 값은 버린다 */ }
+  },
+
+  reset() {
+    this.samples = [];
+    this.pending.clear();
+    this.save();
+  }
+};
+
+/** 사이드바·시스템 상태에 북극성 지표를 표시한다. */
+function refreshNorthStar() {
+  const value = $('#mNorthStar');
+  if (!value) return;
+  const median = NorthStar.median();
+  value.textContent = median === null ? '—' : median.toFixed(1) + tr('unitSecondsShort');
+
+  const note = $('#northStarNote');
+  if (note) {
+    note.textContent = median === null
+      ? tr('nsNoData')
+      : tr('nsSummary', {
+          median: median.toFixed(1),
+          n: NorthStar.count(),
+          baseline: IMPACT.humanScanSeconds.toFixed(1),
+          target: CONFIG.northStarTargetSeconds
+        });
+    note.classList.toggle('good', median !== null && median <= CONFIG.northStarTargetSeconds);
+  }
+
+  const ackButton = $('#ackAlert');
+  if (ackButton) ackButton.hidden = !NorthStar.waiting();
+}
+
+/** 경보 창의 '확인했습니다' — 이 한 번의 클릭이 북극성 지표를 만든다. */
+function acknowledgeAlert() {
+  const seconds = NorthStar.acknowledge();
+  if (seconds === null) return;
+  Diagnostics.log(tr('nsAcknowledged', { seconds: seconds.toFixed(1) }), 'ok');
+  pushEvent(tr('nsEventAck', { seconds: seconds.toFixed(1) }), 'ok', { tta: Number(seconds.toFixed(2)) });
+  adminToast.classList.remove('show');
+  refreshNorthStar();
+  refreshMetrics();
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   31. 내 정보 지우기
+   이 시스템은 서버에 아무것도 보내지 않는 대신, 담당자 연락처와 설정을
+   브라우저 안에 저장한다. 공용 PC·시연용 노트북에서 쓴 뒤 그대로 두면
+   다음 사람이 볼 수 있다. 지울 방법을 사용자 손에 쥐어 준다.
+   ══════════════════════════════════════════════════════════════════ */
+function wipeLocalData() {
+  if (!confirm(tr('wipeConfirm'))) return;
+  const keys = ['beachWatchContacts', 'beachWatchLanguage', 'beachWatchSite',
+                'beachWatchPreset', 'beachWatchThreshold', 'beachWatchFrames',
+                'beachWatchEscalate', 'beachWatchHours', 'beachWatchHintDismissed',
+                'beachWatchNorthStar'];
+  try {
+    /* 장소별 위험 구역 키는 접두어로 찾아 지운다 */
+    Object.keys(localStorage)
+      .filter(k => k.indexOf('beachWatchBoundary:') === 0)
+      .forEach(k => keys.push(k));
+  } catch (e) { /* 저장소 접근이 막힌 환경 */ }
+  keys.forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+
+  state.contacts = [];
+  NorthStar.reset();
+  renderContacts();
+  refreshNorthStar();
+  Diagnostics.log(tr('wipeDone'), 'ok');
+  /* 경보 스냅샷은 메모리에만 있으므로 함께 비운다 */
+  state.events.forEach(e => { if (e.snapshot) e.snapshot = ''; });
+  renderEventLog();
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -4095,6 +4656,10 @@ function updateCameraAlert(camera, count, dwellSeconds, trackedCount) {
        직전 사건 때문에 억제되지 않도록. */
     state.contacts.forEach(c => { c.lastLevelRank = 0; });
     camera.lastAlertCount = 0;
+    /* 상황이 해소됐다 — 아무도 확인하지 않았다면 이 건은 표본에 넣지 않는다.
+       확인하지 않은 것을 0초로 세면 지표가 좋아 보이는 방향으로 왜곡된다. */
+    NorthStar.clear(camera);
+    refreshNorthStar();
   }
   camera.alertLevel = level;
   camera.lastDwell = dwellSeconds;
@@ -4188,6 +4753,11 @@ function raiseAlert(camera, level, count, dwellSeconds) {
   /* 경보가 뜬 순간의 화면을 함께 남긴다 — 나중에 오탐이었는지 확인하기 위해서다.
      이 이미지는 메모리에만 있고 저장·전송되지 않는다. */
   const snapshot = captureSnapshot(camera);
+  /* 북극성 지표 — 이 사람이 위험 구역에 '들어간 순간'부터 재기 시작한다.
+     경보가 뜬 시각이 아니라 진입 시각이어야, 감지가 늦어진 것도 숫자에 잡힌다. */
+  let enteredAt = Date.now();
+  camera.riskSince.forEach(since => { enteredAt = Math.min(enteredAt, since); });
+  NorthStar.open(camera, enteredAt);
   pushEvent(camera.name + ' · ' + tr('eventAlert', { level: levelLabel, count }),
     level === 'critical' ? 'error' : 'warn',
     { level, count, dwell: Math.round(dwellSeconds), camera: camera.name, snapshot });
@@ -4407,6 +4977,16 @@ function showAlertToast(message, targets, level) {
     }
   });
 
+  /* 북극성 지표를 만드는 한 번의 클릭.
+     담당자가 상황을 실제로 인지한 시점을 제품이 직접 기록한다. */
+  const ack = document.createElement('button');
+  ack.type = 'button';
+  ack.id = 'ackAlert';
+  ack.className = 'toast-ack';
+  ack.textContent = tr('nsAckButton');
+  ack.addEventListener('click', acknowledgeAlert);
+  actions.append(ack);
+
   adminToast.classList.add('show');
   clearTimeout(state.toastTimer);
   state.toastTimer = setTimeout(() => adminToast.classList.remove('show'), level === 'critical' ? 12000 : 6000);
@@ -4620,7 +5200,7 @@ function pushEvent(message, kind, extra) {
   const at = new Date();
   state.events.unshift(Object.assign({
     at: at.toISOString(),
-    label: at.toLocaleTimeString(state.language === 'en' ? 'en-US' : 'ko-KR', { hour12: false }),
+    label: at.toLocaleTimeString(activeLocale().locale, { hour12: false }),
     message, kind: kind || 'info'
   }, extra || {}));
   if (state.events.length > CONFIG.maxEvents) state.events.length = CONFIG.maxEvents;
@@ -4742,7 +5322,7 @@ function refreshImpact() {
   const result = computeImpact(beaches, recovery, coverage);
   $('#outDeaths').textContent = result.deaths.toFixed(2);
   $('#outCost').textContent = formatWon(result.cost);
-  $('#outHardware').textContent = state.language === 'en' ? '0 KRW' : '0원';
+  $('#outHardware').textContent = activeLocale().currencyZero;
 
   const gap = state.metrics.realCycle > 0 ? Math.max(0, IMPACT.humanScanSeconds - state.metrics.realCycle) : 0;
   $('#outGap').textContent = gap > 0 ? gap.toFixed(1) + tr('unitSecondsShort') : '—';
@@ -5884,28 +6464,91 @@ SelfTest.add('임계값: 타일 임계값은 항상 전체 임계값 이하', ()
 });
 
 /* — 다국어 — */
-SelfTest.add('다국어: ko에 있는 키가 en에 모두 존재', () => {
-  const missing = Object.keys(I18N.ko).filter(key => !(key in I18N.en));
-  return missing.length === 0 || 'missing in en: ' + missing.slice(0, 8).join(', ');
+
+/** 지원하는 모든 언어. 언어를 추가하면 여기에만 넣으면 아래 검사가 전부 따라간다. */
+const SUPPORTED_LANGUAGES = ['ko', 'en', 'zh'];
+
+SelfTest.add('다국어: 지원 언어 3개가 모두 사전에 있다', () => {
+  const missing = SUPPORTED_LANGUAGES.filter(lang => !I18N[lang]);
+  return missing.length === 0 || 'no dictionary for: ' + missing.join(', ');
 });
-SelfTest.add('다국어: en에 있는 키가 ko에 모두 존재', () => {
-  const missing = Object.keys(I18N.en).filter(key => !(key in I18N.ko));
-  return missing.length === 0 || 'missing in ko: ' + missing.slice(0, 8).join(', ');
+
+SelfTest.add('다국어: 모든 언어가 같은 키를 가진다', () => {
+  const base = Object.keys(I18N.ko);
+  const problems = [];
+  SUPPORTED_LANGUAGES.forEach(lang => {
+    const missing = base.filter(k => !(k in I18N[lang]));
+    const extra = Object.keys(I18N[lang]).filter(k => !(k in I18N.ko));
+    if (missing.length) problems.push(lang + ' 누락: ' + missing.slice(0, 6).join(','));
+    if (extra.length) problems.push(lang + ' 잉여: ' + extra.slice(0, 6).join(','));
+  });
+  return problems.length === 0 || problems.join(' | ');
 });
+
+SelfTest.add('다국어: 빈 문구가 없다', () => {
+  const empty = [];
+  SUPPORTED_LANGUAGES.forEach(lang => {
+    Object.keys(I18N[lang]).forEach(key => {
+      if (!String(I18N[lang][key]).trim()) empty.push(lang + '.' + key);
+    });
+  });
+  return empty.length === 0 || 'empty: ' + empty.slice(0, 8).join(', ');
+});
+
+SelfTest.add('다국어: 번역을 빠뜨려 한국어가 그대로 남은 곳이 없다', () => {
+  /* 영어·중국어 사전에 한글이 남아 있으면 번역을 건너뛴 것이다. */
+  const hangul = /[가-힣]/;
+  const leftover = [];
+  ['en', 'zh'].forEach(lang => {
+    Object.keys(I18N[lang]).forEach(key => {
+      if (hangul.test(String(I18N[lang][key]))) leftover.push(lang + '.' + key);
+    });
+  });
+  return leftover.length === 0 || 'untranslated: ' + leftover.slice(0, 8).join(', ');
+});
+
 SelfTest.add('다국어: DOM의 data-i18n 키가 모두 사전에 존재', () => {
   const keys = Array.from(document.querySelectorAll('[data-i18n]')).map(el => el.dataset.i18n);
   const missing = keys.filter(key => !(key in I18N.ko));
   return missing.length === 0 || 'unknown keys: ' + Array.from(new Set(missing)).slice(0, 8).join(', ');
 });
-SelfTest.add('다국어: 설치 유형 문자열이 양쪽 언어에 모두 있다', () => {
+
+SelfTest.add('다국어: 설치 유형 문자열이 모든 언어에 있다', () => {
   const keys = Object.keys(SITE_PRESETS).flatMap(k => [SITE_PRESETS[k].i18n, SITE_PRESETS[k].note, SITE_PRESETS[k].heading]);
-  const missing = keys.filter(k => !(k in I18N.ko) || !(k in I18N.en));
+  const missing = [];
+  SUPPORTED_LANGUAGES.forEach(lang => keys.forEach(k => { if (!(k in I18N[lang])) missing.push(lang + '.' + k); }));
   return missing.length === 0 || 'missing: ' + missing.join(', ');
 });
-SelfTest.add('다국어: 치환 변수 {count}가 양쪽 언어에 모두 존재', () => {
-  const keys = ['alertCount', 'adminAlertBody', 'watchText', 'criticalText', 'eventAlert'];
-  const bad = keys.filter(key => !I18N.ko[key].includes('{count}') || !I18N.en[key].includes('{count}'));
-  return bad.length === 0 || 'missing {count}: ' + bad.join(', ');
+
+SelfTest.add('다국어: 치환 변수가 모든 언어에서 짝이 맞는다', () => {
+  /* {count} 하나만 보는 것으로는 부족하다. 번역하다 변수를 빠뜨리면
+     경보 문구에서 인원 수가 사라진 채 발송된다. 전 문구를 대조한다. */
+  const vars = text => (String(text).match(/\{\w+\}/g) || []).sort().join(',');
+  const bad = [];
+  Object.keys(I18N.ko).forEach(key => {
+    const expected = vars(I18N.ko[key]);
+    SUPPORTED_LANGUAGES.forEach(lang => {
+      if (vars(I18N[lang][key]) !== expected) bad.push(lang + '.' + key);
+    });
+  });
+  return bad.length === 0 || 'variable mismatch: ' + bad.slice(0, 8).join(', ');
+});
+
+SelfTest.add('다국어: 언어별 로케일·음성 설정이 갖춰져 있다', () => {
+  const bad = SUPPORTED_LANGUAGES.filter(lang => {
+    const L = LOCALES[lang];
+    return !L || !L.locale || !L.voice || !L.title || !L.currencyZero;
+  });
+  return bad.length === 0 || 'incomplete locale: ' + bad.join(', ');
+});
+
+SelfTest.add('다국어: 언어 선택 목록이 지원 언어와 일치한다', () => {
+  const select = $('#languageSelect');
+  if (!select) return true;
+  const options = Array.from(select.options).map(o => o.value).sort();
+  const expected = SUPPORTED_LANGUAGES.slice().sort();
+  return options.join(',') === expected.join(',') ||
+    ('options [' + options.join(',') + '] vs supported [' + expected.join(',') + ']');
 });
 
 /* — 접근성 — */
@@ -6069,6 +6712,96 @@ SelfTest.add('접근성: 단축키 안내에 모든 키 설명이 있다', () =>
   return items.length >= 8 || ('only ' + items.length + ' shortcuts documented');
 });
 
+
+/* — v9: 북극성 지표 · 어린이 안전 · 개인정보 — */
+SelfTest.add('북극성: 중앙값을 정확히 계산한다', () => {
+  const backup = NorthStar.samples.slice();
+  NorthStar.samples = [3, 9, 5];
+  const odd = NorthStar.median();
+  NorthStar.samples = [2, 4, 6, 8];
+  const even = NorthStar.median();
+  NorthStar.samples = [];
+  const none = NorthStar.median();
+  NorthStar.samples = backup;
+  return (odd === 5 && even === 5 && none === null) || ('odd ' + odd + ', even ' + even + ', none ' + none);
+});
+
+SelfTest.add('북극성: 확인하지 않은 경보는 표본에 넣지 않는다', () => {
+  const backup = NorthStar.samples.slice();
+  NorthStar.samples = []; NorthStar.pending.clear();
+  const before = NorthStar.count();
+  NorthStar.open({ id: 'testcam' }, Date.now() - 4000);
+  NorthStar.clear({ id: 'testcam' });          /* 아무도 확인하지 않고 상황 종료 */
+  const after = NorthStar.count();
+  NorthStar.samples = backup; NorthStar.pending.clear();
+  return (before === 0 && after === 0) || 'unacknowledged alert leaked into samples';
+});
+
+SelfTest.add('북극성: 진입 시각부터 재므로 감지 지연도 숫자에 잡힌다', () => {
+  const backup = NorthStar.samples.slice();
+  NorthStar.samples = []; NorthStar.pending.clear();
+  const enteredAt = Date.now() - 7000;
+  NorthStar.open({ id: 'testcam' }, enteredAt);
+  const seconds = NorthStar.acknowledge();
+  NorthStar.samples = backup; NorthStar.pending.clear();
+  return (seconds >= 6.8 && seconds <= 7.5) || ('measured ' + seconds);
+});
+
+SelfTest.add('북극성: 표본 상한을 넘기지 않는다', () => {
+  const backup = NorthStar.samples.slice();
+  NorthStar.samples = [];
+  for (let i = 0; i < CONFIG.northStarSamples + 20; i++) {
+    NorthStar.pending.clear();
+    NorthStar.open({ id: 'c' }, Date.now() - 1000);
+    NorthStar.acknowledge();
+  }
+  const n = NorthStar.count();
+  NorthStar.samples = backup; NorthStar.save();
+  return n === CONFIG.northStarSamples || ('kept ' + n);
+});
+
+SelfTest.add('어린이 안전: 어린이 우선이 최소 크기를 낮춘다', () => {
+  const adult = { minW: 5, minH: 7, minArea: 45, aspectMax: 2.6 };
+  const child = childAwareShape(adult);
+  return (child.minW < adult.minW && child.minH < adult.minH && child.minArea < adult.minArea)
+    || ('not smaller: ' + JSON.stringify(child));
+});
+
+SelfTest.add('어린이 안전: 어른 기준에서 걸러지던 작은 사람이 통과한다', () => {
+  /* 멀리 있는 아이 정도의 크기 */
+  const small = box(100, 100, 4, 6);
+  const adult = { minW: 5, minH: 7, minArea: 45, aspectMax: 2.6 };
+  const rejectedByAdult = !isPlausiblePerson(small, adult);
+  const acceptedByChild = isPlausiblePerson(small, childAwareShape(adult));
+  return (rejectedByAdult && acceptedByChild)
+    || ('adult rejects ' + rejectedByAdult + ', child accepts ' + acceptedByChild);
+});
+
+SelfTest.add('어린이 안전: 크기를 낮춘 만큼 확인 횟수를 한 번 더 요구한다', () => {
+  const box2 = $('#childMode');
+  if (!box2) return true;
+  const was = box2.checked;
+  box2.checked = false;
+  const off = activeThresholds(focusedCamera()).confirmFrames;
+  box2.checked = true;
+  const on = activeThresholds(focusedCamera()).confirmFrames;
+  box2.checked = was;
+  return (on === off + 1) || ('off ' + off + ', on ' + on);
+});
+
+SelfTest.add('개인정보: 알림 본문에 사진·연락처가 들어가지 않는다', () => {
+  const contact = { name: '홍길동', role: '1구역', phone: '01011112222', email: 'a@b.c' };
+  const payload = buildAlertPayload({ name: '카메라 1', zoneMode: 'line' }, 'alert', 1, 3, contact, false);
+  const text = JSON.stringify(payload);
+  const leaks = [];
+  if (text.indexOf('data:image') >= 0) leaks.push('image');
+  if (text.indexOf(contact.phone) >= 0) leaks.push('phone');
+  if (text.indexOf(contact.email) >= 0) leaks.push('email');
+  return leaks.length === 0 || 'payload leaks: ' + leaks.join(', ');
+});
+
+SelfTest.add('개인정보: 내 정보 지우기 기능이 있다', () =>
+  (typeof wipeLocalData === 'function' && !!$('#wipeData')) || 'no way to erase local data');
 /* — v8: 인원 수 · 360° 회전 · 안내문 닫기 — */
 SelfTest.add('인원 수: 구역 안 박스 개수가 그대로 인원 수가 된다', () => {
   const cam = focusedCamera();
@@ -6394,6 +7127,11 @@ function bindUi() {
   ['#hoursEnabled', '#hoursFrom', '#hoursTo'].forEach(sel =>
     $(sel).addEventListener('change', refreshWatchHours));
   $('#prepareOffline').addEventListener('click', prepareOffline);
+  $('#childMode').addEventListener('change', () => {
+    Diagnostics.log(tr($('#childMode').checked ? 'childModeOn' : 'childModeOff'), 'info');
+    refreshTunerLabels();
+  });
+  $('#wipeData').addEventListener('click', wipeLocalData);
 
   /* 버튼마다 '무엇을 하는 버튼인가'를 한 줄로 알려 준다.
      이름만으로는 한 점 되돌리기와 선 다듬기의 차이를 알기 어렵다. */
@@ -6491,7 +7229,7 @@ function restoreSettings() {
 function startClock() {
   const tick = () => {
     $('#clock').textContent = new Intl.DateTimeFormat(
-      state.language === 'en' ? 'en-US' : 'ko-KR',
+      activeLocale().locale,
       { dateStyle: 'short', timeStyle: 'medium', hour12: false }
     ).format(new Date());
   };
@@ -6513,6 +7251,8 @@ function init() {
   refreshZoneCard();
   refreshWatchHours();
   refreshOfflineBadge();
+  NorthStar.restore();
+  refreshNorthStar();
   listCameras();
   Diagnostics.log('Beach Watch v7 ready · ' + SelfTest.cases.length + ' self-test cases · up to ' +
     CONFIG.maxCameras + ' cameras · ' + state.contacts.length + ' recipients', 'ok');
@@ -6533,57 +7273,9 @@ window.BeachWatch = {
   resolveStreamKind, validateStreamUrl,
   /* v7 */
   withinWatchHours, parseHhMm, watchHoursActive, buildVoiceMessage, typingInField,
+  NorthStar, refreshNorthStar, acknowledgeAlert,
   setZoneAngle, rotatePoints, fitPointsInView, translatePointsToHeight, centroidOf, normalizeAngle,
   setPanelHint, resetZoneBase,
-  toggleControlRoom, nudgeZonePoint, selectNextZonePoint,
-  OfflineCache, prepareOffline, Speaker, captureSnapshot
-};
-
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-else init();
-</script>
-</body>
-</html>
-
-  };
-  tick(); setInterval(tick, 1000);
-}
-
-function init() {
-  restoreSettings();
-  restoreContacts();
-  restoreBoundaryFor(state.detached);
-  bindUi();
-  applyLanguage(store.get('beachWatchLanguage', 'ko'), false);
-  startClock();
-  setHealth('healthIdle', '');
-  refreshMetrics();
-  updateGridCount();
-  renderContacts();
-  refreshAlertToggle();
-  refreshZoneCard();
-  refreshWatchHours();
-  refreshOfflineBadge();
-  listCameras();
-  Diagnostics.log('Beach Watch v7 ready · ' + SelfTest.cases.length + ' self-test cases · up to ' +
-    CONFIG.maxCameras + ' cameras · ' + state.contacts.length + ' recipients', 'ok');
-}
-
-/* 개발자 도구·자동화 테스트에서 접근할 수 있도록 최소한만 노출한다. */
-window.BeachWatch = {
-  state, CONFIG, IMPACT, PRESETS, SITE_PRESETS,
-  selfTest: () => SelfTest.run(),
-  stressTest: count => runStressTest(count),
-  carryTracks,
-  computeImpact, crossesAboveLine, isInDangerZone, pointInPolygon, abovePolyline,
-  polylineYAt, simplifyPoints, insertIndexFor, setZoneMode, applyZoneToAll, polygonToPolyline, smoothPath,
-  normalizeContact, contactsForLevel, buildAlertPayload, shouldSendNow,
-  clusterObservations, suppressDuplicates, shouldMergeObservations, trackCandidates,
-  classifyScene: stats => SceneAnalyzer.classify(stats),
-  addCamera, removeCamera, focusCamera, setSiteType,
-  resolveStreamKind, validateStreamUrl,
-  /* v7 */
-  withinWatchHours, parseHhMm, watchHoursActive, buildVoiceMessage, typingInField,
   toggleControlRoom, nudgeZonePoint, selectNextZonePoint,
   OfflineCache, prepareOffline, Speaker, captureSnapshot
 };
