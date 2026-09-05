@@ -702,6 +702,7 @@
           <label><span data-i18n="voiceToggle">음성으로 읽어 주기</span><input id="voiceEnabled" type="checkbox" checked></label>
           <label><span data-i18n="snapshotToggle">경보 순간 화면 남기기</span><input id="snapshotEnabled" type="checkbox" checked></label>
           <label><span data-i18n="childMode">어린이도 확실히 잡기</span><input id="childMode" type="checkbox" checked></label>
+          <label><span data-i18n="precisionMode">정밀 모드 (먼 사람까지)</span><input id="precisionMode" type="checkbox"></label>
         </fieldset>
       </section>
 
@@ -817,6 +818,7 @@
       <div class="source-tabs" role="group" aria-label="source type">
         <button type="button" id="tabDevice" aria-pressed="true" data-i18n="srcDevice">기기 카메라</button>
         <button type="button" id="tabStream" aria-pressed="false" data-i18n="srcStream">스트림 URL</button>
+        <button type="button" id="tabYt" aria-pressed="false" data-i18n="srcYt">유튜브 · 화면</button>
         <button type="button" id="tabSim" aria-pressed="false" data-i18n="srcSim">시뮬레이션</button>
       </div>
 
@@ -840,6 +842,14 @@
             <option value="mjpeg">MJPEG</option>
           </select>
         </label>
+      </div>
+
+      <div class="source-pane" id="paneYt">
+        <label><span data-i18n="srcYtUrl">유튜브 주소 (선택)</span>
+          <input id="ytUrl" type="url" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
+          <small data-i18n="srcYtHelp">유튜브 화면은 보안상 링크만으로는 분석할 수 없습니다. 주소를 넣고 추가하면 영상이 새 탭에서 열리고, 이어서 뜨는 화면 공유 창에서 <b>그 탭</b>을 고르면 됩니다. 그때부터는 일반 카메라와 똑같이 위험 구역을 그리고 경보를 받을 수 있습니다.</small>
+        </label>
+        <small data-i18n="srcYtSkip">주소를 비워 두고 추가하면 유튜브를 열지 않고 바로 화면 공유만 시작합니다 (다른 프로그램 화면도 감시할 수 있습니다).</small>
       </div>
 
       <div class="source-pane" id="paneSim">
@@ -1730,6 +1740,19 @@ Object.assign(I18N.ko, {
   missionMetric:'북극성 지표 — 진입에서 담당자 확인까지 걸린 시간(중앙값) 21.8초 → 5초 이하',
   /* 어린이 안전 · 개인정보 */
   childMode:'어린이도 확실히 잡기',
+  precisionMode:'정밀 모드 (먼 사람까지)',
+  precisionOn:'정밀 모드 켜짐 — 화면을 더 잘게 나누고 좌우 반전으로 한 번 더 봅니다. 느린 기기에서는 반응이 느려질 수 있습니다',
+  precisionOff:'정밀 모드 꺼짐 — 기본 감지로 돌아갑니다',
+  srcYt:'유튜브 · 화면',
+  srcYtUrl:'유튜브 주소 (선택)',
+  srcYtHelp:'유튜브 화면은 보안상 링크만으로는 분석할 수 없습니다. 주소를 넣고 추가하면 영상이 새 탭에서 열리고, 이어서 뜨는 화면 공유 창에서 그 탭을 고르면 됩니다. 그때부터는 일반 카메라와 똑같이 위험 구역을 그리고 경보를 받을 수 있습니다.',
+  srcYtSkip:'주소를 비워 두고 추가하면 유튜브를 열지 않고 바로 화면 공유만 시작합니다 (다른 프로그램 화면도 감시할 수 있습니다).',
+  errBadYouTube:'유튜브 주소를 알아볼 수 없습니다. watch?v=… 또는 youtu.be/… 형태로 넣어 주세요',
+  errScreenUnsupported:'이 브라우저는 화면 공유를 지원하지 않습니다. 크롬·엣지 최신판을 쓰거나 https 주소로 접속해 주세요',
+  screenShareCancelled:'화면 공유를 취소했습니다. 다시 추가하면 공유 창이 한 번 더 뜹니다',
+  ytOpened:'유튜브 영상을 새 탭에서 열었습니다 — 이어지는 화면 공유 창에서 그 탭을 고르세요',
+  camYouTubeName:'유튜브 화면',
+  camScreenName:'공유 화면',
   childModeOn:'어린이 우선 — 작은 사람도 인정하도록 크기 기준을 낮췄습니다(대신 확인 횟수 +1)',
   childModeOff:'어린이 우선을 껐습니다 — 크기 기준이 어른 기준으로 돌아갑니다',
   wipeData:'이 기기에 저장된 내 정보 지우기',
@@ -1808,6 +1831,19 @@ Object.assign(I18N.en, {
   missionText:'In 8 weeks, a lifeguard learns that someone entered the danger zone in 5 seconds instead of 20.',
   missionMetric:'North Star — median time from zone entry to staff acknowledgement: 21.8s → 5s or less',
   childMode:'Catch children too',
+  precisionMode:'Precision mode (distant people)',
+  precisionOn:'Precision mode on — finer tiles plus a mirrored re-check. Slower devices may lag',
+  precisionOff:'Precision mode off — back to standard detection',
+  srcYt:'YouTube · Screen',
+  srcYtUrl:'YouTube link (optional)',
+  srcYtHelp:'YouTube frames cannot be analysed from a link alone for security reasons. Paste a link and the video opens in a new tab; then pick that tab in the screen-share prompt. From there it behaves exactly like a normal camera — draw the zone and get alerts.',
+  srcYtSkip:'Leave the link empty to skip YouTube and start screen sharing straight away (any application window can be watched).',
+  errBadYouTube:'That does not look like a YouTube link. Use watch?v=… or youtu.be/…',
+  errScreenUnsupported:'This browser cannot share a screen. Use a recent Chrome/Edge, or open the page over https',
+  screenShareCancelled:'Screen sharing was cancelled. Add the camera again to reopen the prompt',
+  ytOpened:'Opened the YouTube video in a new tab — pick that tab in the screen-share prompt',
+  camYouTubeName:'YouTube screen',
+  camScreenName:'Shared screen',
   childModeOn:'Child priority on — smaller bodies now count as people (re-check count +1 to compensate)',
   childModeOff:'Child priority off — size limits return to adult scale',
   wipeData:'Erase my data from this device',
@@ -2090,6 +2126,19 @@ I18N.zh = {
   missionText:'8 周后，海滩安全员将在 5 秒而不是 20 秒内得知有人进入危险区域。',
   missionMetric:'北极星指标 — 从进入到负责人确认的时间（中位数）21.8 秒 → 5 秒以内',
   childMode:'儿童也要可靠识别',
+  precisionMode:'精细模式（识别更远的人）',
+  precisionOn:'精细模式已开启 — 画面切分更细，并额外做一次左右镜像复检。低性能设备可能变慢',
+  precisionOff:'精细模式已关闭 — 恢复标准识别',
+  srcYt:'YouTube · 屏幕',
+  srcYtUrl:'YouTube 链接（可选）',
+  srcYtHelp:'出于安全限制，仅凭链接无法分析 YouTube 画面。填入链接并添加后，视频会在新标签页打开，然后在屏幕共享窗口中选择该标签页即可。之后就与普通摄像头完全一样，可以绘制危险区域并接收警报。',
+  srcYtSkip:'留空链接直接添加，则不打开 YouTube，直接开始屏幕共享（也可监视其他程序窗口）。',
+  errBadYouTube:'无法识别该 YouTube 链接。请使用 watch?v=… 或 youtu.be/… 格式',
+  errScreenUnsupported:'此浏览器不支持屏幕共享。请使用较新的 Chrome/Edge，或通过 https 访问',
+  screenShareCancelled:'已取消屏幕共享。再次添加即可重新弹出共享窗口',
+  ytOpened:'已在新标签页打开 YouTube 视频 — 请在屏幕共享窗口中选择该标签页',
+  camYouTubeName:'YouTube 画面',
+  camScreenName:'共享画面',
   childModeOn:'儿童优先已开启 — 已放宽尺寸下限以识别更小的身形（重复确认次数 +1 作为补偿）',
   childModeOff:'已关闭儿童优先 — 尺寸下限恢复为成人标准',
   wipeData:'清除本设备上保存的我的信息',
@@ -2163,6 +2212,12 @@ const CONFIG = {
   clusterPasses: 3,
   /* 타일 분할 */
   tilesX: 3, tilesY: 2, overlap: 0.22,
+  /* 정밀 모드 — 먼 바다의 작은 사람을 놓치지 않기 위해 타일을 더 잘게 나누고,
+     좌우 반전 프레임을 한 번 더 본다(TTA). 느린 기기에서는 지연이 늘어나므로
+     기본값은 꺼짐이고, 지연이 커지면 adaptWorkload 가 자동으로 되돌린다. */
+  precisionTilesX: 4, precisionTilesY: 3,
+  precisionFlipTta: true,     // 좌우 반전 전체 프레임 1회 추가
+  precisionScoreRelief: 0.04, // 반전 패스는 점수 문턱을 이만큼 낮춰 약한 관측도 받는다
   tileCanvasWidth: 480,
   tileEdgeSlack: 2,           // 타일 가장자리에 이만큼 닿으면 '잘린 관측'으로 표시
   /* 경계 구역 판정 */
@@ -2327,6 +2382,9 @@ const state = {
   rrIndex: 0,
   model: null,
   backend: '',
+  /* 정밀 모드 — 타일을 더 잘게 나누고 좌우 반전 재검사를 추가한다.
+     기본값 꺼짐. 느린 기기에서 켜면 지연이 늘어난다. */
+  precision: false,
   detecting: false,
   halted: false,
   /* 마지막 실패 사유. 경보가 없을 때 사이드바에 계속 표시한다 */
@@ -2627,6 +2685,39 @@ function centerDistance(a, b) {
   return Math.hypot(ax - bx, ay - by);
 }
 
+/** 좌우 반전 프레임에서 나온 박스를 원본 좌표로 되돌린다.
+ *  정밀 모드의 반전 재검사(TTA)에서 쓴다. 반전 화면의 x 는 원본에서
+ *  오른쪽 끝부터 세므로, 새 x = 전체폭 − (x + 폭) 이다.
+ *  y·높이는 좌우 반전에 영향받지 않는다. */
+function unflipBox(bbox, sourceWidth) {
+  const [x, y, w, h] = bbox;
+  return [sourceWidth - (x + w), y, w, h];
+}
+
+/** 유튜브 주소에서 영상 ID(11자)를 뽑는다. 못 뽑으면 null.
+ *  watch?v= · youtu.be/ · /embed/ · /live/ · /shorts/ 를 모두 받는다.
+ *  ID 를 못 읽으면 유튜브 입력으로 취급하지 않는다(오탐 방지). */
+function parseYouTubeId(url) {
+  if (typeof url !== 'string') return null;
+  let parsed;
+  try { parsed = new URL(url.trim()); } catch (e) { return null; }
+  const host = parsed.hostname.replace(/^www\./, '').toLowerCase();
+  const valid = id => (/^[A-Za-z0-9_-]{11}$/.test(id) ? id : null);
+
+  if (host === 'youtu.be') return valid(parsed.pathname.slice(1).split('/')[0]);
+  if (host !== 'youtube.com' && host !== 'm.youtube.com' && host !== 'music.youtube.com') return null;
+
+  const v = parsed.searchParams.get('v');
+  if (v) return valid(v);
+  const match = parsed.pathname.match(/^\/(embed|live|shorts|v)\/([^/?#]+)/);
+  return match ? valid(match[2]) : null;
+}
+
+/** 유튜브 영상을 새 탭에서 열 주소. 자동재생을 켜 두면 화면 공유 직후
+ *  바로 분석이 시작된다. */
+function youTubeWatchUrl(id) {
+  return 'https://www.youtube.com/watch?v=' + id + '&autoplay=1';
+}
 /* ══════════════════════════════════════════════════════════════════
    8. 중복 병합 — 한 사람을 한 번만 세기 위한 핵심
    ──────────────────────────────────────────────────────────────────
@@ -3587,7 +3678,7 @@ function wipeLocalData() {
   const keys = ['beachWatchContacts', 'beachWatchLanguage', 'beachWatchSite',
                 'beachWatchPreset', 'beachWatchThreshold', 'beachWatchFrames',
                 'beachWatchEscalate', 'beachWatchHours', 'beachWatchHintDismissed',
-                'beachWatchNorthStar'];
+                'beachWatchNorthStar', 'beachWatchPrecision'];
   try {
     /* 장소별 위험 구역 키는 접두어로 찾아 지운다 */
     Object.keys(localStorage)
@@ -4436,6 +4527,34 @@ async function detectPeople(camera) {
     tileContext.filter = 'none';
   }
 
+  /* 2-b) 정밀 모드 — 좌우 반전 프레임을 한 번 더 본다 (TTA).
+     COCO-SSD 는 좌우 비대칭 오차가 있어, 한쪽 방향에서만 잡히는 대상이 있다.
+     반전 패스에서 나온 박스는 원본 좌표로 되돌려 같은 병합 단계로 넘긴다. */
+  if (state.precision && CONFIG.precisionFlipTta) {
+    tileCanvas.width = CONFIG.tileCanvasWidth;
+    tileCanvas.height = Math.max(320, Math.round(CONFIG.tileCanvasWidth * source.height / source.width));
+    tileContext.filter = thresholds.filter;
+    tileContext.save();
+    tileContext.translate(tileCanvas.width, 0);
+    tileContext.scale(-1, 1);
+    tileContext.drawImage(source.element, 0, 0, tileCanvas.width, tileCanvas.height);
+    tileContext.restore();
+    const flipScore = Math.max(0.05, thresholds.fullScore - CONFIG.precisionScoreRelief);
+    const flipped = (await state.model.detect(tileCanvas, CONFIG.maxDetectionsFull, flipScore))
+      .filter(p => p.class === 'person');
+    const fx = source.width / tileCanvas.width;
+    const fy = source.height / tileCanvas.height;
+    flipped.forEach(p => {
+      const scaled = [p.bbox[0] * fx, p.bbox[1] * fy, p.bbox[2] * fx, p.bbox[3] * fy];
+      found.push(Object.assign({}, p, {
+        bbox: unflipBox(scaled, source.width),
+        source: 'flip',
+        clipped: false
+      }));
+    });
+    tileContext.filter = 'none';
+  }
+
   const rawCount = found.length;
 
   /* 3) 중복 병합 → 형태 필터 → 시간적 검증 */
@@ -4455,6 +4574,13 @@ async function detectPeople(camera) {
   return { people, raw: rawCount };
 }
 
+/** 지금 허용된 최대 타일 수. 정밀 모드면 더 잘게 나눈다. */
+function maxTiles() {
+  return state.precision
+    ? { x: CONFIG.precisionTilesX, y: CONFIG.precisionTilesY }
+    : { x: CONFIG.tilesX, y: CONFIG.tilesY };
+}
+
 /** 추론 지연에 따라 타일 수를 자동으로 줄이고 늘린다. */
 function adaptWorkload(camera, latency) {
   const m = camera.metrics;
@@ -4464,8 +4590,8 @@ function adaptWorkload(camera, latency) {
   if (m.latencyAvg > CONFIG.latencyDegradeMs && total > 1) {
     camera.activeTiles = total > 2 ? { x: 2, y: 1 } : { x: 1, y: 1 };
     Diagnostics.log(camera.name + ' · ' + tr('degradedTiles', { tiles: camera.activeTiles.x * camera.activeTiles.y }), 'warn');
-  } else if (m.latencyAvg < CONFIG.latencyRestoreMs && total < CONFIG.tilesX * CONFIG.tilesY) {
-    camera.activeTiles = total < 2 ? { x: 2, y: 1 } : { x: CONFIG.tilesX, y: CONFIG.tilesY };
+  } else if (m.latencyAvg < CONFIG.latencyRestoreMs && total < maxTiles().x * maxTiles().y) {
+    camera.activeTiles = total < 2 ? { x: 2, y: 1 } : maxTiles();
     Diagnostics.log(camera.name + ' · ' + tr('restoredTiles', { tiles: camera.activeTiles.x * camera.activeTiles.y }), 'ok');
   }
 }
@@ -5463,6 +5589,7 @@ function scheduleReconnect(camera) {
 
 async function connectCamera(camera, isRetry) {
   if (camera.kind === 'sim') { startSimulation(camera); return true; }
+  if (camera.kind === 'screen') return connectScreen(camera);
   if (camera.kind === 'stream') return connectStream(camera, isRetry);
 
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -5519,6 +5646,76 @@ async function connectCamera(camera, isRetry) {
 }
 
 /* ── 스트림 URL (드론 · IP 카메라 게이트웨이) ─────────────────────── */
+/* ── 화면 공유 (유튜브 포함) ────────────────────────────────────────
+   유튜브 iframe 은 교차 출처라 canvas 로 픽셀을 읽을 수 없다(오염된 캔버스).
+   그래서 링크만으로는 AI 분석이 불가능하다. 대신 사용자가 그 탭을 화면
+   공유하면 진짜 MediaStream 이 들어오고, 그때부터는 기기 카메라와 완전히
+   같은 경로를 탄다 — 기준선 그리기·감지·경보가 모두 그대로 동작한다. */
+async function connectScreen(camera) {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+    camera.error = tr('errScreenUnsupported');
+    state.lastError = camera.error;
+    statusTitle.textContent = tr('needsAttention');
+    statusText.textContent = camera.error;
+    setHealth('healthError', 'bad');
+    refreshAllPanels(); renderCameraBar();
+    return false;
+  }
+  requestNotificationPermission();
+  Diagnostics.log(tr('camConnecting', { name: camera.name }) + ' [screen]', 'info');
+
+  const seq = (camera.connectSeq = (camera.connectSeq || 0) + 1);
+  const stale = () => camera.connectSeq !== seq || !state.cameras.includes(camera);
+
+  try {
+    if (camera.stream) camera.stream.getTracks().forEach(t => t.stop());
+    const stream = await navigator.mediaDevices.getDisplayMedia({
+      video: { frameRate: { ideal: 24, max: 30 } },
+      audio: false
+    });
+    if (stale()) { stream.getTracks().forEach(t => t.stop()); return false; }
+    camera.stream = stream;
+    /* 사용자가 브라우저의 '공유 중지' 버튼을 누르면 track 이 끝난다.
+       그때 화면이 마지막 프레임으로 얼어붙은 채 'LIVE' 로 남지 않도록
+       기기 카메라와 동일한 감시를 붙인다. */
+    attachStreamWatchdog(camera);
+    camera.video.srcObject = camera.stream;
+    await camera.video.play();
+
+    camera.online = true;
+    camera.error = null;
+    camera.reconnectAttempt = 0;
+    state.halted = false;
+    state.lastError = '';
+    Diagnostics.log(tr('camConnected', {
+      name: camera.name,
+      resolution: camera.video.videoWidth + 'x' + camera.video.videoHeight
+    }), 'ok');
+    setHealth('healthGood', 'good');
+    refreshAllPanels(); renderCameraBar(); drawBoundary(camera);
+    await ensureDetectionRunning();
+    return true;
+  } catch (error) {
+    camera.online = false;
+    camera.error = error && error.message ? error.message : String(error);
+    /* 사용자가 공유 창에서 '취소'를 누른 것은 오류가 아니다. 조용히 되돌린다. */
+    const cancelled = error && (error.name === 'NotAllowedError' || error.name === 'AbortError');
+    if (cancelled) {
+      Diagnostics.log(tr('screenShareCancelled'), 'info');
+      state.lastError = tr('screenShareCancelled');
+    } else {
+      Diagnostics.countError(tr('camFailed', { name: camera.name, reason: camera.error }));
+      state.lastError = tr('camFailed', { name: camera.name, reason: camera.error });
+      setHealth('healthError', 'bad');
+    }
+    statusTitle.textContent = tr('needsAttention');
+    statusText.textContent = state.lastError;
+    teardownSource(camera);
+    refreshAllPanels(); renderCameraBar();
+    return false;
+  }
+}
+
 function resolveStreamKind(url, declared) {
   if (declared && declared !== 'auto') return declared;
   const lower = url.split('?')[0].toLowerCase();
@@ -5803,7 +6000,7 @@ function resumeDetection() {
     c.previousPeople = [];
     c.riskSince.clear();
     c.riskSeen.clear();
-    c.activeTiles = { x: CONFIG.tilesX, y: CONFIG.tilesY };
+    c.activeTiles = maxTiles();
     c.metrics.latencyAvg = 0;
   });
   setHealth('healthGood', 'good');
@@ -6251,6 +6448,38 @@ SelfTest.add('스트림: 잘못된 URL을 거른다', () => {
   return (bad === 'errBadUrl' && ok === null) || 'bad=' + bad + ' ok=' + ok;
 });
 
+/* — 유튜브 · 화면 공유 — */
+SelfTest.add('유튜브: 주소 형태별로 영상 ID를 뽑는다', () => {
+  const cases = [
+    ['https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'dQw4w9WgXcQ'],
+    ['https://youtu.be/dQw4w9WgXcQ?t=30', 'dQw4w9WgXcQ'],
+    ['https://www.youtube.com/embed/dQw4w9WgXcQ', 'dQw4w9WgXcQ'],
+    ['https://www.youtube.com/live/dQw4w9WgXcQ', 'dQw4w9WgXcQ'],
+    ['https://m.youtube.com/watch?v=dQw4w9WgXcQ&feature=share', 'dQw4w9WgXcQ']
+  ];
+  const bad = cases.filter(([url, want]) => parseYouTubeId(url) !== want);
+  return bad.length === 0 || 'failed: ' + bad.map(c => c[0]).join(', ');
+});
+SelfTest.add('유튜브: 유튜브가 아닌 주소·잘못된 ID는 거른다', () => {
+  const rejects = ['https://example.com/watch?v=dQw4w9WgXcQ', 'https://www.youtube.com/watch?v=short',
+                   'not a url', 'https://www.youtube.com/'];
+  const leaked = rejects.filter(url => parseYouTubeId(url) !== null);
+  return leaked.length === 0 || 'accepted: ' + leaked.join(', ');
+});
+SelfTest.add('정밀 모드: 좌우 반전 박스를 원본 좌표로 되돌린다', () => {
+  const back = unflipBox([10, 20, 30, 40], 100);
+  const twice = unflipBox(back, 100);
+  const same = twice.every((v, i) => Math.abs(v - [10, 20, 30, 40][i]) < 1e-9);
+  return (back[0] === 60 && back[1] === 20 && back[2] === 30 && back[3] === 40 && same)
+    || 'got ' + JSON.stringify(back) + ' roundtrip ' + JSON.stringify(twice);
+});
+SelfTest.add('정밀 모드: 켜면 타일 상한이 늘어난다', () => {
+  const before = state.precision;
+  state.precision = false; const std = maxTiles();
+  state.precision = true;  const hi = maxTiles();
+  state.precision = before;
+  return (hi.x * hi.y > std.x * std.y) || 'precision did not raise tile ceiling';
+});
 /* — 자유 경계 구역 (폴리라인 / 폴리곤) — */
 SelfTest.add('구역: 점 2개 폴리라인은 예전 직선 판정과 동일', () => {
   const line = [{ x: 0, y: 0.5 }, { x: 1, y: 0.5 }];
@@ -6573,6 +6802,18 @@ SelfTest.add('저장: 경계선 직렬화/복원 왕복', () => {
   return ok || 'round-trip failed';
 });
 
+/* 새 설정을 추가하면서 '내 정보 지우기' 목록에 넣는 것을 잊기 쉽다.
+   README 21장이 "설정을 한 번에 지웁니다" 라고 약속하므로, 저장하는 키가
+   지우기 목록에서 빠지면 약속이 깨진다. 소스에서 직접 대조한다. */
+SelfTest.add('개인정보: 저장하는 모든 키가 지우기 목록에 들어 있다', () => {
+  const source = String(wipeLocalData);
+  const saved = ['beachWatchContacts', 'beachWatchLanguage', 'beachWatchSite',
+                 'beachWatchPreset', 'beachWatchThreshold', 'beachWatchFrames',
+                 'beachWatchEscalate', 'beachWatchHours', 'beachWatchHintDismissed',
+                 'beachWatchNorthStar', 'beachWatchPrecision', 'beachWatchBoundary:'];
+  const missing = saved.filter(k => source.indexOf(k) < 0);
+  return missing.length === 0 || 'wipe list missing: ' + missing.join(', ');
+});
 /* — v6: 안정성 회귀 — */
 SelfTest.add('추적 유예: 한 프레임 놓쳐도 같은 사람으로 남는다', () => {
   const prev = [{ id: 7, bbox: [10, 10, 20, 40], score: .8, hits: 5, averageScore: .8, sizeStable: true, missed: 0 }];
@@ -6989,7 +7230,8 @@ let sourceTab = 'device';
 
 function setSourceTab(tab) {
   sourceTab = tab;
-  [['device', '#tabDevice', '#paneDevice'], ['stream', '#tabStream', '#paneStream'], ['sim', '#tabSim', '#paneSim']]
+  [['device', '#tabDevice', '#paneDevice'], ['stream', '#tabStream', '#paneStream'],
+   ['yt', '#tabYt', '#paneYt'], ['sim', '#tabSim', '#paneSim']]
     .forEach(([key, tabSel, paneSel]) => {
       $(tabSel).setAttribute('aria-pressed', String(key === tab));
       $(paneSel).classList.toggle('on', key === tab);
@@ -7004,6 +7246,7 @@ function openSourceDialog() {
   }
   $('#cameraLabel').value = '';
   $('#streamUrl').value = '';
+  $('#ytUrl').value = '';
   $('#sourceError').classList.remove('on');
   setSourceTab('device');
   listCameras();
@@ -7024,6 +7267,30 @@ async function confirmSourceDialog(event) {
     sourceDialog.close();
     const camera = addCamera({ kind: 'sim', name: name || tr('camDefaultName', { n: state.cameras.length + 1 }) });
     if (camera) startSimulation(camera);
+    return;
+  }
+
+  /* 유튜브 · 화면 공유 — 유튜브 픽셀은 교차 출처라 직접 읽을 수 없으므로
+     영상을 새 탭에서 열어 주고, 그 탭을 화면 공유로 받아 분석한다. */
+  if (sourceTab === 'yt') {
+    const raw = $('#ytUrl').value.trim();
+    let videoId = null;
+    if (raw) {
+      videoId = parseYouTubeId(raw);
+      if (!videoId) { event.preventDefault(); showSourceError('errBadYouTube'); return; }
+    }
+    event.preventDefault();
+    sourceDialog.close();
+    if (videoId) {
+      /* 사용자 클릭에서 이어진 호출이라 팝업 차단에 걸리지 않는다 */
+      window.open(youTubeWatchUrl(videoId), '_blank', 'noopener');
+      Diagnostics.log(tr('ytOpened'), 'info');
+    }
+    const camera = addCamera({
+      kind: 'screen',
+      name: name || (videoId ? tr('camYouTubeName') : tr('camScreenName'))
+    });
+    if (camera) await connectCamera(camera, false);
     return;
   }
 
@@ -7064,6 +7331,10 @@ function bindUi() {
     if (settingsDialog.showModal) settingsDialog.showModal();
     else settingsDialog.setAttribute('open', '');
   });
+  /* README 22장이 "설정 → 언어에서 즉시 바뀌며" 라고 안내하므로, 저장을 누르지
+     않아도 고르는 즉시 화면 전체가 바뀌어야 한다. 저장 버튼은 그대로 두어
+     이미 익숙해진 사용자의 조작도 계속 동작하게 한다. */
+  $('#languageSelect').addEventListener('change', () => applyLanguage($('#languageSelect').value));
   $('#saveSettings').addEventListener('click', () => applyLanguage($('#languageSelect').value));
   settingsDialog.addEventListener('click', e => { if (e.target === settingsDialog) settingsDialog.close(); });
 
@@ -7071,6 +7342,7 @@ function bindUi() {
   $('#addCamera').addEventListener('click', openSourceDialog);
   $('#tabDevice').addEventListener('click', () => setSourceTab('device'));
   $('#tabStream').addEventListener('click', () => setSourceTab('stream'));
+  $('#tabYt').addEventListener('click', () => setSourceTab('yt'));
   $('#tabSim').addEventListener('click', () => setSourceTab('sim'));
   $('#sourceConfirm').addEventListener('click', confirmSourceDialog);
   sourceDialog.addEventListener('click', e => { if (e.target === sourceDialog) sourceDialog.close(); });
@@ -7127,6 +7399,16 @@ function bindUi() {
   ['#hoursEnabled', '#hoursFrom', '#hoursTo'].forEach(sel =>
     $(sel).addEventListener('change', refreshWatchHours));
   $('#prepareOffline').addEventListener('click', prepareOffline);
+  /* 정밀 모드 — 타일을 4x3 으로 늘리고 좌우 반전 재검사를 더한다.
+     느린 기기에서는 지연이 커지므로 adaptWorkload 가 자동으로 되돌린다. */
+  $('#precisionMode').addEventListener('change', () => {
+    state.precision = $('#precisionMode').checked;
+    store.set('beachWatchPrecision', state.precision ? '1' : '0');
+    state.cameras.forEach(c => { c.activeTiles = maxTiles(); c.metrics.latencyAvg = 0; });
+    Diagnostics.log(tr(state.precision ? 'precisionOn' : 'precisionOff'), 'info');
+    refreshMetrics();
+  });
+
   $('#childMode').addEventListener('change', () => {
     Diagnostics.log(tr($('#childMode').checked ? 'childModeOn' : 'childModeOff'), 'info');
     refreshTunerLabels();
@@ -7224,6 +7506,8 @@ function restoreSettings() {
   state.detached.points = activeSite().line.map(p => ({ x: p.x, y: p.y }));
   restoreWatchHours();
   state.hintDismissed = store.get('beachWatchHintDismissed', '0') === '1';
+  state.precision = store.get('beachWatchPrecision', '0') === '1';
+  $('#precisionMode').checked = state.precision;
 }
 
 function startClock() {
