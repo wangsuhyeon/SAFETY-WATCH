@@ -7060,18 +7060,972 @@ SelfTest.add('저장: 경계선 직렬화/복원 왕복', () => {
   return ok || 'round-trip failed';
 });
 
+/* 새 설정을 추가하면서 '내 정보 지우기' 목록에 넣는 것을 잊기 쉽다.
+   README 21장이 "설정을 한 번에 지웁니다" 라고 약속하므로, 저장하는 키가
+   지우기 목록에서 빠지면 약속이 깨진다. 소스에서 직접 대조한다. */
+SelfTest.add('개인정보: 저장하는 모든 키가 지우기 목록에 들어 있다', () => {
+  const source = String(wipeLocalData);
+  const saved = ['beachWatchContacts', 'beachWatchLanguage', 'beachWatchSite',
+                 'beachWatchPreset', 'beachWatchThreshold', 'beachWatchFrames',
+                 'beachWatchEscalate', 'beachWatchHours', 'beachWatchHintDismissed',
+                 'beachWatchNorthStar', 'beachWatchPrecision', 'beachWatchBoundary:'];
+  const missing = saved.filter(k => source.indexOf(k) < 0);
+  return missing.length === 0 || 'wipe list missing: ' + missing.join(', ');
+});
+/* — v6: 안정성 회귀 — */
+SelfTest.add('추적 유예: 한 프레임 놓쳐도 같은 사람으로 남는다', () => {
+  const prev = [{ id: 7, bbox: [10, 10, 20, 40], score: .8, hits: 5, averageScore: .8, sizeStable: true, missed: 0 }];
+  const kept = carryTracks([], prev);
+  return (kept.length === 1 && kept[0].id === 7 && kept[0].missed === 1) || 'lost track after one miss';
+});
+
+SelfTest.add('추적 유예: 유예 횟수를 넘기면 버린다', () => {
+  let prev = [{ id: 7, bbox: [10, 10, 20, 40], score: .8, hits: 5, averageScore: .8, sizeStable: true, missed: 0 }];
+  for (let i = 0; i <= CONFIG.trackGraceFrames; i++) prev = carryTracks([], prev);
+  return prev.length === 0 || 'ghost track never expires';
+});
+
+SelfTest.add('추적 유예: 다시 잡히면 누적 관측 수가 이어진다', () => {
+  const prev = carryTracks([], [{ id: 3, bbox: [10, 10, 20, 40], score: .8, hits: 4, averageScore: .8, sizeStable: true, missed: 0 }]);
+  const idRef = { value: 99 };
+  const again = trackCandidates([{ bbox: [11, 11, 20, 40], score: .8, class: 'person' }], prev, idRef);
+  return (again[0].id === 3 && again[0].hits === 5 && again[0].missed === 0) || 'hits reset after brief miss';
+});
+
+SelfTest.add('저장: 경계선은 이름이 아니라 카메라 id로 저장된다', () => {
+  const cam = focusedCamera();
+  const backup = cam.points.map(p => ({ x: p.x, y: p.y })), name = cam.name;
+  cam.points = [{ x: 0.3, y: 0.4 }, { x: 0.7, y: 0.6 }];
+  persistBoundaries();
+  const saved = JSON.parse(store.get(boundaryStorageKey(), '{}'));
+  const byId = !!saved[cam.id];
+  /* 이름이 바뀌어도(=언어 전환) 복원된다 */
+  cam.name = name + ' renamed';
+  cam.points = [{ x: 0, y: 0 }, { x: 1, y: 1 }];
+  restoreBoundaryFor(cam);
+  const restored = Math.abs(cam.points[0].x - 0.3) < 1e-9;
+  cam.name = name; cam.points = backup; persistBoundaries(); drawBoundary(cam);
+  return (byId && restored) || ('id key ' + byId + ', restore ' + restored);
+});
+
+SelfTest.add('알림: 시험 발송은 실제 경보의 중복 방지 시계를 건드리지 않는다', () => {
+  const backup = state.contacts;
+  const c = normalizeContact({ name: '점검용', phone: '01000000000', minLevel: 'alert', onDuty: true });
+  state.contacts = [c];
+  notifyRecipients(null, 'alert', 'ALERT', 1, 2, true, c);
+  const ok = !c.lastSentAt && shouldSendNow(c, 'alert', Date.now());
+  state.contacts = backup;
+  return ok || 'test send consumed the real throttle';
+});
+
+SelfTest.add('설정: tfjs 대체 CDN이 준비되어 있다', () =>
+  (Array.isArray(CONFIG.tfCdns) && CONFIG.tfCdns.length >= 2) || 'no tfjs fallback');
+
+SelfTest.add('설정: 웹훅에 시간 제한이 설정되어 있다', () =>
+  (CONFIG.webhookTimeoutMs > 0 && CONFIG.webhookTimeoutMs <= 15000) || 'webhook has no timeout');
+
+SelfTest.add('설정: 영상 정지 감시 시간이 합리적 범위', () =>
+  (CONFIG.streamStallMs >= 3000 && CONFIG.streamStallMs <= 30000) || 'bad stall window');
+
+/* — v7: 감시 시간대 · 음성 · 스냅샷 · 오프라인 — */
+SelfTest.add('시간대: 09:00–19:00 안팎을 정확히 가른다', () => {
+  const at = (h, m) => h * 60 + (m || 0);
+  return (withinWatchHours(at(12), '09:00', '19:00') &&
+          !withinWatchHours(at(8, 59), '09:00', '19:00') &&
+          withinWatchHours(at(9), '09:00', '19:00') &&
+          !withinWatchHours(at(19), '09:00', '19:00')) || 'daytime window wrong';
+});
+
+SelfTest.add('시간대: 자정을 넘기는 구간(22:00–06:00)도 맞다', () => {
+  const at = h => h * 60;
+  return (withinWatchHours(at(23), '22:00', '06:00') &&
+          withinWatchHours(at(2), '22:00', '06:00') &&
+          !withinWatchHours(at(12), '22:00', '06:00')) || 'overnight window wrong';
+});
+
+SelfTest.add('시간대: 설정이 없거나 잘못되면 항상 감시', () =>
+  (withinWatchHours(600, '', '') && withinWatchHours(600, '25:00', '19:00') &&
+   withinWatchHours(600, '09:00', '09:00')) || 'should default to always-on');
+
+SelfTest.add('시간대: 시각 문자열 파싱', () =>
+  (parseHhMm('09:30') === 570 && parseHhMm('00:00') === 0 && parseHhMm('23:59') === 1439 &&
+   parseHhMm('24:00') === null && parseHhMm('9:5') === null && parseHhMm('') === null) || 'parse failed');
+
+SelfTest.add('음성: 안내 문장에 등급·카메라·인원이 모두 들어간다', () => {
+  const text = buildVoiceMessage({ name: '북측 1구역' }, 'critical', 2, 7.4);
+  return (text.indexOf('북측 1구역') >= 0 && text.indexOf('2') >= 0 && text.indexOf('7') >= 0)
+    || ('voice text incomplete: ' + text);
+});
+
+SelfTest.add('음성: 같은 상황은 반복해서 읽지 않는다', () => {
+  const now = Date.now();
+  Speaker.lastKey = 'cam1:alert'; Speaker.lastSpokenAt = now;
+  const same = Speaker.shouldSpeak('cam1:alert', now + 1000);
+  const escalated = Speaker.shouldSpeak('cam1:critical', now + 1000);
+  const later = Speaker.shouldSpeak('cam1:alert', now + CONFIG.voiceRepeatMs + 10);
+  Speaker.lastKey = ''; Speaker.lastSpokenAt = 0;
+  return (!same && escalated && later) || 'repeat rule wrong';
+});
+
+SelfTest.add('스냅샷: 끄면 캡처하지 않는다', () => {
+  const box = $('#snapshotEnabled');
+  const was = box.checked;
+  box.checked = false;
+  const off = captureSnapshot(focusedCamera());
+  box.checked = was;
+  return off === '' || 'captured while disabled';
+});
+
+SelfTest.add('스냅샷: 오래된 기록의 이미지는 메모리에서 비운다', () => {
+  const backup = state.events.slice();
+  state.events = [];
+  for (let i = 0; i < CONFIG.maxSnapshots + 5; i++) {
+    pushEvent('test ' + i, 'info', { snapshot: 'data:image/jpeg;base64,AAAA' });
+  }
+  const withShots = state.events.filter(e => e.snapshot).length;
+  state.events = backup; renderEventLog();
+  return withShots <= CONFIG.maxSnapshots || ('kept ' + withShots + ' snapshots');
+});
+
+SelfTest.add('오프라인: 캐시 모듈이 준비되어 있다', () =>
+  (typeof OfflineCache === 'object' && typeof OfflineCache.runCachedScript === 'function' &&
+   typeof OfflineCache.fetchThrough === 'function') || 'offline cache missing');
+
+SelfTest.add('키보드: 화살표로 점을 옮기면 0–1 범위를 벗어나지 않는다', () => {
+  const cam = focusedCamera();
+  const backup = cam.points.map(p => ({ x: p.x, y: p.y }));
+  cam.points[0] = { x: 0.001, y: 0.001 };
+  for (let i = 0; i < 20; i++) nudgeZonePoint(-1, -1, true);
+  const p = cam.points[0];
+  const ok = p.x >= 0 && p.x <= 1 && p.y >= 0 && p.y <= 1;
+  cam.points = backup; drawBoundary(cam); persistBoundaries();
+  return ok || ('out of range: ' + JSON.stringify(p));
+});
+
+SelfTest.add('단축키: 입력 칸에 타이핑 중일 때는 동작하지 않는다', () =>
+  (typingInField({ tagName: 'INPUT' }) && typingInField({ tagName: 'TEXTAREA' }) &&
+   !typingInField({ tagName: 'BUTTON' })) || 'shortcut guard wrong');
+
+SelfTest.add('접근성: 단축키 안내에 모든 키 설명이 있다', () => {
+  const items = document.querySelectorAll('#shortcutDialog .shortcut-list li');
+  return items.length >= 8 || ('only ' + items.length + ' shortcuts documented');
+});
+
+
+/* — v9: 북극성 지표 · 어린이 안전 · 개인정보 — */
+SelfTest.add('북극성: 중앙값을 정확히 계산한다', () => {
+  const backup = NorthStar.samples.slice();
+  NorthStar.samples = [3, 9, 5];
+  const odd = NorthStar.median();
+  NorthStar.samples = [2, 4, 6, 8];
+  const even = NorthStar.median();
+  NorthStar.samples = [];
+  const none = NorthStar.median();
+  NorthStar.samples = backup;
+  return (odd === 5 && even === 5 && none === null) || ('odd ' + odd + ', even ' + even + ', none ' + none);
+});
+
+SelfTest.add('북극성: 확인하지 않은 경보는 표본에 넣지 않는다', () => {
+  const backup = NorthStar.samples.slice();
+  NorthStar.samples = []; NorthStar.pending.clear();
+  const before = NorthStar.count();
+  NorthStar.open({ id: 'testcam' }, Date.now() - 4000);
+  NorthStar.clear({ id: 'testcam' });          /* 아무도 확인하지 않고 상황 종료 */
+  const after = NorthStar.count();
+  NorthStar.samples = backup; NorthStar.pending.clear();
+  return (before === 0 && after === 0) || 'unacknowledged alert leaked into samples';
+});
+
+SelfTest.add('북극성: 진입 시각부터 재므로 감지 지연도 숫자에 잡힌다', () => {
+  const backup = NorthStar.samples.slice();
+  NorthStar.samples = []; NorthStar.pending.clear();
+  const enteredAt = Date.now() - 7000;
+  NorthStar.open({ id: 'testcam' }, enteredAt);
+  const seconds = NorthStar.acknowledge();
+  NorthStar.samples = backup; NorthStar.pending.clear();
+  return (seconds >= 6.8 && seconds <= 7.5) || ('measured ' + seconds);
+});
+
+SelfTest.add('북극성: 표본 상한을 넘기지 않는다', () => {
+  const backup = NorthStar.samples.slice();
+  NorthStar.samples = [];
+  for (let i = 0; i < CONFIG.northStarSamples + 20; i++) {
+    NorthStar.pending.clear();
+    NorthStar.open({ id: 'c' }, Date.now() - 1000);
+    NorthStar.acknowledge();
+  }
+  const n = NorthStar.count();
+  NorthStar.samples = backup; NorthStar.save();
+  return n === CONFIG.northStarSamples || ('kept ' + n);
+});
+
+SelfTest.add('어린이 안전: 어린이 우선이 최소 크기를 낮춘다', () => {
+  const adult = { minW: 5, minH: 7, minArea: 45, aspectMax: 2.6 };
+  const child = childAwareShape(adult);
+  return (child.minW < adult.minW && child.minH < adult.minH && child.minArea < adult.minArea)
+    || ('not smaller: ' + JSON.stringify(child));
+});
+
+SelfTest.add('어린이 안전: 어른 기준에서 걸러지던 작은 사람이 통과한다', () => {
+  /* 멀리 있는 아이 정도의 크기 */
+  const small = box(100, 100, 4, 6);
+  const adult = { minW: 5, minH: 7, minArea: 45, aspectMax: 2.6 };
+  const rejectedByAdult = !isPlausiblePerson(small, adult);
+  const acceptedByChild = isPlausiblePerson(small, childAwareShape(adult));
+  return (rejectedByAdult && acceptedByChild)
+    || ('adult rejects ' + rejectedByAdult + ', child accepts ' + acceptedByChild);
+});
+
+SelfTest.add('어린이 안전: 크기를 낮춘 만큼 확인 횟수를 한 번 더 요구한다', () => {
+  const box2 = $('#childMode');
+  if (!box2) return true;
+  const was = box2.checked;
+  box2.checked = false;
+  const off = activeThresholds(focusedCamera()).confirmFrames;
+  box2.checked = true;
+  const on = activeThresholds(focusedCamera()).confirmFrames;
+  box2.checked = was;
+  return (on === off + 1) || ('off ' + off + ', on ' + on);
+});
+
+SelfTest.add('개인정보: 알림 본문에 사진·연락처가 들어가지 않는다', () => {
+  const contact = { name: '홍길동', role: '1구역', phone: '01011112222', email: 'a@b.c' };
+  const payload = buildAlertPayload({ name: '카메라 1', zoneMode: 'line' }, 'alert', 1, 3, contact, false);
+  const text = JSON.stringify(payload);
+  const leaks = [];
+  if (text.indexOf('data:image') >= 0) leaks.push('image');
+  if (text.indexOf(contact.phone) >= 0) leaks.push('phone');
+  if (text.indexOf(contact.email) >= 0) leaks.push('email');
+  return leaks.length === 0 || 'payload leaks: ' + leaks.join(', ');
+});
+
+SelfTest.add('개인정보: 내 정보 지우기 기능이 있다', () =>
+  (typeof wipeLocalData === 'function' && !!$('#wipeData')) || 'no way to erase local data');
+/* — v8: 인원 수 · 360° 회전 · 안내문 닫기 — */
+SelfTest.add('인원 수: 구역 안 박스 개수가 그대로 인원 수가 된다', () => {
+  const cam = focusedCamera();
+  if (!cam.detections || !cam.canvas) return true;    /* 카메라가 없으면 건너뛴다 */
+  const backup = { pts: cam.points.slice(), mode: cam.zoneMode };
+  cam.points = [{ x: 0, y: 0.6 }, { x: 1, y: 0.6 }]; cam.zoneMode = 'line';
+  cam.riskSince.clear(); cam.riskSeen.clear();
+  const src = { element: cam.canvas, width: 1000, height: 1000 };
+  const p = (id, x) => ({ id, bbox: [x, 300, 30, 45], score: .8, hits: 5, averageScore: .8, sizeStable: true, missed: 0 });
+  renderCamera(cam, [p(1, 100), p(2, 300), p(3, 500)], src);
+  const three = cam.riskCount;
+  const boxes = cam.detections.querySelectorAll('.detection-box').length;
+  cam.points = backup.pts; cam.zoneMode = backup.mode;
+  cam.riskSince.clear(); cam.riskSeen.clear();
+  return (three === 3 && boxes === 3) || ('count ' + three + ', boxes ' + boxes);
+});
+
+SelfTest.add('인원 수: 떨어져 있는 여러 사람은 한 명으로 합쳐지지 않는다', () => {
+  const mk = (x, y, src) => ({ bbox: [x, y, 18, 26], score: .7, class: 'person', source: src || 'full' });
+  const apart = clusterObservations([mk(100, 100), mk(200, 100), mk(300, 100), mk(400, 100)]).length;
+  const near = clusterObservations([mk(100, 100, 'tile-0-0'), mk(122, 100, 'tile-0-1')]).length;
+  return (apart === 4 && near === 2) || ('apart ' + apart + ', near ' + near);
+});
+
+SelfTest.add('인원 수: 사람이 늘면 알림을 다시 보낸다', () => {
+  const cam = focusedCamera();
+  const before = cam.lastAlertCount || 0;
+  cam.lastAlertCount = 1;
+  const growsOnTwo = 2 > (cam.lastAlertCount || 0);
+  const notOnOne = !(1 > (cam.lastAlertCount || 0));
+  cam.lastAlertCount = before;
+  return (growsOnTwo && notOnOne) || 'growth rule wrong';
+});
+
+SelfTest.add('회전: 90도를 돌리면 가로선이 세로선이 된다', () => {
+  const line = [{ x: 0.2, y: 0.5 }, { x: 0.8, y: 0.5 }];
+  const turned = rotatePoints(line, 90, 1);            /* 정사각 화면 기준 */
+  const dx = Math.abs(turned[1].x - turned[0].x);
+  const dy = Math.abs(turned[1].y - turned[0].y);
+  return (dx < 1e-6 && Math.abs(dy - 0.6) < 1e-6) || ('dx ' + dx.toFixed(4) + ', dy ' + dy.toFixed(4));
+});
+
+SelfTest.add('회전: 360도를 돌리면 원래 자리로 돌아온다', () => {
+  const shape = [{ x: 0.2, y: 0.4 }, { x: 0.5, y: 0.7 }, { x: 0.8, y: 0.45 }];
+  const back = rotatePoints(shape, 360, 16 / 9);
+  const same = shape.every((p, i) => Math.abs(p.x - back[i].x) < 1e-9 && Math.abs(p.y - back[i].y) < 1e-9);
+  return same || 'full turn did not return to origin';
+});
+
+SelfTest.add('회전: 어떤 각도에서도 길이(모양)가 보존된다', () => {
+  const line = [{ x: 0.25, y: 0.5 }, { x: 0.75, y: 0.5 }];
+  const aspect = 16 / 9;
+  const lengthOf = pts => Math.hypot((pts[1].x - pts[0].x) * aspect, pts[1].y - pts[0].y);
+  const base = lengthOf(line);
+  for (let deg = 0; deg < 360; deg += 15) {
+    if (Math.abs(lengthOf(rotatePoints(line, deg, aspect)) - base) > 1e-9) return 'length changed at ' + deg;
+  }
+  return true;
+});
+
+SelfTest.add('회전: 화면을 벗어나면 각도를 유지한 채 안으로 넣는다', () => {
+  const line = [{ x: 0.02, y: 0.5 }, { x: 0.98, y: 0.5 }];
+  const turned = fitPointsInView(rotatePoints(line, 90, 16 / 9));
+  const inside = turned.every(p => p.x >= -1e-9 && p.x <= 1 + 1e-9 && p.y >= -1e-9 && p.y <= 1 + 1e-9);
+  const stillVertical = Math.abs(turned[1].x - turned[0].x) < 1e-6;
+  return (inside && stillVertical) || ('inside ' + inside + ', vertical ' + stillVertical);
+});
+
+SelfTest.add('회전: 각도는 0–359 로 정규화된다', () =>
+  (normalizeAngle(370) === 10 && normalizeAngle(-90) === 270 &&
+   normalizeAngle(0) === 0 && normalizeAngle('abc') === 0) || 'angle normalize wrong');
+
+SelfTest.add('높이: 세로로 옮겨도 모양이 그대로 유지된다', () => {
+  const shape = [{ x: 0.2, y: 0.4 }, { x: 0.5, y: 0.7 }, { x: 0.8, y: 0.45 }];
+  const moved = translatePointsToHeight(shape, 0.3);
+  const dy = moved[0].y - shape[0].y;
+  const parallel = moved.every((p, i) => Math.abs((p.y - shape[i].y) - dy) < 1e-9 && p.x === shape[i].x);
+  const inside = moved.every(p => p.y >= 0 && p.y <= 1);
+  return (parallel && inside) || ('parallel ' + parallel + ', inside ' + inside);
+});
+
+SelfTest.add('중심: 여러 점의 중심을 정확히 구한다', () => {
+  const c = centroidOf([{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 1, y: 1 }, { x: 0, y: 1 }]);
+  return (Math.abs(c.x - 0.5) < 1e-9 && Math.abs(c.y - 0.5) < 1e-9) || 'centroid wrong';
+});
+
+SelfTest.add('안내문: 닫으면 화면에서 사라지고 설명은 카드에 남는다', () => {
+  const cam = focusedCamera();
+  if (!cam.hintEl) return true;                       /* 패널이 없는 상태면 건너뛴다 */
+  const wasEditing = state.editing, wasDismissed = state.hintDismissed;
+  state.editing = true; state.hintDismissed = false;
+  setPanelHint(cam);
+  const shown = cam.hintEl.classList.contains('on');
+  state.hintDismissed = true;
+  setPanelHint(cam);
+  const hidden = !cam.hintEl.classList.contains('on');
+  const cardStillHasText = tr('zoneHintEdit').length > 0;
+  state.editing = wasEditing; state.hintDismissed = wasDismissed;
+  setPanelHint(cam); refreshZoneCard();
+  return (shown && hidden && cardStillHasText) || ('shown ' + shown + ', hidden ' + hidden);
+});
+
+SelfTest.add('안내문: 닫기 버튼에 접근 가능한 이름이 있다', () => {
+  const cam = focusedCamera();
+  if (!cam.panel) return true;
+  const close = $('.hint-close', cam.panel);
+  return (!close || (close.getAttribute('aria-label') || '').length > 0) || 'hint close has no label';
+});
+
 /* ══════════════════════════════════════════════════════════════════
-   33. MLX9064X 1초 주기 실시간 온도 계측 및 스마트 관제 연동
+   23. 부하 테스트
+   ══════════════════════════════════════════════════════════════════ */
+function runStressTest(objectCount) {
+  const count = objectCount || 200;
+  Diagnostics.log(tr('stressRunning'), 'info');
+
+  /* 성수기 혼잡 상황을 흉내 낸다: 서로 다른 사람 여럿 + 한 사람당 1–3개의
+     중복 관측(전체 프레임 + 타일). 병합이 실제로 일어나는 입력이어야
+     처리량 측정에 의미가 있다. */
+  const synthetic = [];
+  const people = Math.max(1, Math.ceil(count / 3));
+  for (let i = 0; i < people; i++) {
+    const x = (i * 137) % 1820, y = ((i * 89) % 940);
+    const w = 18 + (i % 7), h = 40 + (i % 13);
+    const copies = 1 + (i % 3);
+    for (let k = 0; k < copies && synthetic.length < count; k++) {
+      synthetic.push(box(x + k, y + k, w + k, h + k, {
+        score: 0.40 + ((i + k) % 40) / 100,
+        source: k === 0 ? 'full' : 'tile-' + (k % 2) + '-' + (i % 3),
+        clipped: k > 1
+      }));
+    }
+  }
+  while (synthetic.length < count) {
+    const i = synthetic.length;
+    synthetic.push(box((i * 211) % 1800, (i * 67) % 900, 20, 44, { score: 0.5, source: 'full' }));
+  }
+
+  const t0 = nowMs();
+  const merged = clusterObservations(synthetic);
+  const t1 = nowMs();
+
+  const ref = { value: 1 };
+  let previous = [];
+  for (let frame = 0; frame < 5; frame++) {
+    previous = trackCandidates(merged.map(b => Object.assign({}, b, {
+      bbox: [b.bbox[0] + frame, b.bbox[1] + frame, b.bbox[2], b.bbox[3]]
+    })), previous, ref);
+  }
+  const t2 = nowMs();
+
+  const camera = focusedCamera();
+  const hasPanel = Boolean(camera.detections);
+  if (hasPanel) renderCamera(camera, previous.slice(0, 60), { width: 1920, height: 1080 });
+  const t3 = nowMs();
+
+  /* 부하 테스트가 실제 경보를 남기지 않도록 되돌린다 */
+  if (hasPanel) {
+    camera.detections.innerHTML = '';
+    camera.riskSince.clear();
+    camera.riskSeen.clear();
+    camera.riskCount = 0;
+    camera.alertLevel = 'none';
+    camera.panel.classList.remove('critical');
+    updatePanelLevel(camera);
+  }
+  state.alertLevel = 'none';
+  $('#detectCount').textContent = '0';
+  stateChip.className = 'state';
+  stateChip.textContent = state.detecting ? 'LIVE' : tr('ready');
+  refreshStatusPanel();
+
+  Diagnostics.log(tr('stressDone', {
+    objects: count, dedupe: (t1 - t0).toFixed(1), track: (t2 - t1).toFixed(1),
+    render: (t3 - t2).toFixed(1), total: (t3 - t0).toFixed(1)
+  }), 'ok');
+  Diagnostics.log(tr('dedupeReport', { raw: count, merged: merged.length }), 'info');
+  return { objects: count, dedupe: t1 - t0, track: t2 - t1, render: t3 - t2, total: t3 - t0, kept: merged.length };
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   24. 카메라 추가 다이얼로그
+   ══════════════════════════════════════════════════════════════════ */
+let sourceTab = 'device';
+
+function setSourceTab(tab) {
+  sourceTab = tab;
+  [['device', '#tabDevice', '#paneDevice'], ['stream', '#tabStream', '#paneStream'],
+   ['yt', '#tabYt', '#paneYt'], ['file', '#tabFile', '#paneFile'], ['sim', '#tabSim', '#paneSim']]
+    .forEach(([key, tabSel, paneSel]) => {
+      $(tabSel).setAttribute('aria-pressed', String(key === tab));
+      $(paneSel).classList.toggle('on', key === tab);
+    });
+  $('#sourceError').classList.remove('on');
+}
+
+function openSourceDialog() {
+  if (state.cameras.length >= CONFIG.maxCameras) {
+    Diagnostics.log(tr('camLimitReached', { max: CONFIG.maxCameras }), 'warn');
+    return;
+  }
+  $('#cameraLabel').value = '';
+  $('#streamUrl').value = '';
+  $('#ytUrl').value = '';
+  $('#fileInput').value = '';
+  $('#sourceError').classList.remove('on');
+  setSourceTab('device');
+  listCameras();
+  if (sourceDialog.showModal) sourceDialog.showModal(); else sourceDialog.setAttribute('open', '');
+}
+
+function showSourceError(key) {
+  const box = $('#sourceError');
+  box.textContent = tr(key);
+  box.classList.add('on');
+}
+
+async function confirmSourceDialog(event) {
+  const name = $('#cameraLabel').value.trim();
+
+  if (sourceTab === 'sim') {
+    event.preventDefault();
+    sourceDialog.close();
+    const camera = addCamera({ kind: 'sim', name: name || tr('camDefaultName', { n: state.cameras.length + 1 }) });
+    if (camera) startSimulation(camera);
+    return;
+  }
+
+  /* 유튜브 · 화면 공유 — 유튜브 픽셀은 교차 출처라 직접 읽을 수 없으므로
+     영상을 새 탭에서 열어 주고, 그 탭을 화면 공유로 받아 분석한다. */
+  if (sourceTab === 'yt') {
+    const raw = $('#ytUrl').value.trim();
+    let videoId = null;
+    if (raw) {
+      videoId = parseYouTubeId(raw);
+      if (!videoId) { event.preventDefault(); showSourceError('errBadYouTube'); return; }
+    }
+    event.preventDefault();
+    sourceDialog.close();
+    if (videoId) {
+      /* 사용자 클릭에서 이어진 호출이라 팝업 차단에 걸리지 않는다 */
+      window.open(youTubeWatchUrl(videoId), '_blank', 'noopener');
+      Diagnostics.log(tr('ytOpened'), 'info');
+    }
+    const camera = addCamera({
+      kind: 'screen',
+      name: name || (videoId ? tr('camYouTubeName') : tr('camScreenName'))
+    });
+    if (camera) await connectCamera(camera, false);
+    return;
+  }
+
+  if (sourceTab === 'file') {
+    const input = $('#fileInput');
+    const file = input.files && input.files[0];
+    if (!file) { event.preventDefault(); showSourceError('errNeedFile'); return; }
+    event.preventDefault();
+    sourceDialog.close();
+    const camera = addCamera({
+      kind: 'file', fileUrl: URL.createObjectURL(file),
+      name: name || tr('camFileName')
+    });
+    if (camera) await connectCamera(camera, false);
+    return;
+  }
+
+  if (sourceTab === 'stream') {
+    const url = $('#streamUrl').value.trim();
+    if (!url) { event.preventDefault(); showSourceError('errNeedUrl'); return; }
+    const problem = validateStreamUrl(url);
+    if (problem) { event.preventDefault(); showSourceError(problem); return; }
+    event.preventDefault();
+    sourceDialog.close();
+    const camera = addCamera({
+      kind: 'stream', url, streamKind: $('#streamKind').value,
+      name: name || tr('camDefaultName', { n: state.cameras.length + 1 })
+    });
+    if (camera) await connectCamera(camera, false);
+    return;
+  }
+
+  /* 기기 카메라 */
+  event.preventDefault();
+  sourceDialog.close();
+  const camera = addCamera({
+    kind: 'device', deviceId: cameraSelect.value,
+    name: name || (cameraSelect.selectedOptions[0] && cameraSelect.selectedOptions[0].value
+      ? cameraSelect.selectedOptions[0].textContent
+      : tr('camDefaultName', { n: state.cameras.length + 1 }))
+  });
+  if (camera) await connectCamera(camera, false);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   25. 이벤트 바인딩
+   ══════════════════════════════════════════════════════════════════ */
+function bindUi() {
+  /* 설정 다이얼로그 */
+  $('#settingsButton').addEventListener('click', () => {
+    $('#languageSelect').value = state.language;
+    if (settingsDialog.showModal) settingsDialog.showModal();
+    else settingsDialog.setAttribute('open', '');
+  });
+  /* README 22장이 "설정 → 언어에서 즉시 바뀌며" 라고 안내하므로, 저장을 누르지
+     않아도 고르는 즉시 화면 전체가 바뀌어야 한다. 저장 버튼은 그대로 두어
+     이미 익숙해진 사용자의 조작도 계속 동작하게 한다. */
+  $('#languageSelect').addEventListener('change', () => applyLanguage($('#languageSelect').value));
+  $('#saveSettings').addEventListener('click', () => applyLanguage($('#languageSelect').value));
+  settingsDialog.addEventListener('click', e => { if (e.target === settingsDialog) settingsDialog.close(); });
+
+  /* 카메라 추가 */
+  $('#addCamera').addEventListener('click', openSourceDialog);
+  $('#tabDevice').addEventListener('click', () => setSourceTab('device'));
+  $('#tabStream').addEventListener('click', () => setSourceTab('stream'));
+  $('#tabYt').addEventListener('click', () => setSourceTab('yt'));
+  $('#tabFile').addEventListener('click', () => setSourceTab('file'));
+  $('#tabSim').addEventListener('click', () => setSourceTab('sim'));
+  $('#sourceConfirm').addEventListener('click', confirmSourceDialog);
+  sourceDialog.addEventListener('click', e => { if (e.target === sourceDialog) sourceDialog.close(); });
+
+  /* 경계 구역 편집 */
+  $('#boundaryHeight').addEventListener('input', e => moveLineToHeight(Number(e.target.value)));
+  $('#boundaryTilt').addEventListener('input', e => setZoneAngle(Number(e.target.value)));
+  $('#zoneModeLine').addEventListener('click', () => setZoneMode('line'));
+  $('#zoneModePolygon').addEventListener('click', () => setZoneMode('polygon'));
+  $('#zoneUndo').addEventListener('click', undoZonePoint);
+  $('#zoneSimplify').addEventListener('click', simplifyZone);
+  $('#zoneApplyAll').addEventListener('click', applyZoneToAll);
+
+  /* 수신자 */
+  $('#enableAlerts').addEventListener('click', enableBrowserAlerts);
+  $('#addContact').addEventListener('click', () => openContactDialog(null));
+  $('#contactSave').addEventListener('click', saveContact);
+  $('#contactDialog').addEventListener('click', e => { if (e.target === $('#contactDialog')) $('#contactDialog').close(); });
+
+  /* 컨트롤 */
+  $('#connect').addEventListener('click', () => {
+    if (state.cameras.length === 0) { openSourceDialog(); return; }
+    state.cameras.forEach(c => { if (!c.online && !c.simulating) connectCamera(c, false); });
+  });
+  $('#disconnect').addEventListener('click', disconnectAll);
+  $('#simulate').addEventListener('click', () => {
+    const existing = state.cameras.find(c => c.simulating);
+    if (existing) { teardownSource(existing); removeCamera(existing.id); return; }
+    const camera = addCamera({ kind: 'sim' });
+    if (camera) startSimulation(camera);
+  });
+  $('#editLine').addEventListener('click', () => {
+    state.editing = !state.editing;
+    refreshZoneCard();
+    if (!state.editing) persistBoundaries();
+  });
+  $('#resetLine').addEventListener('click', resetZone);
+
+  /* 자동화 · 진단 */
+  $('#adminNotification').addEventListener('change', requestNotificationPermission);
+  $('#exportEvents').addEventListener('click', exportEvents);
+  $('#runSelfTest').addEventListener('click', () => SelfTest.run());
+  $('#runStress').addEventListener('click', () => runStressTest(200));
+
+  /* ── v7: 관제 모드 · 단축키 · 감시 시간대 · 오프라인 · 음성 ── */
+  $('#controlRoom').addEventListener('click', () => toggleControlRoom());
+  $('#shortcutHelp').addEventListener('click', () => { try { $('#shortcutDialog').showModal(); } catch (e) {} });
+  document.addEventListener('keydown', handleShortcut);
+  /* 브라우저 전체화면을 사용자가 직접 빠져나온 경우에도 레이아웃을 되돌린다 */
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && document.body.classList.contains('control-room')) toggleControlRoom(false);
+  });
+
+  ['#hoursEnabled', '#hoursFrom', '#hoursTo'].forEach(sel =>
+    $(sel).addEventListener('change', refreshWatchHours));
+  $('#prepareOffline').addEventListener('click', prepareOffline);
+  /* 정밀 모드 — 타일을 4x3 으로 늘리고 좌우 반전 재검사를 더한다.
+     느린 기기에서는 지연이 커지므로 adaptWorkload 가 자동으로 되돌린다. */
+  $('#precisionMode').addEventListener('change', () => {
+    state.precision = $('#precisionMode').checked;
+    store.set('beachWatchPrecision', state.precision ? '1' : '0');
+    state.cameras.forEach(c => { c.activeTiles = maxTiles(); c.metrics.latencyAvg = 0; });
+    Diagnostics.log(tr(state.precision ? 'precisionOn' : 'precisionOff'), 'info');
+    refreshMetrics();
+  });
+
+  $('#childMode').addEventListener('change', () => {
+    Diagnostics.log(tr($('#childMode').checked ? 'childModeOn' : 'childModeOff'), 'info');
+    refreshTunerLabels();
+  });
+  $('#wipeData').addEventListener('click', wipeLocalData);
+
+  /* 버튼마다 '무엇을 하는 버튼인가'를 한 줄로 알려 준다.
+     이름만으로는 한 점 되돌리기와 선 다듬기의 차이를 알기 어렵다. */
+  [['#editLine', 'tipEdit'], ['#zoneUndo', 'tipUndo'], ['#zoneSimplify', 'tipSimplify'],
+   ['#resetLine', 'tipReset'], ['#zoneApplyAll', 'tipApplyAll']].forEach(([sel, key]) => {
+    const button = $(sel);
+    if (!button) return;
+    const show = () => { const tip = $('#zoneTip'); if (tip) tip.textContent = tr(key); };
+    const clear = () => { const tip = $('#zoneTip'); if (tip) tip.textContent = tr('zoneTipDefault'); };
+    button.addEventListener('mouseenter', show);
+    button.addEventListener('focus', show);
+    button.addEventListener('mouseleave', clear);
+    button.addEventListener('blur', clear);
+    button.title = tr(key);          /* 터치 기기·스크린리더용 */
+    button.dataset.tipKey = key;
+  });
+  $('#hintRestore').addEventListener('click', () => {
+    state.hintDismissed = false;
+    store.set('beachWatchHintDismissed', '0');
+    refreshZoneCard();
+  });
+
+  /* 음성을 끄면 읽고 있던 안내도 즉시 멈춘다 */
+  $('#voiceEnabled').addEventListener('change', e => { if (!e.target.checked) Speaker.stop(); });
+
+  /* 튜너 */
+  $('#envPreset').addEventListener('change', e => {
+    state.presetMode = e.target.value;
+    store.set('beachWatchPreset', state.presetMode);
+    refreshBadges();
+  });
+  $('#tunerConfidence').addEventListener('input', e => {
+    state.userThreshold = Number(e.target.value) / 100;
+    refreshTunerLabels(); store.set('beachWatchThreshold', e.target.value);
+  });
+  $('#tunerFrames').addEventListener('input', e => {
+    state.userFrames = Number(e.target.value);
+    refreshTunerLabels(); store.set('beachWatchFrames', e.target.value);
+  });
+  $('#tunerEscalate').addEventListener('input', e => {
+    state.escalateSeconds = Number(e.target.value);
+    refreshTunerLabels(); store.set('beachWatchEscalate', e.target.value);
+  });
+
+  /* 임팩트 계산기는 사이트에서 제거되어 README/IMPACT.md로 옮겨졌다.
+     계산식 자체는 자가 진단이 계속 검증하므로 함수는 남겨 둔다. */
+  ['#calcBeaches', '#calcRecovery', '#calcCoverage'].forEach(selector => {
+    const element = $(selector);
+    if (element) element.addEventListener('input', refreshImpact);
+  });
+
+  /* 탭이 다시 보이면 즉시 한 사이클 돌려 지연을 회복한다 */
+  document.addEventListener('visibilitychange', () => {
+    /* 이미 루프가 돌고 있으면 새로 부르지 않는다. 추론이 진행 중일 때는
+       취소할 타이머가 없어서, 부를 때마다 루프가 하나씩 늘어난다. */
+    if (!document.hidden && state.detecting && !loopRunning) { clearTimeout(loopTimer); detectLoop(); }
+  });
+
+  /* 창 크기가 바뀌면 박스 좌표계가 어긋나므로 즉시 지운다 */
+  addEventListener('resize', () => {
+    state.cameras.forEach(c => { if (c.detections) c.detections.innerHTML = ''; });
+    drawAllBoundaries();
+  });
+
+  setInterval(() => { if (state.metrics.startedAt) refreshMetrics(); }, 1000);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   26. 초기화
+   ══════════════════════════════════════════════════════════════════ */
+function restoreSettings() {
+  const site = store.get('beachWatchSite', 'beach');
+  state.siteType = SITE_PRESETS[site] ? site : 'beach';
+
+  state.presetMode = store.get('beachWatchPreset', 'auto');
+  state.userThreshold = Number(store.get('beachWatchThreshold', '40')) / 100;
+  state.userFrames = Number(store.get('beachWatchFrames', '2'));
+  state.escalateSeconds = Number(store.get('beachWatchEscalate', String(activeSite().escalate)));
+
+  const validPreset = state.presetMode === 'auto' || Boolean(PRESETS[state.presetMode]);
+  if (!validPreset) state.presetMode = 'auto';
+  if (!isFinite(state.userThreshold) || state.userThreshold <= 0) state.userThreshold = 0.40;
+  if (!isFinite(state.userFrames) || state.userFrames < 1) state.userFrames = 2;
+  if (!isFinite(state.escalateSeconds) || state.escalateSeconds < 2) state.escalateSeconds = activeSite().escalate;
+
+  $('#envPreset').value = state.presetMode;
+  $('#tunerConfidence').value = Math.round(state.userThreshold * 100);
+  $('#tunerFrames').value = state.userFrames;
+  $('#tunerEscalate').value = state.escalateSeconds;
+  state.detached.points = activeSite().line.map(p => ({ x: p.x, y: p.y }));
+  restoreWatchHours();
+  state.hintDismissed = store.get('beachWatchHintDismissed', '0') === '1';
+  state.precision = store.get('beachWatchPrecision', '0') === '1';
+  $('#precisionMode').checked = state.precision;
+}
+
+function startClock() {
+  const tick = () => {
+    $('#clock').textContent = new Intl.DateTimeFormat(
+      activeLocale().locale,
+      { dateStyle: 'short', timeStyle: 'medium', hour12: false }
+    ).format(new Date());
+  };
+  tick(); setInterval(tick, 1000);
+}
+
+function init() {
+  restoreSettings();
+  restoreContacts();
+  restoreBoundaryFor(state.detached);
+  bindUi();
+  applyLanguage(store.get('beachWatchLanguage', 'ko'), false);
+  startClock();
+  setHealth('healthIdle', '');
+  refreshMetrics();
+  updateGridCount();
+  renderContacts();
+  refreshAlertToggle();
+  refreshZoneCard();
+  refreshWatchHours();
+  refreshOfflineBadge();
+  NorthStar.restore();
+  refreshNorthStar();
+  listCameras();
+  Diagnostics.log('Beach Watch v7 ready · ' + SelfTest.cases.length + ' self-test cases · up to ' +
+    CONFIG.maxCameras + ' cameras · ' + state.contacts.length + ' recipients', 'ok');
+
+
+  /* ══════════════════════════════════════════════════════════════════
+   32. 아두이노 열화상 센서 연동 (Web Serial API)
    ══════════════════════════════════════════════════════════════════ */
 const ArduinoThermal = {
   port: null,
   reader: null,
   keepReading: false,
-  threshold: 34.0,       // 생체 열원 판별 기준 온도
+  threshold: 37.5,
   currentTemp: 0.0,
-  prevTemp: null,
-  lastDeployTime: 0,
-  deployCooldown: 10000,
+
+  init() {
+    const btnConnect = document.getElementById('btnConnectArduino');
+    const btnDisconnect = document.getElementById('btnDisconnectArduino');
+    const tuner = document.getElementById('tunerThermalThreshold');
+    const tunerOut = document.getElementById('outThermalThreshold');
+
+    if (tuner && tunerOut) {
+      tuner.addEventListener('input', (e) => {
+        this.threshold = parseFloat(e.target.value);
+        tunerOut.textContent = this.threshold.toFixed(1) + '°C';
+      });
+    }
+
+    if (btnConnect) {
+      btnConnect.addEventListener('click', () => this.connect());
+    }
+    if (btnDisconnect) {
+      btnDisconnect.addEventListener('click', () => this.disconnect());
+    }
+  },
+
+  async connect() {
+    if (!('serial' in navigator)) {
+      alert('이 브라우저는 Web Serial API를 지원하지 않습니다. Chrome 또는 Edge 브라우저를 사용해 주세요.');
+      if (typeof Diagnostics !== 'undefined') Diagnostics.countError('Web Serial API 미지원 브라우저');
+      return;
+    }
+
+    try {
+      this.port = await navigator.serial.requestPort();
+      await this.port.open({ baudRate: 9600 });
+      
+      this.keepReading = true;
+      const btnConnect = document.getElementById('btnConnectArduino');
+      const btnDisconnect = document.getElementById('btnDisconnectArduino');
+      if (btnConnect) btnConnect.disabled = true;
+      if (btnDisconnect) btnDisconnect.disabled = false;
+      
+      const thermalState = document.getElementById('thermalState');
+      if (thermalState) {
+        thermalState.textContent = 'CONNECTED';
+        thermalState.className = 'state';
+      }
+
+      if (typeof Diagnostics !== 'undefined') Diagnostics.log('아두이노 열화상 카메라 연결 성공 (BaudRate: 9600)', 'ok');
+      this.readSerialLoop();
+    } catch (err) {
+      if (typeof Diagnostics !== 'undefined') Diagnostics.countError('아두이노 연결 실패: ' + err.message);
+    }
+  },
+
+  async readSerialLoop() {
+    const textDecoder = new TextDecoderStream();
+    this.port.readable.pipeTo(textDecoder.writable);
+    const reader = textDecoder.readable.getReader();
+    this.reader = reader;
+
+    let buffer = '';
+
+    try {
+      while (this.keepReading) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        if (value) {
+          buffer += value;
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+
+          for (const line of lines) {
+            this.handleData(line.trim());
+          }
+        }
+      }
+    } catch (err) {
+      if (typeof Diagnostics !== 'undefined') Diagnostics.countError('시리얼 통신 수신 오류: ' + err.message);
+    } finally {
+      reader.releaseLock();
+    }
+  },
+
+  handleData(rawLine) {
+    if (!rawLine) return;
+    let temp = null;
+
+    if (rawLine.startsWith('{') && rawLine.endsWith('}')) {
+      try {
+        const data = JSON.parse(rawLine);
+        temp = parseFloat(data.temp || data.max || data.temperature);
+      } catch (e) {}
+    } else {
+      const match = rawLine.match(/[-+]?[0-9]*\.?[0-9]+/);
+      if (match) {
+        temp = parseFloat(match[0]);
+      }
+    }
+
+    if (temp !== null && !isNaN(temp)) {
+      this.currentTemp = temp;
+      this.updateUI(temp);
+    }
+  },
+
+  updateUI(temp) {
+    const tempEl = document.getElementById('thermalCurrentTemp');
+    const statusEl = document.getElementById('thermalStatusTag');
+    const thermalState = document.getElementById('thermalState');
+
+    if (tempEl) tempEl.textContent = temp.toFixed(1) + '°C';
+
+    const isHigh = temp >= this.threshold;
+
+    if (statusEl) {
+      statusEl.textContent = isHigh ? '고온 감지!' : '정상';
+      statusEl.style.color = isHigh ? '#e05142' : '#07374a';
+    }
+
+    if (thermalState) {
+      thermalState.textContent = isHigh ? 'OVERHEAT' : 'NORMAL';
+      thermalState.className = isHigh ? 'state alert' : 'state';
+    }
+
+    if (isHigh) {
+      const camera = typeof focusedCamera === 'function' ? focusedCamera() : { name: '열화상 센서' };
+      if (typeof pushEvent === 'function') {
+        pushEvent(`[열화상 이상] ${temp.toFixed(1)}°C 고온 감지 (기준: ${this.threshold}°C)`, 'error', {
+          camera: camera.name || '열화상 센서'
+        });
+      }
+      if (typeof playSiren === 'function') playSiren('critical');
+      if (typeof Speaker !== 'undefined' && Speaker.speak) {
+        Speaker.speak(`열화상 센서 고온 감지. 현재 온도 ${temp.toFixed(1)}도입니다.`);
+      }
+    }
+  },
+
+  async disconnect() {
+    this.keepReading = false;
+    if (this.reader) {
+      await this.reader.cancel();
+    }
+    if (this.port) {
+      await this.port.close();
+      this.port = null;
+    }
+
+    const btnConnect = document.getElementById('btnConnectArduino');
+    const btnDisconnect = document.getElementById('btnDisconnectArduino');
+    if (btnConnect) btnConnect.disabled = false;
+    if (btnDisconnect) btnDisconnect.disabled = true;
+
+    const thermalState = document.getElementById('thermalState');
+    if (thermalState) {
+      thermalState.textContent = 'DISCONNECTED';
+      thermalState.className = 'state';
+    }
+
+    if (typeof Diagnostics !== 'undefined') Diagnostics.log('아두이노 연결 해제 완료', 'info');
+  }
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+  ArduinoThermal.init();
+});
+}
+
+/* 개발자 도구·자동화 테스트에서 접근할 수 있도록 최소한만 노출한다. */
+window.BeachWatch = {
+  state, CONFIG, IMPACT, PRESETS, SITE_PRESETS,
+  selfTest: () => SelfTest.run(),
+  stressTest: count => runStressTest(count),
+  carryTracks,
+  computeImpact, crossesAboveLine, isInDangerZone, pointInPolygon, abovePolyline,
+  polylineYAt, simplifyPoints, insertIndexFor, setZoneMode, applyZoneToAll, polygonToPolyline, smoothPath,
+  normalizeContact, contactsForLevel, buildAlertPayload, shouldSendNow,
+  clusterObservations, suppressDuplicates, shouldMergeObservations, trackCandidates,
+  classifyScene: stats => SceneAnalyzer.classify(stats),
+  addCamera, removeCamera, focusCamera, setSiteType,
+  resolveStreamKind, validateStreamUrl,
+  /* v7 */
+  withinWatchHours, parseHhMm, watchHoursActive, buildVoiceMessage, typingInField,
+  NorthStar, refreshNorthStar, acknowledgeAlert,
+  setZoneAngle, rotatePoints, fitPointsInView, translatePointsToHeight, centroidOf, normalizeAngle,
+  setPanelHint, resetZoneBase,
+  toggleControlRoom, nudgeZonePoint, selectNextZonePoint,
+  OfflineCache, prepareOffline, Speaker, captureSnapshot
+};
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+/* ══════════════════════════════════════════════════════════════════
+   32. MLX9064X 열화상 카메라 센서 연동 및 스마트 튜브 사출 제어
+   ══════════════════════════════════════════════════════════════════ */
+const ArduinoThermal = {
+  port: null,
+  reader: null,
+  keepReading: false,
+  threshold: 34.0,       // 생체 열원 판별 임계값 (야외 표면 온도 감안 기본 34.0°C)
+  currentTemp: 0.0,
+  lastDeployTime: 0,     // 튜브 사출 중복 방지 타이머
+  deployCooldown: 10000, // 튜브 사출 쿨타임 (10초)
 
   init() {
     const btnConnect = document.getElementById('btnConnectArduino');
@@ -7094,37 +8048,36 @@ const ArduinoThermal = {
 
   async connect() {
     if (!('serial' in navigator)) {
-      alert('이 브라우저는 Web Serial API를 지원하지 않습니다. Chrome/Edge를 사용해 주세요.');
+      alert('이 브라우저는 Web Serial API를 지원하지 않습니다. Chrome 또는 Edge 브라우저를 사용해 주세요.');
+      if (typeof Diagnostics !== 'undefined') Diagnostics.countError('Web Serial API 미지원 브라우저');
       return;
     }
 
     try {
       this.port = await navigator.serial.requestPort();
-      await this.port.open({ baudRate: 115200 }); // MLX9064X 115200 bps
+      // MLX9064X 고속 스트리밍에 맞춘 115200 BaudRate
+      await this.port.open({ baudRate: 115200 });
+      
       this.keepReading = true;
-
       const btnConnect = document.getElementById('btnConnectArduino');
       const btnDisconnect = document.getElementById('btnDisconnectArduino');
       if (btnConnect) btnConnect.disabled = true;
       if (btnDisconnect) btnDisconnect.disabled = false;
-
+      
       const thermalState = document.getElementById('thermalState');
       if (thermalState) {
-        thermalState.textContent = 'CONNECTED (1s)';
+        thermalState.textContent = 'CONNECTED';
         thermalState.className = 'state';
       }
 
-      if (typeof Diagnostics !== 'undefined') {
-        Diagnostics.log('MLX9064X 열화상 센서 연결 성공 — 실시간 1초 측정 시작', 'ok');
-      }
+      if (typeof Diagnostics !== 'undefined') Diagnostics.log('MLX9064X 열화상 카메라 연결 성공 (115200 BaudRate)', 'ok');
       this.readSerialLoop();
     } catch (err) {
-      if (typeof Diagnostics !== 'undefined') {
-        Diagnostics.countError('아두이노 연결 실패: ' + err.message);
-      }
+      if (typeof Diagnostics !== 'undefined') Diagnostics.countError('아두이노 연결 실패: ' + err.message);
     }
   },
 
+  // 아두이노로 튜브 사출 제어 명령 전송 ('T' 문자 송신)
   async sendCommand(cmd) {
     if (this.port && this.port.writable) {
       try {
@@ -7132,7 +8085,10 @@ const ArduinoThermal = {
         const writer = this.port.writable.getWriter();
         await writer.write(encoder.encode(cmd));
         writer.releaseLock();
-      } catch (e) {}
+        if (typeof Diagnostics !== 'undefined') Diagnostics.log(`아두이노 명령 전송 [${cmd}]: 튜브 사출 모터 작동`, 'ok');
+      } catch (e) {
+        if (typeof Diagnostics !== 'undefined') Diagnostics.countError('명령 전송 실패: ' + e.message);
+      }
     }
   },
 
@@ -7141,6 +8097,7 @@ const ArduinoThermal = {
     this.port.readable.pipeTo(textDecoder.writable);
     const reader = textDecoder.readable.getReader();
     this.reader = reader;
+
     let buffer = '';
 
     try {
@@ -7150,7 +8107,7 @@ const ArduinoThermal = {
         if (value) {
           buffer += value;
           const lines = buffer.split('\n');
-          buffer = lines.pop();
+          buffer = lines.pop(); // 완전하지 않은 마지막 줄은 다음 버퍼로 유지
 
           for (const line of lines) {
             this.handleData(line.trim());
@@ -7158,9 +8115,7 @@ const ArduinoThermal = {
         }
       }
     } catch (err) {
-      if (typeof Diagnostics !== 'undefined') {
-        Diagnostics.countError('데이터 수신 오류: ' + err.message);
-      }
+      if (typeof Diagnostics !== 'undefined') Diagnostics.countError('열화상 데이터 수신 오류: ' + err.message);
     } finally {
       reader.releaseLock();
     }
@@ -7170,68 +8125,60 @@ const ArduinoThermal = {
     if (!rawLine || rawLine.startsWith('ERR:')) return;
     let temp = null;
 
-    // 1) JSON 형식 파싱 (아두이노의 {"max": 36.5, "avg": 27.2})
+    // JSON 형식 지원: {"max": 36.8} 또는 {"temp": 36.8}
     if (rawLine.startsWith('{') && rawLine.endsWith('}')) {
       try {
         const data = JSON.parse(rawLine);
-        temp = parseFloat(data.max !== undefined ? data.max : data.temp);
+        temp = parseFloat(data.max || data.temp || data.temperature);
       } catch (e) {}
-    } 
-    // 2) 단일 수치 텍스트 파싱
-    else {
+    } else {
+      // 일반 숫자 텍스트 파싱
       const match = rawLine.match(/[-+]?[0-9]*\.?[0-9]+/);
       if (match) temp = parseFloat(match[0]);
     }
 
     if (temp !== null && !isNaN(temp)) {
       this.currentTemp = temp;
-      this.updatePerSecondUI(temp);
+      this.evaluateDualCondition(temp);
     }
   },
 
-  updatePerSecondUI(temp) {
+  // 일반 카메라(AI 객체 인식/위험구역)와 MLX9064X 열화상(체온) 교차 검증
+  evaluateDualCondition(maxTemp) {
     const tempEl = document.getElementById('thermalCurrentTemp');
     const statusEl = document.getElementById('thermalStatusTag');
     const thermalState = document.getElementById('thermalState');
 
-    // 1초 단위 온도 변화량 계산 (예: +0.2°C/s)
-    let deltaText = '';
-    if (this.prevTemp !== null) {
-      const diff = temp - this.prevTemp;
-      const sign = diff >= 0 ? '+' : '';
-      deltaText = ` (${sign}${diff.toFixed(1)}°C/s)`;
-    }
-    this.prevTemp = temp;
+    if (tempEl) tempEl.textContent = maxTemp.toFixed(1) + '°C';
 
-    if (tempEl) {
-      tempEl.innerHTML = `${temp.toFixed(1)}°C<small style="font-size:12px;font-weight:normal;color:#6b858c;margin-left:4px">${deltaText}</small>`;
-    }
-
-    const isHumanTemp = temp >= this.threshold;
+    const isHumanTemp = maxTemp >= this.threshold; // 설정 체온 이상 감지 여부
     const camera = typeof focusedCamera === 'function' ? focusedCamera() : { riskCount: 0, name: '카메라' };
-    const isInsideDangerZone = camera.riskCount > 0;
+    const isInsideDangerZone = camera.riskCount > 0; // AI 비전 기반 위험 구역 내 인원 존재 여부[cite: 2]
 
     if (statusEl) {
-      statusEl.textContent = isHumanTemp ? '생체 열원 감지' : '정상 (저온)';
+      statusEl.textContent = isHumanTemp ? '열원(사람) 확인' : '비생체(저온)';
       statusEl.style.color = isHumanTemp ? '#e05142' : '#07374a';
     }
 
     if (thermalState) {
-      thermalState.textContent = isHumanTemp ? 'HEAT_DETECTED' : 'NORMAL';
+      thermalState.textContent = isHumanTemp ? 'HUMAN_DETECTED' : 'NORMAL';
       thermalState.className = isHumanTemp ? 'state alert' : 'state';
     }
 
-    // 위험 구역 침범 + 생체 열원 감지 시 복합 경보 및 튜브 사출
     const now = Date.now();
+
+    // ★ 복합 조건: 위험 구역 침범 + MLX9064X 생체 열원 동시 충족
     if (isInsideDangerZone && isHumanTemp) {
+      // 사이렌 경보 울림
       if (typeof playSiren === 'function') playSiren('critical');
 
+      // 쿨타임(10초) 경과 확인 후 튜브 사출 명령 전송
       if (now - this.lastDeployTime > this.deployCooldown) {
         this.lastDeployTime = now;
-        this.sendCommand('T'); // 아두이노로 서보모터 구동 신호 전달
+        this.sendCommand('T'); // 아두이노로 'T' 신호 전송
 
         if (typeof pushEvent === 'function') {
-          pushEvent(`[익사 위험군 확인] 위험 구역 인원 및 체온(${temp.toFixed(1)}°C) 검증 완료 → 구명 튜브 투척 작동!`, 'error', {
+          pushEvent(`[익사 위험군 확정] 위험 구역 내 인원(${camera.riskCount}명) 및 MLX9064X 생체 열원(${maxTemp.toFixed(1)}°C) 검증 완료 → 튜브 사출 작동!`, 'error', {
             camera: camera.name
           });
         }
@@ -7239,6 +8186,12 @@ const ArduinoThermal = {
         if (typeof Speaker !== 'undefined' && Speaker.speak) {
           Speaker.speak('익사 위험군 확인. 구명 튜브를 투척합니다.');
         }
+      }
+    } 
+    // 열원만 감지되고 위험 구역에는 들어오지 않은 경우
+    else if (isHumanTemp) {
+      if (typeof pushEvent === 'function' && Math.random() < 0.05) {
+        pushEvent(`[열화상 감지] 생체 열원(${maxTemp.toFixed(1)}°C) 감지 (위험 구역 외곽)`, 'info');
       }
     }
   },
@@ -7261,7 +8214,8 @@ const ArduinoThermal = {
       thermalState.textContent = 'DISCONNECTED';
       thermalState.className = 'state';
     }
-    this.prevTemp = null;
+
+    if (typeof Diagnostics !== 'undefined') Diagnostics.log('아두이노 연결 해제 완료', 'info');
   }
 };
 
