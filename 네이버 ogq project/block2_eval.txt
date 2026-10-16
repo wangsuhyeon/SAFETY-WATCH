@@ -1,0 +1,51 @@
+{
+    const tempEl = document.getElementById('thermalCurrentTemp');
+    const statusEl = document.getElementById('thermalStatusTag');
+    const thermalState = document.getElementById('thermalState');
+
+    if (tempEl) tempEl.textContent = maxTemp.toFixed(1) + '°C';
+
+    const isHumanTemp = maxTemp >= this.threshold; // 설정 체온 이상 감지 여부
+    const camera = typeof focusedCamera === 'function' ? focusedCamera() : { riskCount: 0, name: '카메라' };
+    const isInsideDangerZone = camera.riskCount > 0; // AI 비전 기반 위험 구역 내 인원 존재 여부[cite: 2]
+
+    if (statusEl) {
+      statusEl.textContent = isHumanTemp ? '열원(사람) 확인' : '비생체(저온)';
+      statusEl.style.color = isHumanTemp ? '#e05142' : '#07374a';
+    }
+
+    if (thermalState) {
+      thermalState.textContent = isHumanTemp ? 'HUMAN_DETECTED' : 'NORMAL';
+      thermalState.className = isHumanTemp ? 'state alert' : 'state';
+    }
+
+    const now = Date.now();
+
+    // ★ 복합 조건: 위험 구역 침범 + MLX9064X 생체 열원 동시 충족
+    if (isInsideDangerZone && isHumanTemp) {
+      // 사이렌 경보 울림
+      if (typeof playSiren === 'function') playSiren('critical');
+
+      // 쿨타임(10초) 경과 확인 후 튜브 사출 명령 전송
+      if (now - this.lastDeployTime > this.deployCooldown) {
+        this.lastDeployTime = now;
+        this.sendCommand('T'); // 아두이노로 'T' 신호 전송
+
+        if (typeof pushEvent === 'function') {
+          pushEvent(`[익사 위험군 확정] 위험 구역 내 인원(${camera.riskCount}명) 및 MLX9064X 생체 열원(${maxTemp.toFixed(1)}°C) 검증 완료 → 튜브 사출 작동!`, 'error', {
+            camera: camera.name
+          });
+        }
+
+        if (typeof Speaker !== 'undefined' && Speaker.speak) {
+          Speaker.speak('익사 위험군 확인. 구명 튜브를 투척합니다.');
+        }
+      }
+    } 
+    // 열원만 감지되고 위험 구역에는 들어오지 않은 경우
+    else if (isHumanTemp) {
+      if (typeof pushEvent === 'function' && Math.random() < 0.05) {
+        pushEvent(`[열화상 감지] 생체 열원(${maxTemp.toFixed(1)}°C) 감지 (위험 구역 외곽)`, 'info');
+      }
+    }
+  }

@@ -1,0 +1,516 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="AI 湲곕컲 ?섎? ?ㅼ떆媛??덉쟾 紐⑤땲?곕쭅 ???댁닔?뺤옣쨌媛빧룻샇?샕룸뱶濡?移대찓?쇰? 理쒕? 5?源뚯? ?⑤뵒諛붿씠?ㅻ줈 媛먯떆?⑸땲??">
+  <meta name="color-scheme" content="light">
+  <title>Beach Watch 쨌 AI ?섎? ?덉쟾 愿??/title>
+  <link rel="stylesheet" href="styles.merged.css">
+</head>
+<body>
+<a class="skip-link" href="#stage" data-i18n="skipToMonitor">蹂몃Ц(愿???붾㈃)?쇰줈 嫄대꼫?곌린</a>
+<main class="app">
+  <header class="top">
+    <div class="brand"><span>BEACH</span> WATCH</div>
+    <button class="settings-button" id="controlRoom" type="button" aria-pressed="false" data-i18n="controlRoom">愿??紐⑤뱶</button>
+    <button class="settings-button" id="shortcutHelp" type="button" aria-haspopup="dialog" data-i18n="shortcutsShort">?⑥텞??/button>
+    <button class="settings-button" id="settingsButton" type="button" aria-haspopup="dialog"><span aria-hidden="true">&#9881;</span> <span data-i18n="settings">?ㅼ젙</span></button>
+    <div class="live" id="liveStatus">移대찓???곌껐 ????/div>
+  </header>
+
+  <div class="badges">
+    <span class="badge" id="badgeBackend"><b data-i18n="badgeEngine">?붿쭊</b> <span id="backendName">-</span></span>
+    <span class="badge" id="badgeEnv"><b data-i18n="badgeEnvironment">?섍꼍</b> <span id="envName" data-i18n="envUnknown">遺꾩꽍 ?湲?/span></span>
+    <span class="badge" id="badgeHealth"><b data-i18n="badgeHealth">?곹깭</b> <span id="healthName" data-i18n="healthIdle">?湲?/span></span>
+    <span class="badge" id="badgeOffline"><b data-i18n="badgeOffline">?ㅽ봽?쇱씤</b> <span id="offlineState" data-i18n="offlineNotYet">以鍮?????/span></span>
+    <span class="badge" data-i18n="badgeOnDevice">?⑤뵒諛붿씠??泥섎━ 쨌 ?곸긽 誘몄쟾??/span>
+    <span class="badge" data-i18n="badgeLicense">MIT ?ㅽ뵂?뚯뒪</span>
+  </div>
+
+  <section class="grid">
+    <div>
+      <div class="eyebrow" data-i18n="monitoringEyebrow">?ㅼ떆媛??덉쟾 紐⑤땲?곕쭅</div>
+      <div class="heading"><h1 data-i18n="mainTitle">?대? ?덉쟾 愿??移대찓??/h1><span class="clock" id="clock"></span></div>
+
+      <div class="stage-grid" id="stageGrid" data-count="0" aria-label="camera grid"></div>
+
+      <div class="camera-bar" id="cameraBar">
+        <span class="camera-count" id="cameraCount">0 / 5</span>
+        <button class="camera-add" id="addCamera" type="button" data-i18n="addCamera">竊?移대찓??異붽?</button>
+      </div>
+
+      <div class="controls">
+        <button class="primary" id="connect" data-i18n="connectFirst">移대찓???곌껐</button>
+        <button id="simulate" data-i18n="runSimulation">?쒕??덉씠???ㅽ뻾</button>
+        <button class="danger" id="disconnect" data-i18n="disconnectAll">?꾩껜 ?곌껐 醫낅즺</button>
+      </div>
+
+      <section class="zone-card" id="zoneEditor" aria-label="danger zone editor">
+        <div class="eyebrow" data-i18n="zoneEyebrow">DANGER ZONE</div>
+        <h2 data-i18n="zoneTitle">寃쎄퀎 援ъ뿭 ?몄쭛</h2>
+        <p data-i18n="zoneLede">?뚮룄?좉낵 ?덉쟾援ъ뿭? 吏곸꽑???꾨떃?덈떎. ?먯쓣 ?먰븯??留뚰겮 李띿뼱 吏?뺤뿉 留욌뒗 紐⑥뼇?쇰줈 洹몃━?몄슂.</p>
+
+        <div class="zone-modes" role="group" aria-label="zone mode">
+          <button type="button" id="zoneModeLine" aria-pressed="true">
+            <span data-i18n="zoneModeLine">寃쎄퀎??/span>
+            <small data-i18n="zoneModeLineHelp">?좊낫??諛붽묑履??꾩そ)???덉쑝硫??꾪뿕</small>
+          </button>
+          <button type="button" id="zoneModePolygon" aria-pressed="false">
+            <span data-i18n="zoneModePolygon">?꾪뿕 ?곸뿭</span>
+            <small data-i18n="zoneModePolygonHelp">?ロ엺 援ъ뿭 ?덉뿉 ?ㅼ뼱?ㅻ㈃ ?꾪뿕</small>
+          </button>
+        </div>
+
+        <div class="zone-actions">
+          <button class="primary" id="editLine" data-i18n="zoneEdit">洹몃━湲??쒖옉</button>
+          <button id="zoneUndo" data-i18n="zoneUndo">留덉?留?????젣</button>
+          <button id="zoneSimplify" data-i18n="zoneSimplify">??以꾩씠湲?/button>
+          <button id="resetLine" data-i18n="zoneReset">泥섏쓬 紐⑥뼇?쇰줈</button>
+          <button id="zoneApplyAll" data-i18n="zoneApplyAll">紐⑤뱺 移대찓?쇱뿉 ?곸슜</button>
+        </div>
+        <p class="zone-tip" id="zoneTip" data-i18n="zoneTipDefault">踰꾪듉 ?꾩뿉 留덉슦?ㅻ? ?щ━硫?媛곴컖 ?대뼡 ?쇱쓣 ?섎뒗吏 ?뚮젮 以띾땲??</p>
+
+        <div class="zone-stat">
+          <span id="zonePoints">??2媛?/span>
+          <span id="zoneModeTag">??/span>
+          <span id="zoneCameraTag">??/span>
+        </div>
+        <div class="zone-hint" id="zoneHint"></div>
+        <button class="hint-restore" id="hintRestore" type="button" hidden data-i18n="hintRestore">?붾㈃ ???덈궡 ?ㅼ떆 蹂닿린</button>
+
+        <div class="zone-sliders" id="zoneSliders">
+          <label class="mobile-line-control"><span data-i18n="height">?믪씠</span><input id="boundaryHeight" type="range" min="5" max="95" step="1" value="66"><output id="boundaryHeightValue">66%</output></label>
+          <label class="mobile-line-control"><span data-i18n="tilt">?뚯쟾</span><input id="boundaryTilt" type="range" min="0" max="360" step="1" value="0"><output id="boundaryTiltValue">0째</output></label>
+        </div>
+      </section>
+
+      <div class="cols lower-cards">
+        <section class="card">
+        <div class="eyebrow" data-i18n="tuningEyebrow">DETECTION TUNING</div>
+        <h2 data-i18n="tuningTitle">媛먯? 誘쇨컧??/h2>
+        <p data-i18n="tuningLede">?꾩옣 議곌굔??留욎떠 ?ㅽ깘怨?誘명깘??洹좏삎??議곗젙?⑸땲??</p>
+        <label class="tuner" style="display:grid;grid-template-columns:1fr auto;padding-top:14px">
+          <span data-i18n="envPreset">?섍꼍 ?꾨━??/span><span></span>
+          <select id="envPreset" style="grid-column:1/-1;margin-top:6px">
+            <option value="auto" data-i18n="presetAuto">?먮룞 ?먮퀎</option>
+            <option value="clear" data-i18n="presetClear">二쇨컙 쨌 留묒쓬</option>
+            <option value="haze" data-i18n="presetHaze">?먮┝ 쨌 ?덇컻</option>
+            <option value="night" data-i18n="presetNight">?쇨컙 쨌 ?議곕룄</option>
+            <option value="crowd" data-i18n="presetCrowd">?쇱옟 쨌 ?깆닔湲?/option>
+          </select>
+          <small data-i18n="envPresetHelp">?먮룞 ?먮퀎? 留ㅼ큹 ?꾨젅??諛앷린쨌?鍮꾨? 痢≪젙???꾨━?뗭쓣 ?꾪솚?⑸땲??</small>
+        </label>
+        <label class="tuner">
+          <span data-i18n="tunerConfidence">?좊ː???꾧퀎媛?/span><output id="outConfidence">40%</output>
+          <input id="tunerConfidence" type="range" min="20" max="70" step="1" value="40">
+          <small data-i18n="tunerConfidenceHelp">??텧?섎줉 ?먭굅由??듭닔?먮? ???≪?留??뚮룄 ?ㅽ깘???섏뼱?⑸땲??</small>
+        </label>
+        <label class="tuner">
+          <span data-i18n="tunerFrames">?뺤씤 ?꾨젅????/span><output id="outFrames">2</output>
+          <input id="tunerFrames" type="range" min="1" max="6" step="1" value="2">
+          <small data-i18n="tunerFramesHelp">?곗냽 ?꾨젅?꾩뿉??諛섎났 愿痢〓맂 ??곷쭔 ?щ엺?쇰줈 ?뺤젙?⑸땲??</small>
+        </label>
+        <label class="tuner">
+          <span data-i18n="tunerEscalate">湲닿툒 ?밴꺽 ?쒓컙</span><output id="outEscalate">6珥?/output>
+          <input id="tunerEscalate" type="range" min="2" max="20" step="1" value="6">
+          <small data-i18n="tunerEscalateHelp">寃쎄퀎??諛?泥대쪟媛 ???쒓컙???섏쑝硫?湲닿툒 寃쎈낫濡??밴꺽?⑸땲??</small>
+        </label>
+        </section>
+
+        <section class="card">
+        <div class="eyebrow" data-i18n="diagnosticsEyebrow">DIAGNOSTICS</div>
+        <h2 data-i18n="diagnosticsTitle">?쒖뒪??吏꾨떒</h2>
+        <p data-i18n="diagnosticsLede">異붾줎 吏?곌낵 ?ㅻ쪟瑜??ㅼ떆媛꾩쑝濡?怨꾩륫???깅뒫 ??섎? ?ㅼ뒪濡?媛먯??⑸땲??</p>
+        <div class="northstar" id="northStarBox">
+          <div class="ns-head">
+            <span class="ns-tag" data-i18n="nsTag">遺곴레??吏??/span>
+            <b id="mNorthStar">??/b>
+          </div>
+          <div class="ns-label" data-i18n="nsLabel">?꾪뿕 援ъ뿭 吏꾩엯 ???대떦???뺤씤源뚯? (以묒븰媛?</div>
+          <p class="ns-note" id="northStarNote" data-i18n="nsNoData">?꾩쭅 ?뺤씤??寃쎈낫媛 ?놁뒿?덈떎. 寃쎈낫 李쎌쓽 ?뚰솗?명뻽?듬땲?ㅳ띾? ?꾨Ⅴ硫????レ옄媛 ?볦엯?덈떎.</p>
+        </div>
+        <div class="diag">
+          <div><b id="mFps">0.0</b><small data-i18n="mFpsLabel">遺꾩꽍 FPS</small></div>
+          <div><b id="mLatency">0</b><small data-i18n="mLatencyLabel">異붾줎 吏??(ms)</small></div>
+          <div><b id="mCycle">0.0</b><small data-i18n="mCycleLabel">媛먯떆 二쇨린 (珥?</small></div>
+          <div><b id="mTiles">6</b><small data-i18n="mTilesLabel">遺꾪븷 ???/small></div>
+          <div><b id="mUptime">00:00</b><small data-i18n="mUptimeLabel">媛???쒓컙</small></div>
+          <div><b id="mErrors">0</b><small data-i18n="mErrorsLabel">蹂듦뎄???ㅻ쪟</small></div>
+          <div><b id="mAlerts">0</b><small data-i18n="mAlertsLabel">?꾩쟻 寃쎈낫</small></div>
+          <div><b id="mPeak">0</b><small data-i18n="mPeakLabel">理쒕? ?숈떆 媛먯?</small></div>
+          <div><b id="mMerge">0 ??0</b><small data-i18n="mMergeLabel">愿痢????몄썝</small></div>
+          <div><b id="mCams">0</b><small data-i18n="mCamsLabel">?쒖꽦 移대찓??/small></div>
+        </div>
+        <div class="controls" style="padding:0;border:0;box-shadow:none;background:none;backdrop-filter:none">
+          <button id="runSelfTest" data-i18n="runSelfTest">?먭? 吏꾨떒 ?ㅽ뻾</button>
+          <button id="runStress" data-i18n="runStress">遺???뚯뒪??/button>
+        </div>
+        <div class="logbox" id="diagLog" data-empty="??></div>
+        </section>
+      </div>
+    </div>
+
+    <aside>
+      <section class="card">
+        <div class="eyebrow" data-i18n="siteEyebrow">DEPLOYMENT SITE</div>
+        <h2 data-i18n="siteTitle">?ㅼ튂 ?μ냼 ?좏삎</h2>
+        <p data-i18n="siteLede">?μ냼???곕씪 ?꾪뿕???깃꺽???щ씪吏묐땲?? ?좏삎??怨좊Ⅴ硫?媛먯? ?뚮씪誘명꽣? 寃쎈낫 ?쒓컙???④퍡 諛붾앸땲??</p>
+        <div class="site-picker" id="sitePicker" role="group" aria-label="deployment site type"></div>
+        <div class="site-note" id="siteNote"></div>
+      </section>
+
+      <section class="card">
+        <span class="state" id="state">READY</span>
+        <div class="eyebrow" data-i18n="safetyStatus">SAFETY STATUS</div>
+        <h2 id="status">媛먯? ?湲?以?/h2>
+        <p id="statusText">移대찓?쇰? ?곌껐?섎㈃ 寃쎄퀎??媛먯떆媛 ?쒖옉?⑸땲??</p>
+        <div class="statrow">
+          <div><b id="lineInfo">2</b><small data-i18n="boundaryPoints">寃쎄퀎???ъ씤??/small></div>
+          <div><b id="detectCount">0</b><small data-i18n="peopleAbove">?꾪뿕 援ъ뿭 ?щ엺</small></div>
+        </div>
+      </section>
+      <!-- ?댄솕??移대찓??/ ?꾨몢?대끂 ?곕룞 移대뱶 -->
+      <section class="card" id="thermalCard">
+        <span class="state" id="thermalState">DISCONNECTED</span>
+        <div class="eyebrow">THERMAL SENSOR</div>
+        <h2>?댄솕??移대찓??(?꾨몢?대끂)</h2>
+        <p>?쒕━???ы듃(USB)濡??꾨몢?대끂? ?곌껐???ㅼ떆媛??⑤룄瑜?媛먯떆?⑸땲?? ?댄솕?곸? ?щ엺(?앹껜 ?댁썝)怨??④굅??媛앹껜(鍮꾩깮泥?瑜?援щ텇?섍퀬, ?쇰컲 移대찓?쇨? ?ㅼ젙???꾪뿕 援ъ뿭 移⑤쾾??媛먯????④퍡 援먯감 寃利앺빀?덈떎.</p>
+
+        <div class="statrow">
+          <div><b id="thermalCurrentTemp">--.-째C</b><small>?ㅼ떆媛??⑤룄</small></div>
+          <div><b id="thermalPeakTemp">--.-째C</b><small>?몄뀡 理쒓퀬</small></div>
+          <div><b id="thermalAvgTemp">--.-째C</b><small>?됯퇏 ?⑤룄</small></div>
+          <div><b id="thermalStatusTag">?湲?/b><small>?댄솕???먯젙</small></div>
+        </div>
+
+        <canvas id="thermalGraph" class="thermal-graph" width="640" height="96" aria-label="?댄솕???⑤룄 ?ㅼ떆媛?洹몃옒?? hidden></canvas>
+
+        <p id="thermalWarn" class="thermal-warn" hidden></p>
+
+        <pre id="thermalRaw" class="thermal-raw" aria-label="?꾨몢?대끂?먯꽌 ?섏떊???먮낯 ?곗씠?? hidden>?섏떊 ?먮Ц ?湲?..</pre>
+
+        <p class="thermal-note" id="thermalDualNote">?쇰컲 移대찓?쇱? ?댄솕??移대찓?쇰? ?④퍡 ?곕㈃, ?쇰컲 移대찓?쇨? ?ㅼ젙??援ъ뿭???섏뼱???몄썝??媛먯??섍퀬 ?댄솕??移대찓?쇨? ?щ엺(?앹껜 ?댁썝) ?щ?瑜?援щ텇??援먯감 寃利앺빀?덈떎. ??議곌굔???숈떆??留뚯”???뚮쭔 ?듭궗 ?꾪뿕援곗쑝濡??뺤젙?⑸땲??</p>
+
+        <label class="tuner" style="margin-top:12px">
+          <span>?앹껜 ?댁썝(?щ엺) ?꾧퀎媛?/span><output id="outThermalThreshold">37.5째C</output>
+          <input id="tunerThermalThreshold" type="range" min="30.0" max="45.0" step="0.5" value="37.5">
+          <small>???⑤룄 ?댁긽?대㈃ ?앹껜 ?댁썝(?щ엺)?쇰줈 ?먯젙?⑸땲?? 42째C瑜?珥덇낵?섎뒗 ?댁썝? ?щ엺???꾨땶 ?④굅??媛앹껜(?붿쭊쨌?쒖뼇???쒕㈃ ??濡?援щ텇?섏뿬 寃利앹뿉???쒖쇅?⑸땲??</small>
+        </label>
+
+        <div class="tuner" style="margin-top:12px;padding-top:10px;border-top:1px dashed #cfe0df">
+          <span style="display:flex;align-items:center;gap:8px">
+            ?쒖빞 ?뺣젹 (?댄솕?????쇰컲 移대찓??
+            <em class="align-state" id="thermalAlignState">?뺣젹 ?꾩슂</em>
+          </span>
+          <div class="align-controls">
+            <button id="btnThermalAlign" type="button">?쒖빞 ?뺣젹 耳쒓린</button>
+            <label>媛濡?output id="outThermalPan">0%</output><input id="tunerThermalPan" type="range" min="-50" max="50" step="1" value="0"></label>
+            <label>?몃줈<output id="outThermalTilt">0%</output><input id="tunerThermalTilt" type="range" min="-50" max="50" step="1" value="0"></label>
+            <label>?쒖빞 ?ш린<output id="outThermalFov">100%</output><input id="tunerThermalFov" type="range" min="20" max="150" step="1" value="100"></label>
+          </div>
+          <small>?곸긽 ?꾩뿉 洹몃젮吏???몃? ?ш컖???댄솕???쒖빞)怨??ъ옄媛 ?쇰컲 移대찓???붾㈃怨?媛숈븘吏?꾨줉 ?댄솕??移대찓?쇱쓽 諛붾씪蹂대뒗 硫는룰컖??諛?<b>媛濡??몃줈/?ш린</b>瑜?留욎텛?몄슂. ??移대찓?쇨? 媛숈? ?λ㈃??蹂댁븘???⑤룄 ?먯젙???뺥솗?댁쭛?덈떎. ?댄솕???꾨젅?꾩씠 ?ㅻ㈃ ?ш컖???덉뿉 ?덊듃留듭씠 ?쒖떆?⑸땲??</small>
+        </div>
+
+        <div class="controls" style="padding:0;border:0;box-shadow:none;background:none;backdrop-filter:none;margin-top:10px">
+          <button class="primary" id="btnConnectArduino" type="button">?뵆 ?꾨몢?대끂 ?곌껐</button>
+          <button class="danger" id="btnDisconnectArduino" type="button" disabled>?곌껐 ?댁젣</button>
+        </div>
+      </section>
+      <section class="card">
+        <div class="eyebrow" data-i18n="contactsEyebrow">ALERT RECIPIENTS</div>
+        <h2 data-i18n="contactsTitle">?뚮┝ ?섏떊??/h2>
+        <p data-i18n="contactsLede">?깅줉???대떦?먯뿉寃??꾪뿕 ?뺣룄??留욎떠 ?뚮┝??蹂대깄?덈떎.</p>
+        <button class="alert-toggle" id="enableAlerts" type="button" data-i18n="enableAlerts">?뵒 ?뚮┝ 耳쒓린</button>
+        <p class="alert-toggle-help" data-i18n="enableAlertsHelp">釉뚮씪?곗? ?뚮┝??耳쒕㈃ ?ㅻⅨ 李쎌쓣 蹂닿퀬 ?덉뼱???꾪뿕 ?곹솴??諛붾줈 ?밸땲??</p>
+        <div class="contact-list" id="contactList"></div>
+        <div class="contact-empty" id="contactEmpty" data-i18n="contactsEmpty">?깅줉???섏떊?먭? ?놁뒿?덈떎.</div>
+        <div class="controls" style="padding:0;border:0;box-shadow:none;background:none;backdrop-filter:none">
+          <button class="primary" id="addContact" data-i18n="addContact">竊??섏떊???깅줉</button>
+        </div>
+      </section>
+
+      <section class="card alertbox">
+        <div class="eyebrow" data-i18n="latestEvent">LATEST EVENT</div>
+        <h2 data-i18n="alertLog">寃쎈낫 湲곕줉</h2>
+        <p id="eventText">?꾩쭅 諛쒖깮??寃쎈낫媛 ?놁뒿?덈떎.</p>
+        <div class="logbox" id="eventLog" data-empty="??></div>
+        <div class="alert-stage-guide" aria-label="alert stages">
+          <div class="watch"><b data-i18n="alertGuideWatch">二쇱쓽</b><small data-i18n="alertGuideWatchText">吏꾩엯???뺤씤?섎뒗 ?④퀎 쨌 ?뚮━ ?놁쓬</small></div>
+          <div class="alert"><b data-i18n="alertGuideAlert">寃쎄퀬</b><small data-i18n="alertGuideAlertText">1.5珥??댁긽 吏??쨌 寃쎈낫?뚭낵 ?뚮┝</small></div>
+          <div class="urgent"><b data-i18n="alertGuideUrgent">湲닿툒</b><small data-i18n="alertGuideUrgentText">?ㅼ젙 ?쒓컙 珥덇낵 쨌 諛섎났 ?ъ씠??/small></div>
+        </div>
+        <div class="controls" style="padding:0;border:0;box-shadow:none;background:none;backdrop-filter:none">
+          <button id="exportEvents" data-i18n="exportEvents">?대깽??CSV ?대낫?닿린</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="eyebrow" data-i18n="opsEyebrow">OPERATION</div>
+        <h2 data-i18n="opsTitle">?댁쁺 ?ㅼ젙</h2>
+
+        <fieldset class="fieldset">
+          <label><span data-i18n="hoursEnabled">媛먯떆 ?쒓컙?留?寃쎈낫</span><input id="hoursEnabled" type="checkbox"></label>
+        </fieldset>
+        <div class="hours-row" id="hoursRow">
+          <label><span data-i18n="hoursFrom">?쒖옉</span><input id="hoursFrom" type="time" value="09:00" step="300"></label>
+          <label><span data-i18n="hoursTo">醫낅즺</span><input id="hoursTo" type="time" value="19:00" step="300"></label>
+        </div>
+        <p class="hours-note" id="hoursNote" data-i18n="hoursAlways">吏湲덉? ?섎（ 醫낆씪 寃쎈낫瑜??몃┰?덈떎.</p>
+
+        <div class="privacy-box">
+          <button id="wipeData" type="button" data-i18n="wipeData">??湲곌린????λ맂 ???뺣낫 吏?곌린</button>
+          <p data-i18n="wipeDataHelp">?대떦???곕씫泥샕룹쐞??援ъ뿭쨌?ㅼ젙????釉뚮씪?곗?????λ릺???덉뒿?덈떎. 怨듭슜 PC?먯꽌 ???ㅼ뿉???뚮윭??吏?곗꽭??</p>
+        </div>
+
+        <div class="offline-box">
+          <button id="prepareOffline" type="button" data-i18n="prepareOffline">?명꽣???놁씠 ?????덇쾶 以鍮?/button>
+          <p data-i18n="prepareOfflineHelp">吏湲???踰?諛쏆븘 ?먮㈃, ?ㅼ쓬遺?곕뒗 ?명꽣?룹씠 ?딄꺼??媛먯?媛 洹몃?濡??숈옉?⑸땲??</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="eyebrow" data-i18n="automation">AUTOMATION</div>
+        <fieldset class="fieldset">
+          <label><span data-i18n="boundaryDetection">寃쎄퀎??移⑤쾾 媛먯?</span><input id="boundaryDetection" type="checkbox" checked></label>
+          <label><span data-i18n="adminNotification">愿由ъ옄 ?뚮┝</span><input id="adminNotification" type="checkbox" checked></label>
+          <label><span data-i18n="warningLight">?꾩옣 寃쎄킅??/span><input id="warningLight" type="checkbox"></label>
+          <label><span data-i18n="sirenToggle">寃쎈낫??/span><input id="sirenEnabled" type="checkbox" checked></label>
+          <label><span data-i18n="voiceToggle">?뚯꽦?쇰줈 ?쎌뼱 二쇨린</span><input id="voiceEnabled" type="checkbox" checked></label>
+          <label><span data-i18n="snapshotToggle">寃쎈낫 ?쒓컙 ?붾㈃ ?④린湲?/span><input id="snapshotEnabled" type="checkbox" checked></label>
+          <label><span data-i18n="childMode">?대┛?대룄 ?뺤떎???↔린</span><input id="childMode" type="checkbox" checked></label>
+          <label><span data-i18n="precisionMode">?뺣? 紐⑤뱶 (癒??щ엺源뚯?)</span><input id="precisionMode" type="checkbox"></label>
+        </fieldset>
+      </section>
+
+    </aside>
+  </section>
+
+  <div class="notice">
+    <b data-i18n="noticeTitle">???쒖뒪?쒖? 愿???몃젰???泥댄븯吏 ?딅뒗 蹂댁“ 媛먯떆 ?꾧뎄?낅땲??</b>
+    <span data-i18n="noticeText">?몃챸 ?덉쟾 寃쎈낫??AI 媛먯? 寃곌낵? ?꾩옣 愿???몃젰???뺤씤???④퍡 ?곸슜?댁빞 ?⑸땲?? ?곸긽? 釉뚮씪?곗? ?덉뿉?쒕쭔 泥섎━?섎ŉ ?몃?濡??꾩넚?섏? ?딆뒿?덈떎.</span>
+  </div>
+
+  <section class="section validation-section" aria-labelledby="validationTitle">
+    <div class="eyebrow" data-i18n="fieldInsightsEyebrow">?꾩옣 寃利?諛섏쁺</div>
+    <h2 id="validationTitle" data-i18n="fieldInsightsTitle">?명꽣酉곗뿉???뺤씤??臾몄젣瑜??대젃寃?蹂댁셿?⑸땲??/h2>
+    <p class="lede" data-i18n="fieldInsightsLede">?덉쟾愿由?寃쏀뿕??5紐낆쓽 ?명꽣酉곗뿉???뺤씤??媛먯떆 怨듬갚???쒗뭹???ъ슜 ?먮쫫怨??뚮┝ 諛⑹떇??諛섏쁺?덉뒿?덈떎.</p>
+
+    <div class="validation-grid">
+      <article class="validation-item">
+        <span class="v-kicker">01</span>
+        <h3 data-i18n="insightGapTitle">媛먯떆 怨듬갚</h3>
+        <p data-i18n="insightGapText">?ㅻⅨ ?낅Т瑜??섑뻾?섎뒗 ?숈븞?먮룄 ?꾪뿕 ?곹솴???뚮━? ?뚮┝?쇰줈 ?뚮┫ ???덇쾶 ?덉뒿?덈떎.</p>
+      </article>
+      <article class="validation-item">
+        <span class="v-kicker">02</span>
+        <h3 data-i18n="insightBlindTitle">?ш컖吏?</h3>
+        <p data-i18n="insightBlindText">?꾩슂??遺遺꾨쭔 ?꾪뿕 援ъ뿭?쇰줈 吏?뺥빐 ?щ엺???볦튂湲??ъ슫 怨듦컙??蹂댁“?곸쑝濡?媛먯떆?⑸땲??</p>
+      </article>
+      <article class="validation-item">
+        <span class="v-kicker">03</span>
+        <h3 data-i18n="insightCountTitle">?щ엺 ???뺤씤</h3>
+        <p data-i18n="insightCountText">?붾㈃ ?꾩껜 ?몄썝怨??꾪뿕 援ъ뿭 ?몄썝??援щ텇??諛섎났?곸씤 ?몄썝 ?뺤씤??蹂댁“?⑸땲??</p>
+      </article>
+      <article class="validation-item">
+        <span class="v-kicker">04</span>
+        <h3 data-i18n="insightCctvTitle">?ㅼ떆媛?CCTV 蹂댁“</h3>
+        <p data-i18n="insightCctvText">移대찓?쇰? ?щ엺??怨꾩냽 諛붾씪蹂댁? ?딆븘???꾪뿕???붾㈃??癒쇱? ?뺤씤?????덈룄濡?援ъ꽦?덉뒿?덈떎.</p>
+      </article>
+    </div>
+
+    <div class="validation-flow" aria-label="validation flow">
+      <span data-i18n="validationStep1">?명꽣酉?/span><i>??/i>
+      <span data-i18n="validationStep2">吏곸젒 ?ъ슜</span><i>??/i>
+      <span data-i18n="validationStep3">硫덉텛??吏??愿李?/span><i>??/i>
+      <span data-i18n="validationStep4">臾몄젣 ?섏젙</span><i>??/i>
+      <span data-i18n="validationStep5">?ы뀒?ㅽ듃</span>
+    </div>
+  </section>
+
+  <footer class="site-foot">
+    <p class="team-mission"><b data-i18n="missionTag">? 誘몄뀡</b>
+      <span data-i18n="missionText">8二??? ?댁닔?뺤옣 ?덉쟾?붿썝???꾪뿕 援ъ뿭 吏꾩엯??20珥덇? ?꾨땲??5珥??덉뿉 ?뚭쾶 ?쒕떎.</span>
+      <em data-i18n="missionMetric">遺곴레??吏????吏꾩엯?먯꽌 ?대떦???뺤씤源뚯? 嫄몃┛ ?쒓컙(以묒븰媛? 21.8珥???5珥??댄븯</em>
+    </p>
+    <div class="lic">
+      <span data-i18n="licProject">???꾨줈?앺듃 쨌 MIT License</span>
+      <span>TensorFlow.js 쨌 Apache-2.0</span>
+      <span>COCO-SSD (@tensorflow-models) 쨌 Apache-2.0</span>
+      <span data-i18n="licDataset">COCO Dataset 쨌 CC BY 4.0</span>
+    </div>
+    <p class="doc-links" data-i18n="docLinks">?먯꽭???댁슜? ??μ냼 臾몄꽌???덉뒿?덈떎 ??<b>README.md</b>(臾몄젣 ?뺤쓽쨌?ъ슜踰빧룹엫?⑺듃쨌媛쒕컻 湲곕줉쨌濡쒕뱶留? 쨌 <b>TECHNICAL.md</b>(AI ?뚯씠?꾨씪?맞룹븞?뺤꽦쨌寃利??꾨왂) 쨌 <b>AI_STACK.md</b>(AI 湲곗닠 ?곸꽭 遺꾩꽍) 쨌 <b>IMPACT.md</b>(吏???곗텧 洹쇨굅) 쨌 <b>DEMO_SCRIPT.md</b>(?곕え ?곸긽 ?蹂?</p>
+    <p data-i18n="footText">Beach Watch ??AI 湲곕컲 ?대? ?ㅼ떆媛??덉쟾 紐⑤땲?곕쭅. ?뚯뒪 肄붾뱶??MIT ?쇱씠?좎뒪濡?怨듦컻?섏뼱 ?꾧뎄???먯쑀濡?쾶 ?ъ슜쨌?섏젙쨌?щ같?ы븷 ???덉뒿?덈떎. 蹂??쒖뒪?쒖? ?몃챸 援ъ“ ?몃젰??蹂댁“?섎뒗 ?꾧뎄?대ŉ, ?⑤룆?쇰줈 ?몃챸 ?덉쟾??蹂댁옣?섏? ?딆뒿?덈떎. ?곸긽? ?ъ슜?먯쓽 釉뚮씪?곗? ?덉뿉?쒕쭔 泥섎━?⑸땲??</p>
+  </footer>
+
+  <div class="admin-toast" id="adminToast" role="alert" aria-live="assertive"><b data-i18n="adminAlertTitle">愿由ъ옄 ?덉쟾 ?뚮┝</b><span id="adminToastText"></span></div>
+  <p class="sr-only" id="liveRegion" role="status" aria-live="polite"></p>
+
+  <dialog class="source-dialog shot-dialog" id="snapshotDialog" aria-labelledby="snapshotTitle">
+    <form method="dialog">
+      <div>
+        <div class="eyebrow" data-i18n="snapshotEyebrow">ALERT SNAPSHOT</div>
+        <h2 id="snapshotTitle" data-i18n="snapshotTitle">寃쎈낫 ?쒓컙???붾㈃</h2>
+      </div>
+      <img id="snapshotImage" alt="">
+      <p id="snapshotCaption"></p>
+      <p class="shot-note" data-i18n="snapshotNote">???붾㈃? 湲곌린 ?덉뿉留??덉뒿?덈떎. ??λ릺吏?? ?대뵒濡??꾩넚?섏????딆쑝硫??덈줈怨좎묠?섎㈃ ?щ씪吏묐땲??</p>
+      <div class="dialog-actions">
+        <button value="cancel" data-i18n="close">?リ린</button>
+        <button class="primary" id="snapshotSave" type="button" data-i18n="snapshotSave">?대?吏濡????/button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="source-dialog" id="shortcutDialog" aria-labelledby="shortcutTitle">
+    <form method="dialog">
+      <div>
+        <div class="eyebrow" data-i18n="shortcutsEyebrow">SHORTCUTS</div>
+        <h2 id="shortcutTitle" data-i18n="shortcutsTitle">?ㅻ낫???⑥텞??/h2>
+      </div>
+      <ul class="shortcut-list">
+        <li><kbd>1</kbd>??kbd>5</kbd><span data-i18n="scCamera">洹?踰덊샇??移대찓?쇰? ?ш쾶 蹂닿린</span></li>
+        <li><kbd>E</kbd><span data-i18n="scEdit">?꾪뿕 援ъ뿭 洹몃━湲??쒖옉 / ?앸궡湲?/span></li>
+        <li><kbd>F</kbd><span data-i18n="scFull">愿??紐⑤뱶 (?붾㈃ 媛??</span></li>
+        <li><kbd>D</kbd><span data-i18n="scDemo">泥댄뿕 紐⑤뱶 ?쒖옉 / ?꾧린</span></li>
+        <li><kbd>M</kbd><span data-i18n="scMute">寃쎈낫??耳쒓린 / ?꾧린</span></li>
+        <li><kbd>T</kbd><span data-i18n="scTest">?ㅼ뒪濡??먭??섍린</span></li>
+        <li><kbd>Tab</kbd><span data-i18n="scPoint">(洹몃━??以? ?ㅼ쓬 ???좏깮</span></li>
+        <li><kbd>??/kbd><kbd>??/kbd><kbd>??/kbd><kbd>??/kbd><span data-i18n="scNudge">(洹몃━??以? ?좏깮???먯쓣 ??린湲?쨌 Shift 瑜??꾨Ⅴ硫??ш쾶</span></li>
+        <li><kbd>?</kbd><span data-i18n="scHelp">???꾩?留??닿린</span></li>
+      </ul>
+      <div class="dialog-actions">
+        <button class="primary" value="cancel" data-i18n="close">?リ린</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="source-dialog contact-dialog" id="contactDialog" aria-labelledby="contactTitle">
+    <form method="dialog" id="contactForm">
+      <div>
+        <div class="eyebrow" data-i18n="contactsEyebrow">ALERT RECIPIENTS</div>
+        <h2 id="contactTitle" data-i18n="contactDialogTitle">?섏떊???깅줉</h2>
+      </div>
+
+      <div class="source-pane on" style="display:grid">
+        <div class="grid2">
+          <label><span data-i18n="fieldName">?대쫫</span><input id="contactName" type="text" maxlength="24" autocomplete="off"></label>
+          <label><span data-i18n="fieldRole">??븷 쨌 ?대떦 援ъ뿭</span><input id="contactRole" type="text" maxlength="32" autocomplete="off" placeholder="?? ?덉쟾?붿썝 쨌 1援ъ뿭"></label>
+        </div>
+        <div class="grid2">
+          <label><span data-i18n="fieldPhone">?대???/span><input id="contactPhone" type="text" maxlength="24" autocomplete="off" placeholder="010-0000-0000"></label>
+          <label><span data-i18n="fieldEmail">?대찓??/span><input id="contactEmail" type="text" maxlength="64" autocomplete="off" placeholder="name@example.com"></label>
+        </div>
+        <label><span data-i18n="fieldWebhook">?뱁썒 URL (?좏깮)</span>
+          <input id="contactWebhook" type="url" autocomplete="off" placeholder="https://hooks.example.com/beach-watch">
+          <small data-i18n="fieldWebhookHelp">釉뚮씪?곗?留뚯쑝濡쒕뒗 臾몄옄쨌?대찓?쇱쓣 ?먮룞 諛쒖넚?????놁뒿?덈떎.</small>
+        </label>
+        <label><span data-i18n="fieldMinLevel">?섏떊 ?쒖옉 ?깃툒</span>
+          <select id="contactMinLevel">
+            <option value="alert" data-i18n="levelAlertOnly">寃쎄퀬 ?댁긽</option>
+            <option value="critical" data-i18n="levelCriticalOnly">湲닿툒留?/option>
+          </select>
+        </label>
+      </div>
+
+      <div class="dialog-error" id="contactError"></div>
+
+      <div class="dialog-actions">
+        <button value="cancel" data-i18n="cancel">痍⑥냼</button>
+        <button class="primary" id="contactSave" value="default" data-i18n="contactSave">???/button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="source-dialog" id="sourceDialog" aria-labelledby="sourceTitle">
+    <form method="dialog" id="sourceForm">
+      <div>
+        <div class="eyebrow" data-i18n="addCameraEyebrow">ADD CAMERA</div>
+        <h2 id="sourceTitle" data-i18n="addCameraTitle">移대찓??異붽?</h2>
+      </div>
+
+      <div class="source-tabs" role="group" aria-label="source type">
+        <button type="button" id="tabDevice" aria-pressed="true" data-i18n="srcDevice">湲곌린 移대찓??/button>
+        <button type="button" id="tabStream" aria-pressed="false" data-i18n="srcStream">?ㅽ듃由?URL</button>
+        <button type="button" id="tabYt" aria-pressed="false" data-i18n="srcYt">?좏뒠釉?쨌 ?붾㈃</button>
+        <button type="button" id="tabFile" aria-pressed="false" data-i18n="srcFile">?곸긽 ?뚯씪</button>
+        <button type="button" id="tabSim" aria-pressed="false" data-i18n="srcSim">?쒕??덉씠??/button>
+      </div>
+
+      <div class="source-pane on" id="paneDevice">
+        <label><span data-i18n="srcDevicePick">移대찓???좏깮</span>
+          <select id="cameraSelect"><option value="">移대찓???좏깮</option></select>
+          <small data-i18n="srcDeviceHelp">USB ?뱀틺, ?댁옣 移대찓?? 洹몃━怨?媛??移대찓??OBS ??濡??ㅼ뼱?ㅻ뒗 ?쒕줎 ?곸긽???ш린???섑??⑸땲?? 紐⑸줉??鍮꾩뼱 ?덉쑝硫?癒쇱? ??踰??곌껐??沅뚰븳???덉슜?섏꽭??</small>
+        </label>
+      </div>
+
+      <div class="source-pane" id="paneStream">
+        <label><span data-i18n="srcStreamUrl">?ㅽ듃由?二쇱냼</span>
+          <input id="streamUrl" type="url" placeholder="https://example.com/live/stream.m3u8" autocomplete="off">
+          <small data-i18n="srcStreamHelp">?쒕줎쨌IP 移대찓?쇰뒗 蹂댄넻 RTSP濡??≪텧?섎?濡?釉뚮씪?곗?媛 吏곸젒 ?????놁뒿?덈떎. RTSP瑜?<code>HLS(.m3u8)</code>쨌<code>MP4/WebM</code>쨌<code>MJPEG</code> 以??섎굹濡?蹂?섑빐 二쇰뒗 寃뚯씠?몄썾??二쇱냼瑜??ｌ쑝?몄슂. ?쒕쾭??CORS ?덉슜???꾩슂?⑸땲??</small>
+        </label>
+        <label><span data-i18n="srcStreamKind">?뺤떇</span>
+          <select id="streamKind">
+            <option value="auto" data-i18n="srcAuto">?먮룞 ?먮퀎</option>
+            <option value="hls">HLS (.m3u8)</option>
+            <option value="video" data-i18n="srcVideo">MP4 / WebM 吏곸젒</option>
+            <option value="mjpeg">MJPEG</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="source-pane" id="paneYt">
+        <label><span data-i18n="srcYtUrl">?좏뒠釉?二쇱냼 (?좏깮)</span>
+          <input id="ytUrl" type="url" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
+          <small data-i18n="srcYtHelp">?좏뒠釉??붾㈃? 蹂댁븞??留곹겕留뚯쑝濡쒕뒗 遺꾩꽍?????놁뒿?덈떎. 二쇱냼瑜??ｊ퀬 異붽??섎㈃ ?곸긽??????뿉???대━怨? ?댁뼱???⑤뒗 ?붾㈃ 怨듭쑀 李쎌뿉??<b>洹???/b>??怨좊Ⅴ硫??⑸땲?? 洹몃븣遺?곕뒗 ?쇰컲 移대찓?쇱? ?묎컳???꾪뿕 援ъ뿭??洹몃━怨?寃쎈낫瑜?諛쏆쓣 ???덉뒿?덈떎.</small>
+        </label>
+        <small data-i18n="srcYtSkip">二쇱냼瑜?鍮꾩썙 ?먭퀬 異붽??섎㈃ ?좏뒠釉뚮? ?댁? ?딄퀬 諛붾줈 ?붾㈃ 怨듭쑀留??쒖옉?⑸땲??(?ㅻⅨ ?꾨줈洹몃옩 ?붾㈃??媛먯떆?????덉뒿?덈떎).</small>
+      </div>
+
+      <div class="source-pane" id="paneFile">
+        <label><span data-i18n="srcFilePick">?곸긽 ?뚯씪 ?좏깮</span>
+          <input id="fileInput" type="file" accept="video/*">
+          <small data-i18n="srcFileHelp">??湲곌린????λ맂 ?곸긽 ?뚯씪(MP4쨌WebM쨌MOV ????怨⑤씪 洹몃?濡??ъ깮쨌遺꾩꽍?⑸땲?? ?뚯씪? ?대뵒濡쒕룄 ?꾩넚?섏? ?딄퀬 ??釉뚮씪?곗? ?덉뿉?쒕쭔 ?대┰?덈떎.</small>
+        </label>
+      </div>
+
+      <div class="source-pane" id="paneSim">
+        <small data-i18n="srcSimHelp">移대찓?쇨? ?놁뼱??媛먯?쨌寃쎈낫 ?밴꺽 ?먮쫫???ы쁽?섎뒗 ?⑹꽦 ?λ㈃?낅땲?? 諛쒗몴쨌?ъ궗 ?쒖뿰?⑹씠硫??붾㈃????긽 ?쒕??덉씠?섏엫???쒖떆?⑸땲??</small>
+      </div>
+
+      <label class="source-pane on" style="display:grid"><span data-i18n="srcName">移대찓???대쫫</span>
+        <input id="cameraLabel" type="text" maxlength="24" placeholder="?? 1援ъ뿭 ?⑥そ" autocomplete="off">
+      </label>
+
+      <div class="dialog-error" id="sourceError"></div>
+
+      <div class="dialog-actions">
+        <button value="cancel" data-i18n="cancel">痍⑥냼</button>
+        <button class="primary" id="sourceConfirm" value="default" data-i18n="addCameraConfirm">異붽?</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="settings-dialog" id="settingsDialog" aria-labelledby="settingsTitle">
+    <form method="dialog">
+      <div class="settings-icon" aria-hidden="true">&#9881;</div>
+      <div><div class="eyebrow" data-i18n="preferences">PREFERENCES</div><h2 id="settingsTitle" data-i18n="settingsTitle">?섍꼍 ?ㅼ젙</h2></div>
+      <button class="dialog-close" value="cancel" aria-label="Close">&#10005;</button>
+      <label class="settings-field"><span data-i18n="language">?몄뼱</span>
+        <select id="languageSelect"><option value="ko">?쒓뎅??/option><option value="en">English</option><option value="zh">嶸鵝볞릎??/option></select>
+        <small data-i18n="languageHelp">?좏깮???몄뼱???ㅼ쓬 ?묒냽 ?쒖뿉???좎??⑸땲??</small>
+      </label>
+      <div class="dialog-actions"><button value="cancel" data-i18n="cancel">痍⑥냼</button><button class="primary" id="saveSettings" value="default" data-i18n="saveSettings">?ㅼ젙 ???/button></div>
+    </form>
+  </dialog>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+<!-- ?ㅽ겕由쏀듃??js/01..82 ?쒖꽌?濡?濡쒕뱶?쒕떎 (?쒖꽌 蹂寃?湲덉?) -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+  <script src="app.merged.js"></script>
+</body>
+</html>
+
+
