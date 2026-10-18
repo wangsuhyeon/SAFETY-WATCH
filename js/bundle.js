@@ -8391,7 +8391,7 @@ Object.assign(I18N.ko, {
   errAuthServer:'서버 오류가 발생했습니다. 잠시 후 다시 시도하세요.',
   errAuthTooLarge:'요청이 너무 큽니다. 입력 내용을 줄여 다시 시도하세요.',
   errAuthSessionRequired:'로그인이 필요합니다.',
-  errAuthOffline:'서버 응답을 받지 못했습니다. 서버가 실행 중인지 확인하세요.'
+  errAuthOffline:'계정 서버에 연결되지 않았습니다. 프로젝트 폴더에서 npm start를 실행한 뒤 http://localhost:3000 에 접속하세요. 정적 호스팅에는 회원가입 API가 없습니다.'
 });
 
 Object.assign(I18N.en, {
@@ -8434,7 +8434,7 @@ Object.assign(I18N.en, {
   errAuthServer:'Server error. Please try again.',
   errAuthTooLarge:'Request is too large. Reduce the input and try again.',
   errAuthSessionRequired:'Sign-in required.',
-  errAuthOffline:'No response from the server. Make sure it is running.'
+  errAuthOffline:'The account server is unavailable. Run npm start in the project folder, then open http://localhost:3000. Static hosting does not include the signup API.'
 });
 
 Object.assign(I18N.zh, {
@@ -8477,7 +8477,7 @@ Object.assign(I18N.zh, {
   errAuthServer:'服务器错误，请稍后再试。',
   errAuthTooLarge:'请求内容过大，请精简后重试。',
   errAuthSessionRequired:'需要登录。',
-  errAuthOffline:'未收到服务器响应，请确认服务器正在运行。'
+  errAuthOffline:'账户服务器不可用。请在项目目录运行 npm start，然后打开 http://localhost:3000。纯静态托管不包含注册 API。'
 });
 
 /* 이벤트 저장(events 테이블) 화면 문자열 */
