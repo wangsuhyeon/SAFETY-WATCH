@@ -273,6 +273,10 @@
           <input id="contactWebhook" type="url" autocomplete="off" placeholder="https://hooks.example.com/beach-watch">
           <small data-i18n="fieldWebhookHelp">문자·알림 자동 발송은 알림 서버 주소로 보내고, 이메일은 수신자의 이메일 주소로 자동 발송됩니다.</small>
         </label>
+        <label><span data-i18n="fieldAlertMessage">경고 문구 (선택)</span>
+          <textarea id="contactAlertMessage" rows="3" maxlength="300" placeholder="예: {camera}에 {count}명이 위험 구역에 있습니다."></textarea>
+          <small data-i18n="fieldAlertMessageHelp">비워 두면 기본 경고문을 보냅니다. {camera}, {level}, {count}, {seconds}를 넣으면 상황 값으로 바뀝니다.</small>
+        </label>
         <label><span data-i18n="fieldMinLevel">수신 시작 등급</span>
           <select id="contactMinLevel">
             <option value="alert" data-i18n="levelAlertOnly">경고 이상</option>
@@ -418,8 +422,6 @@
         <div class="eyebrow" data-i18n="contactsEyebrow">ALERT RECIPIENTS</div>
         <h2 data-i18n="contactsTitle">알림 수신자</h2>
         <p data-i18n="contactsLede">등록한 담당자에게 위험 정도에 맞춰 알림을 보냅니다.</p>
-        <button class="alert-toggle" id="enableAlerts" type="button" data-i18n="enableAlerts">🔔 알림 켜기</button>
-        <p class="alert-toggle-help" data-i18n="enableAlertsHelp">브라우저 알림을 켜면 다른 창을 보고 있어도 위험 상황이 바로 뜹니다.</p>
         <div class="contact-list" id="contactList"></div>
         <div class="contact-empty" id="contactEmpty" data-i18n="contactsEmpty">등록된 수신자가 없습니다.</div>
         <div class="controls" style="padding:0;border:0;box-shadow:none;background:none;backdrop-filter:none">

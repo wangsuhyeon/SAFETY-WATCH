@@ -1666,6 +1666,7 @@ const state = {
   editing: false,
   drag: -1,
   freehand: null,     // 드래그로 그리는 중인 궤적
+  lastHandleTap: null,
   /* 집계 */
   alertLevel: 'none',
   metrics: { latency: 0, fps: 0, cycle: 0, realCycle: 0, frames: 0, errors: 0, alerts: 0, peak: 0,
@@ -3560,6 +3561,29 @@ function bindBoundaryPointer(camera) {
 
     /* 기존 점을 잡았으면 이동 */
     if (event.target.classList.contains('handle')) {
+      /* dblclick 이벤트는 첫 클릭에서 시작된 포인터 캡처나 다시 그려진 손잡이에
+         묻히는 브라우저가 있다. 두 번째 pointerdown에서 바로 지워 모든 데스크톱
+         브라우저에서 같은 동작을 보장한다. */
+      if (event.pointerType !== 'touch' && event.detail >= 2) {
+        removeZonePoint(camera, Number(event.target.dataset.index));
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      if (event.pointerType === 'touch') {
+        const index = Number(event.target.dataset.index);
+        const previous = state.lastHandleTap;
+        const isDoubleTap = previous && previous.cameraId === camera.id && previous.index === index &&
+          event.timeStamp - previous.at < 350;
+        state.lastHandleTap = { cameraId: camera.id, index, at: event.timeStamp };
+        if (isDoubleTap) {
+          state.lastHandleTap = null;
+          removeZonePoint(camera, index);
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
+      }
       state.drag = Number(event.target.dataset.index);
       event.target.classList.add('dragging');
       /* 캡처는 오버레이에 건다. 손잡이 요소는 다시 그려질 수 있어서
@@ -4414,6 +4438,7 @@ function normalizeContact(input) {
       name,
       role: String(input.role || '').trim(),
       phone, email, webhook,
+      messageTemplate: String(input.messageTemplate || '').trim().slice(0, 300),
       minLevel: input.minLevel === 'critical' ? 'critical' : 'alert',
       onDuty: input.onDuty !== false,
       lastSentAt: 0
@@ -4424,7 +4449,8 @@ function normalizeContact(input) {
 function persistContacts() {
   store.set(contactStorageKey(), JSON.stringify(state.contacts.map(c =>
     ({ id: c.id, name: c.name, role: c.role, phone: c.phone, email: c.email,
-       webhook: c.webhook, minLevel: c.minLevel, onDuty: c.onDuty }))));
+       webhook: c.webhook, messageTemplate: c.messageTemplate,
+       minLevel: c.minLevel, onDuty: c.onDuty }))));
 }
 
 function restoreContacts() {
@@ -4451,6 +4477,15 @@ function contactsForLevel(level, contacts) {
 
 /** 웹훅으로 보낼 본문. 받는 쪽이 파싱하기 쉽도록 평평한 구조로 둔다. */
 function buildAlertPayload(camera, level, count, dwellSeconds, contact, isTest) {
+  const defaultMessage = isTest ? tr('testAlertBody')
+    : tr('adminAlertBody', { level: tr(level === 'critical' ? 'levelCritical' : 'levelAlert'), count });
+  const template = String(contact.messageTemplate || '').trim();
+  const message = template ? template.replace(/\{(camera|level|count|seconds)\}/g, (all, key) => ({
+    camera: camera ? camera.name : '',
+    level: tr(level === 'critical' ? 'levelCritical' : 'levelAlert'),
+    count: String(count),
+    seconds: String(Math.round(dwellSeconds || 0))
+  })[key]) : defaultMessage;
   return {
     type: 'beach-watch-alert',
     test: Boolean(isTest),
@@ -4461,8 +4496,7 @@ function buildAlertPayload(camera, level, count, dwellSeconds, contact, isTest) 
     peopleInZone: count,
     dwellSeconds: Math.round(dwellSeconds || 0),
     recipient: { name: contact.name, role: contact.role },
-    message: isTest ? tr('testAlertBody')
-      : tr('adminAlertBody', { level: tr(level === 'critical' ? 'levelCritical' : 'levelAlert'), count }),
+    message,
     timestamp: new Date().toISOString()
   };
 }
@@ -4611,15 +4645,6 @@ function notifyRecipients(camera, level, levelLabel, count, dwellSeconds, isTest
      반복 경보에서 발송이 억제되더라도 전화·문자 버튼은 계속 남아 있어야 하기 때문이다. */
   showAlertToast(message, recipients, level);
 
-  if (autoFlag('adminNotification')) {
-    try {
-      if ('Notification' in window && Notification.permission === 'granted') {
-        const who = targets.length ? ' · ' + tr('toastRecipients', { names: targets.map(c => c.name).join(', ') }) : '';
-        new Notification(tr('adminAlertTitle'), { body: message + who, tag: 'beach-boundary-alert' });
-      }
-    } catch (e) { /* 일부 브라우저는 문서 컨텍스트에서 Notification 생성을 막는다 */ }
-  }
-
   if (!state.contacts.length) {
     if (!isTest) Diagnostics.log(tr('notifyNoRecipients'), 'warn');
     return targets;
@@ -4694,34 +4719,6 @@ function toastLink(href, label) {
   return link;
 }
 
-/** 브라우저 알림 허용 상태를 버튼에 그대로 비춘다.
- *  "알림이 안 와요"의 대부분은 권한이 꺼져 있어서다. 상태를 숨기지 않는다. */
-function refreshAlertToggle() {
-  const button = $('#enableAlerts');
-  if (!button) return;
-  const supported = 'Notification' in window;
-  const permission = supported ? Notification.permission : 'denied';
-  button.classList.toggle('on', permission === 'granted');
-  button.classList.toggle('blocked', permission === 'denied');
-  button.textContent = tr(permission === 'granted' ? 'alertsEnabled'
-    : permission === 'denied' ? 'alertsBlocked' : 'enableAlerts');
-  button.disabled = !supported;
-}
-
-function enableBrowserAlerts() {
-  if (!('Notification' in window)) return;
-  if (Notification.permission === 'denied') {
-    Diagnostics.log(tr('alertsDenied'), 'warn');
-    refreshAlertToggle();
-    return;
-  }
-  Promise.resolve(Notification.requestPermission()).then(result => {
-    Diagnostics.log(tr(result === 'granted' ? 'alertsGranted' : 'alertsDenied'), result === 'granted' ? 'ok' : 'warn');
-    refreshAlertToggle();
-  }).catch(() => refreshAlertToggle());
-}
-
-
 /* ============================================================
    47-contacts-ui.js
    ============================================================ */
@@ -4776,7 +4773,6 @@ function renderContacts() {
     addButton.textContent = tr('addContact');
     addButton.disabled = state.contacts.length >= CONFIG.maxContacts;
   }
-  refreshAlertToggle();
   refreshEmailStatus();
 }
 
@@ -4798,6 +4794,7 @@ function openContactDialog(id) {
   $('#contactPhone').value = contact ? contact.phone : '';
   $('#contactEmail').value = contact ? contact.email : '';
   $('#contactWebhook').value = contact ? contact.webhook : '';
+  $('#contactAlertMessage').value = contact ? (contact.messageTemplate || '') : '';
   $('#contactMinLevel').value = contact ? contact.minLevel : 'alert';
   $('#contactTitle').textContent = tr(contact ? 'contactDialogEditTitle' : 'contactDialogTitle');
   $('#contactError').classList.remove('on');
@@ -4813,6 +4810,7 @@ function saveContact(event) {
     phone: $('#contactPhone').value,
     email: $('#contactEmail').value,
     webhook: $('#contactWebhook').value,
+    messageTemplate: $('#contactAlertMessage').value,
     minLevel: $('#contactMinLevel').value,
     onDuty: editingContactId ? (state.contacts.find(c => c.id === editingContactId) || {}).onDuty !== false : true
   });
@@ -4834,7 +4832,6 @@ function saveContact(event) {
     if (state.contacts.length >= CONFIG.maxContacts) return;
     state.contacts.push(result.contact);
     Diagnostics.log(tr('contactAdded', { name: result.contact.name }), 'ok');
-    requestNotificationPermission();
   }
   editingContactId = null;
   persistContacts();
@@ -4862,7 +4859,6 @@ function toggleContactDuty(id) {
 function testContact(id) {
   const contact = state.contacts.find(c => c.id === id);
   if (!contact) return;
-  requestNotificationPermission();
   notifyRecipients(focusedCamera(), 'alert', tr('levelAlert'), 0, 0, true, contact);
   pushEvent(tr('notifyTestSent', { name: contact.name }), 'info', { camera: focusedCamera().name });
 }
@@ -5209,7 +5205,6 @@ async function connectCamera(camera, isRetry) {
     setHealth('healthError', 'bad');
     return false;
   }
-  requestNotificationPermission();
   Diagnostics.log(tr('camConnecting', { name: camera.name }), 'info');
 
   /* 권한 창이 떠 있는 동안 사용자가 이 카메라를 지울 수 있다. 그 뒤에
@@ -5278,7 +5273,6 @@ async function connectScreen(camera) {
     refreshAllPanels(); renderCameraBar();
     return false;
   }
-  requestNotificationPermission();
   Diagnostics.log(tr('camConnecting', { name: camera.name }) + ' [screen]', 'info');
 
   const seq = (camera.connectSeq = (camera.connectSeq || 0) + 1);
@@ -5345,7 +5339,6 @@ async function connectScreen(camera) {
    기기 카메라처럼 자연히 멈추므로, 시연 편의를 위해 자동으로 처음부터
    반복 재생한다. */
 async function connectFile(camera) {
-  requestNotificationPermission();
   Diagnostics.log(tr('camConnecting', { name: camera.name }) + ' [file]', 'info');
   try {
     camera.video.crossOrigin = null;
@@ -5532,14 +5525,6 @@ function connectMjpeg(camera) {
     img.src = camera.url;
     setTimeout(() => { if (!settled) { settled = true; reject(new Error(tr('errStreamLoad'))); } }, 12000);
   });
-}
-
-function requestNotificationPermission() {
-  try {
-    if (autoFlag('adminNotification') && 'Notification' in window && Notification.permission === 'default') {
-      Promise.resolve(Notification.requestPermission()).catch(() => {});
-    }
-  } catch (e) { /* 구형 브라우저 */ }
 }
 
 function disconnectAll() {
@@ -7196,7 +7181,6 @@ function bindUi() {
   $('#zoneApplyAll').addEventListener('click', applyZoneToAll);
 
   /* 수신자 */
-  $('#enableAlerts').addEventListener('click', enableBrowserAlerts);
   $('#addContact').addEventListener('click', () => openContactDialog(null));
   $('#contactSave').addEventListener('click', saveContact);
   $('#contactDialog').addEventListener('click', e => { if (e.target === $('#contactDialog')) $('#contactDialog').close(); });
@@ -7220,9 +7204,7 @@ function bindUi() {
   });
   $('#resetLine').addEventListener('click', resetZone);
 
-  /* 자동화 · 진단 (자동화 체크박스는 화면에서 제거했지만, 다시 생기면 동작하도록 둔다) */
-  const adminNotificationBox = $('#adminNotification');
-  if (adminNotificationBox) adminNotificationBox.addEventListener('change', requestNotificationPermission);
+  /* 자동화 · 진단 */
   $('#exportEvents').addEventListener('click', exportEvents);
   $('#runSelfTest').addEventListener('click', () => SelfTest.run());
   $('#runStress').addEventListener('click', () => runStressTest(200));
@@ -7379,7 +7361,6 @@ function init() {
   refreshMetrics();
   updateGridCount();
   renderContacts();
-  refreshAlertToggle();
   refreshZoneCard();
   refreshWatchHours();
   refreshOfflineBadge();
