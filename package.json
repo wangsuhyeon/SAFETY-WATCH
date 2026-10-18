@@ -1,0 +1,20 @@
+{
+  "name": "beach-watch",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Beach Watch AI water safety monitoring - auth + SQLite backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "test": "node tests/api-check.js",
+    "test:e2e": "node tests/e2e-auth.js",
+    "test:race": "node tests/e2e-signup-race.js",
+    "test:email": "node tests/e2e-email.js"
+  },
+  "dependencies": {
+    "express": "^4.22.3"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.64.1"
+  }
+}
