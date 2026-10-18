@@ -18,6 +18,8 @@ const ROOT = __dirname;
 const PORT = Number(process.env.PORT) || 3000;
 const DATA_DIR = path.join(ROOT, 'data');
 const DB_FILE = process.env.BW_DB ? path.resolve(process.env.BW_DB) : path.join(DATA_DIR, 'beachwatch.db');
+const APP_ORIGINS = String(process.env.APP_ORIGIN || '')
+  .split(',').map(origin => origin.trim()).filter(Boolean);
 
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7;   // 7일
 const MAX_FAILED_ATTEMPTS = 5;                     // 연속 실패 잠금 기준
@@ -200,10 +202,13 @@ function insertSession(user, req) {
 }
 
 function setSessionCookie(req, res, token) {
-  const secure = req.secure || req.headers['x-forwarded-proto'] === 'https';
+  const origin = req.headers.origin;
+  const requestOrigin = (req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http') + '://' + req.get('host');
+  const crossSite = Boolean(origin && origin !== requestOrigin && APP_ORIGINS.includes(origin));
+  const secure = crossSite || req.secure || req.headers['x-forwarded-proto'] === 'https';
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: crossSite ? 'none' : 'lax',
     secure,
     path: '/',
     maxAge: SESSION_TTL_MS
@@ -245,7 +250,14 @@ function clearSession(req, res) {
     const token = decodeURIComponent(raw.slice(COOKIE_NAME.length + 1));
     db.prepare('DELETE FROM sessions WHERE token_hash = ?').run(sha256(token));
   }
-  res.clearCookie(COOKIE_NAME, { path: '/' });
+  const origin = req.headers.origin;
+  const requestOrigin = (req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http') + '://' + req.get('host');
+  const crossSite = Boolean(origin && origin !== requestOrigin && APP_ORIGINS.includes(origin));
+  res.clearCookie(COOKIE_NAME, {
+    path: '/',
+    sameSite: crossSite ? 'none' : 'lax',
+    secure: crossSite || req.secure || req.headers['x-forwarded-proto'] === 'https'
+  });
 }
 
 function requireAuth(req, res, next) {
@@ -332,6 +344,22 @@ function sanitizeEvent(input) {
 
 const app = express();
 app.disable('x-powered-by');
+/* Render, Railway 등 HTTPS 프록시 뒤에서 secure 쿠키를 정확히 발급한다. */
+app.set('trust proxy', 1);
+
+/* 별도 정적 홈페이지가 이 API를 사용할 때만 APP_ORIGIN에 등록한 출처를 허용한다.
+   출처를 비워 두면 같은 서버에서 제공하는 화면만 API를 호출할 수 있다. */
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (!origin || !APP_ORIGINS.includes(origin)) return next();
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
 app.use(express.json({ limit: '16kb' }));
 
 /* 1) API ─────────────────────────────────────────────────── */

@@ -4,6 +4,9 @@
   "private": true,
   "description": "Beach Watch AI water safety monitoring - auth + SQLite backend",
   "main": "server.js",
+  "engines": {
+    "node": ">=22.13.0"
+  },
   "scripts": {
     "start": "node --env-file-if-exists=.env server.js",
     "test": "node tests/api-check.js",

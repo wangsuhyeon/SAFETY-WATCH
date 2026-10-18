@@ -64,13 +64,28 @@
 
   /* ── 서버 통신 ─────────────────────────────────────────── */
 
+  /* 기본값은 같은 서버의 /api 이다. 정적 홈페이지와 API를 분리해 배포할 때만
+     index.html의 beach-watch-api-url meta 값에 API 주소를 넣는다.
+     예: https://beach-watch-api.onrender.com */
+  function apiUrl(pathname) {
+    const meta = document.querySelector('meta[name="beach-watch-api-url"]');
+    const base = meta && meta.content.trim().replace(/\/+$/, '');
+    return base ? base + pathname : pathname;
+  }
+
+  function isCrossOrigin(url) {
+    try { return new URL(url, window.location.href).origin !== window.location.origin; }
+    catch (e) { return false; }
+  }
+
   async function api(pathname, options) {
     const opts = options || {};
+    const url = apiUrl(pathname);
     let res;
     try {
-      res = await fetch(pathname, {
+      res = await fetch(url, {
         method: opts.method || 'POST',
-        credentials: 'same-origin',
+        credentials: isCrossOrigin(url) ? 'include' : 'same-origin',
         headers: opts.body ? { 'content-type': 'application/json' } : undefined,
         body: opts.body ? JSON.stringify(opts.body) : undefined
       });
