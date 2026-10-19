@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: beach-watch
+    runtime: node
+    region: singapore
+    plan: 0.5c-512mb
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    disk:
+      name: beach-watch-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: 22.13.0
+      - key: BW_DB
+        value: /var/data/beachwatch.db
