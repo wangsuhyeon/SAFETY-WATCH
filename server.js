@@ -108,10 +108,12 @@ async function clearEmailCode(userId) {
 }
 
 /** 무료 메일 전달 서비스 FormSubmit AJAX 로 인증 코드 메일을 보낸다.
-    ※ FormSubmit 특성상 그 주소로 오는 메일이 '최초 1회'는 활성화 확인을
-    요청한다 — 수신자가 활성화 링크를 누른 뒤 재발송하면 코드가 도착한다.
-    (이 주소로 실제 메일이 도착한다는 것 자체가 실존 메일함의 증거다) */
-async function sendVerificationEmail(email, name, code) {
+    ※ FormSubmit 은 Origin/Referer 가 없는 서버 간 요청을 거부하므로
+      사이트 주소를 헤더로 반드시 넣는다 (그래서 "웹 서버로 열어라" 오류 방지).
+    ※ 또한 각 수신 주소로 오는 메일이 '최초 1회'는 활성화 확인을 요청한다 —
+      수신자가 활성화 링크를 누른 뒤 재발송하면 코드가 도착한다. */
+async function sendVerificationEmail(email, name, code, origin) {
+  const site = origin || process.env.RENDER_EXTERNAL_URL || 'https://safety-watch-oh5o.onrender.com';
   const subject = '[Beach Watch] 이메일 인증 코드: ' + code;
   const message = [
     (name ? name + '님, ' : '') + 'Beach Watch 가입/로그인 인증 코드입니다.',
@@ -125,11 +127,19 @@ async function sendVerificationEmail(email, name, code) {
   try {
     const res = await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(email), {
       method: 'POST',
-      headers: { 'content-type': 'application/json', 'accept': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        'accept': 'application/json',
+        'Origin': site,
+        'Referer': site + '/'
+      },
       body: JSON.stringify({ _subject: subject, _template: 'box', _captcha: 'false', message }),
       signal: AbortSignal.timeout(15000)
     });
-    return res.ok;
+    if (!res.ok) return false;
+    const data = await res.json().catch(() => null);
+    /* success:false 는 활성화 대기 등 실제 미발송 상태다. */
+    return !!(data && data.success === true);
   } catch (e) {
     console.error('[verify-mail]', e.message);
     return false;
@@ -179,6 +189,13 @@ function safeJSON(text) {
 function clientIP(req) {
   return (req.headers['x-forwarded-for'] || '').split(',')[0].trim()
     || req.socket.remoteAddress || '';
+}
+
+/** 사이트 공개 주소 — FormSubmit 에 Origin/Referer 로 넘겨 서버 발송을 허용받는다. */
+function siteOrigin(req) {
+  const proto = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+  const host = req.headers['x-forwarded-host'] || req.headers.host || '';
+  return proto + '://' + host;
 }
 
 async function logAuth(action, req, extra) {
@@ -427,7 +444,7 @@ app.post('/api/auth/signup', loginRateLimit, async (req, res) => {
   }
 
   /* 자동 점검 모드에서는 외부 메일 발송을 건너뛴다(네트워크 무관·빠른 검증). */
-  const sent = TEST_MODE ? true : await sendVerificationEmail(normalizedEmail, user.name, code);
+  const sent = TEST_MODE ? true : await sendVerificationEmail(normalizedEmail, user.name, code, siteOrigin(req));
   (await logAuth('signup', req, { userId: user.id, email: user.email, detail: '인증 대기' }));
   res.status(201).json(verificationPayload(user.email, sent, code));
 });
@@ -466,7 +483,7 @@ app.post('/api/auth/login', loginRateLimit, async (req, res) => {
   /* 실제 메일주소 인증 전에는 로그인할 수 없다 — 코드를 새로 보내고 안내한다. */
   if (!user.verified) {
     const code = generateEmailCode();
-    const sent = TEST_MODE ? true : await sendVerificationEmail(user.email, user.name, code);
+    const sent = TEST_MODE ? true : await sendVerificationEmail(user.email, user.name, code, siteOrigin(req));
     (await setEmailCode(user.id, code));
     (await logAuth('login_unverified', req, { userId: user.id, email: user.email, detail: '미인증 계정 — 인증 코드 재발송' }));
     const body = {
@@ -536,7 +553,7 @@ app.post('/api/auth/verify/resend', loginRateLimit, async (req, res) => {
   if (user.verified) return fail(res, 400, 'ALREADY_VERIFIED', '이미 인증된 계정입니다. 로그인해 주세요.');
 
   const code = generateEmailCode();
-  const sent = TEST_MODE ? true : await sendVerificationEmail(user.email, user.name, code);
+  const sent = TEST_MODE ? true : await sendVerificationEmail(user.email, user.name, code, siteOrigin(req));
   (await setEmailCode(user.id, code));
   (await logAuth('verify_resend', req, { userId: user.id, email: user.email }));
   res.json(verificationPayload(user.email, sent, code));
