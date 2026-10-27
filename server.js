@@ -56,7 +56,8 @@ const schemaReady = (async () => {
 const TEST_MODE = process.env.BW_TEST_MODE === '1';
 
 /* Gmail SMTP 발송기 — SMTP_USER/SMTP_PASS(앱 비밀번호)가 설정될 때만 사용.
-   Render 같은 클라우드 IP에서도 안정적으로 메일을 보낼 수 있다. */
+   (Render는 SMTP 아웃바운드를 차단하므로, SMTP는 로컬 실행 시에만 유효.
+    클라우드 배포에서는 Brevo HTTPS API 를 사용한다.) */
 let mailer = null;
 if (process.env.SMTP_USER && process.env.SMTP_PASS) {
   try {
@@ -141,7 +142,36 @@ async function sendVerificationEmail(email, name, code, origin) {
     '  확인 링크를 누른 뒤, 화면의 「인증 코드 재발송」을 누르면 도착합니다.'
   ].join('\n');
 
-  /* 1순위 — Gmail SMTP(SMTP_USER/SMTP_PASS 설정 시). 클라우드 IP에서도 안정적. */
+  /** 1순위 — Brevo HTTPS API (BREVO_API_KEY/BREVO_SENDER 설정 시).
+      Render는 SMTP 포트(465/587)를 차단하므로 클라우드 발송은 HTTPS API로만 가능. */
+  if (process.env.BREVO_API_KEY && process.env.BREVO_SENDER) {
+    try {
+      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': process.env.BREVO_API_KEY,
+          'content-type': 'application/json',
+          'accept': 'application/json'
+        },
+        body: JSON.stringify({
+          sender: { name: 'Beach Watch', email: process.env.BREVO_SENDER },
+          to: [{ email }],
+          subject,
+          textContent: message
+        }),
+        signal: AbortSignal.timeout(15000)
+      });
+      if (res.ok) return true;
+      const err = await res.text().catch(() => '');
+      console.error('[verify-mail] Brevo HTTP ' + res.status + ' ' + err.slice(0, 300));
+      return false;
+    } catch (e) {
+      console.error('[verify-mail] Brevo 실패:', e.message);
+      return false;
+    }
+  }
+
+  /* 2순위 — Gmail SMTP (로컬 등 SMTP 포트가 열린 환경에서만 유효). */
   if (mailer) {
     try {
       await mailer.sendMail({
@@ -417,22 +447,7 @@ app.get('/api/health', async (req, res) => {
 });
 
 /* 임시 진단 — 아웃바운드 포트 확인 후 제거 예정 */
-app.get('/api/debug/net-test', async (req, res) => {
-  const net = require('net');
-  const test = (host, port) => new Promise(resolve => {
-    const s = net.connect({ host, port });
-    const done = r => { s.destroy(); resolve(host + ':' + port + ' → ' + r); };
-    s.setTimeout(6000, () => done('timeout'));
-    s.on('connect', () => done('ok'));
-    s.on('error', e => done(e.code || e.message));
-  });
-  const results = await Promise.all([
-    test('smtp.gmail.com', 465),
-    test('smtp.gmail.com', 587),
-    test('api.brevo.com', 443)
-  ]);
-  res.json({ ok: true, results });
-});
+/* (제거됨: Render는 SMTP 465/587 아웃바운드를 차단, HTTPS 443만 허용 확인) */
 
 /* 회원가입 — 계정을 미인증 상태로 만들고 이메일로 인증 코드를 발송한다.
    실제 메일함(코드 수신)이 확인된 주소만 인증 후 로그인할 수 있다. */
