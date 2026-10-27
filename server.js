@@ -416,6 +416,24 @@ app.get('/api/health', async (req, res) => {
   res.json({ ok: true, db: db.driver, file: db.driver === 'sqlite' ? path.relative(ROOT, DB_FILE) : undefined, users });
 });
 
+/* 임시 진단 — 아웃바운드 포트 확인 후 제거 예정 */
+app.get('/api/debug/net-test', async (req, res) => {
+  const net = require('net');
+  const test = (host, port) => new Promise(resolve => {
+    const s = net.connect({ host, port });
+    const done = r => { s.destroy(); resolve(host + ':' + port + ' → ' + r); };
+    s.setTimeout(6000, () => done('timeout'));
+    s.on('connect', () => done('ok'));
+    s.on('error', e => done(e.code || e.message));
+  });
+  const results = await Promise.all([
+    test('smtp.gmail.com', 465),
+    test('smtp.gmail.com', 587),
+    test('api.brevo.com', 443)
+  ]);
+  res.json({ ok: true, results });
+});
+
 /* 회원가입 — 계정을 미인증 상태로 만들고 이메일로 인증 코드를 발송한다.
    실제 메일함(코드 수신)이 확인된 주소만 인증 후 로그인할 수 있다. */
 app.post('/api/auth/signup', loginRateLimit, async (req, res) => {
