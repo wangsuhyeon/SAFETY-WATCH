@@ -136,10 +136,14 @@ async function sendVerificationEmail(email, name, code, origin) {
       body: JSON.stringify({ _subject: subject, _template: 'box', _captcha: 'false', message }),
       signal: AbortSignal.timeout(15000)
     });
-    if (!res.ok) return false;
+    if (!res.ok) { console.error('[verify-mail] HTTP ' + res.status + ' origin=' + site); return false; }
     const data = await res.json().catch(() => null);
     /* success:false 는 활성화 대기 등 실제 미발송 상태다. */
-    return !!(data && data.success === true);
+    if (!(data && data.success === true)) {
+      console.error('[verify-mail] rejected origin=' + site + ' resp=' + JSON.stringify(data).slice(0, 300));
+      return false;
+    }
+    return true;
   } catch (e) {
     console.error('[verify-mail]', e.message);
     return false;
