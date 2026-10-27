@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "express": "^4.22.3",
+    "nodemailer": "^10.2.1",
     "pg": "^8.16.0"
   },
   "devDependencies": {

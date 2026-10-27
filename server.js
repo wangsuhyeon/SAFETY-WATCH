@@ -55,6 +55,22 @@ const schemaReady = (async () => {
    포함한다. 실제 배포에서는 이 환경변수를 설정하지 않는다. */
 const TEST_MODE = process.env.BW_TEST_MODE === '1';
 
+/* Gmail SMTP 발송기 — SMTP_USER/SMTP_PASS(앱 비밀번호)가 설정될 때만 사용.
+   Render 같은 클라우드 IP에서도 안정적으로 메일을 보낼 수 있다. */
+let mailer = null;
+if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+  try {
+    const nodemailer = require('nodemailer');
+    mailer = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+    });
+    console.log('[verify-mail] Gmail SMTP 발송기 준비 완료 (' + process.env.SMTP_USER + ')');
+  } catch (e) {
+    console.error('[verify-mail] nodemailer 초기화 실패:', e.message);
+  }
+}
+
 /* 이벤트 등급 — 경보성 등급은 통계에서 "경보"로 집계한다. */
 const EVENT_KINDS = ['info', 'ok', 'warn', 'watch', 'alert', 'critical', 'error'];
 const ALERT_KINDS = ['alert', 'critical', 'error'];
@@ -124,6 +140,24 @@ async function sendVerificationEmail(email, name, code, origin) {
     '· 메일이 오지 않으면 이 주소로 온 첫 메일(FormSubmit 활성화 요청)에서',
     '  확인 링크를 누른 뒤, 화면의 「인증 코드 재발송」을 누르면 도착합니다.'
   ].join('\n');
+
+  /* 1순위 — Gmail SMTP(SMTP_USER/SMTP_PASS 설정 시). 클라우드 IP에서도 안정적. */
+  if (mailer) {
+    try {
+      await mailer.sendMail({
+        from: '"Beach Watch" <' + process.env.SMTP_USER + '>',
+        to: email,
+        subject,
+        text: message
+      });
+      return true;
+    } catch (e) {
+      console.error('[verify-mail] SMTP 실패:', e.message);
+      return false;
+    }
+  }
+
+  /* 2순위 — FormSubmit 폴백(로컬 등 서버 IP가 차단되지 않은 환경). */
   try {
     const res = await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(email), {
       method: 'POST',
