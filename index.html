@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="AI 기반 수변 실시간 안전 모니터링 — 해수욕장·강·호수·드론 카메라를 최대 5대까지 온디바이스로 감시합니다.">
   <meta name="color-scheme" content="light">
-  <title>Safety Watch · AI 수변 안전 관제</title>
+  <title>Beach Watch · AI 수변 안전 관제</title>
   <link rel="stylesheet" href="css/bundle.css">
   <link rel="stylesheet" href="css/auth.css">
 </head>
@@ -13,7 +13,7 @@
 <a class="skip-link" href="#stage" data-i18n="skipToMonitor">본문(관제 화면)으로 건너뛰기</a>
 <main class="app">
   <header class="top">
-    <div class="brand"><span>SAFETY</span> WATCH</div>
+    <div class="brand"><span>BEACH</span> WATCH</div>
     <div class="top-actions">
       <button class="settings-button" id="controlRoom" type="button" aria-pressed="false" data-i18n="controlRoom">관제 모드</button>
       <button class="settings-button" id="shortcutHelp" type="button" aria-haspopup="dialog" data-i18n="shortcutsShort">단축키</button>
@@ -146,7 +146,7 @@
       <div class="logbox" id="eventLog" data-empty="—"></div>
       <div class="alert-stage-guide" aria-label="alert stages">
         <div class="watch"><b data-i18n="alertGuideWatch">주의</b><small data-i18n="alertGuideWatchText">진입을 확인하는 단계 · 소리 없음</small></div>
-        <div class="alert"><b data-i18n="alertGuideAlert">경고</b><small data-i18n="alertGuideAlertText">1.5초 이상 지속 · 경보음과 알림</small></div>
+        <div class="alert"><b data-i18n="alertGuideAlert">경고</b><small data-i18n="alertGuideAlertText">5초 이상 지속 · 경보음과 알림</small></div>
         <div class="urgent"><b data-i18n="alertGuideUrgent">긴급</b><small data-i18n="alertGuideUrgentText">설정 시간 초과 · 반복 사이렌</small></div>
       </div>
       <div class="controls" style="padding:0;border:0;box-shadow:none;background:none;backdrop-filter:none">
@@ -410,8 +410,8 @@
           <small data-i18n="tunerFramesHelp">연속 프레임에서 반복 관측된 대상만 사람으로 확정합니다.</small>
         </label>
         <label class="tuner">
-          <span data-i18n="tunerEscalate">긴급 승격 시간</span><output id="outEscalate">6초</output>
-          <input id="tunerEscalate" type="range" min="2" max="20" step="1" value="6">
+          <span data-i18n="tunerEscalate">긴급 승격 시간</span><output id="outEscalate">30초</output>
+          <input id="tunerEscalate" type="range" min="2" max="60" step="1" value="30">
           <small data-i18n="tunerEscalateHelp">경계선 밖 체류가 이 시간을 넘으면 긴급 경보로 승격됩니다.</small>
         </label>
       </section>
@@ -491,7 +491,7 @@
           <label><span data-i18n="authName">이름</span><input id="signupName" type="text" autocomplete="name" required></label>
           <label><span data-i18n="authEmail">이메일</span><input id="signupEmail" type="email" autocomplete="email" required></label>
           <label><span data-i18n="authPassword">비밀번호</span><input id="signupPassword" type="password" autocomplete="new-password" required></label>
-          <label><span data-i18n="authPasswordConfirm">비밀번호 확인</span><input id="signupPasswordConfirm" type="password" autocomplete="new-password" required></label>
+          <label><span data-i18n="authPasswordConfirm">비밀번호 확인</span><input id="signupPasswordConfirm" type="password" autocomplete="new-password" required><small id="signupPwMatch" class="pw-match" aria-live="polite"></small></label>
           <label><span data-i18n="authSecurityQuestion">보안 질문</span>
             <select id="signupQuestion">
               <option value="" data-i18n="authQuestionSelect">보안 질문을 선택하세요</option>
@@ -510,13 +510,30 @@
         </form>
       </section>
 
+      <section class="auth-view" id="authViewVerify" hidden>
+        <div class="eyebrow" data-i18n="authVerifyEyebrow">이메일 인증</div>
+        <p class="auth-lede">
+          <span data-i18n="authVerifyLede">아래 주소로 보낸 6자리 인증 코드를 입력하면 가입이 완료됩니다.</span>
+          <b class="auth-verify-email" id="verifyEmailText"></b>
+        </p>
+        <form class="auth-form" id="authVerifyForm" novalidate>
+          <label><span data-i18n="authVerifyCode">인증 코드 (6자리)</span><input id="verifyCode" class="auth-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required></label>
+          <div class="dialog-error" id="verifyError"></div>
+          <div class="dialog-actions">
+            <button type="button" id="verifyBack" data-i18n="authVerifyBack">돌아가기</button>
+            <button type="button" id="verifyResend" data-i18n="authVerifyResend">인증 코드 재발송</button>
+            <button class="primary" type="submit" id="verifySubmit" data-i18n="authVerifySubmit">인증하고 시작하기</button>
+          </div>
+        </form>
+        <p class="auth-hint" data-i18n="authVerifyHint">메일이 오지 않으면 이 주소로 온 첫 메일(FormSubmit 활성화 요청)의 확인 링크를 누른 뒤 「인증 코드 재발송」을 눌러 주세요. 실제 존재하는 메일주소만 가입할 수 있습니다.</p>
+      </section>
+
       <section class="auth-view" id="authViewAccount" hidden>
         <div class="auth-card">
           <span class="auth-avatar" aria-hidden="true">&#128100;</span>
           <div class="auth-card-info">
             <b id="accountName"></b>
             <small id="accountEmail"></small>
-            <span class="auth-role" id="accountRole"></span>
           </div>
         </div>
         <dl class="auth-facts">

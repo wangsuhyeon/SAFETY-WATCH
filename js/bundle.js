@@ -286,7 +286,7 @@ Object.assign(I18N.ko, {
   siteLede:'장소에 따라 위험의 성격이 달라집니다. 유형을 고르면 감지 파라미터와 경보 시간이 함께 바뀝니다.',
   siteBeach:'해수욕장', siteRiver:'강 · 계곡', siteLake:'호수 · 저수지', sitePool:'수영장', siteDrone:'드론 항공',
   siteBeachNote:'파도·이안류가 주 위험 요인입니다. 경계선을 파도 라인에 맞추고, 파도 포말 오탐을 억제하기 위해 확인 프레임을 2회 이상 유지하세요. 5년간 물놀이 사망의 42%가 바다에서 발생했습니다.',
-  siteRiverNote:'급류는 수 초 만에 사람을 휩쓸어갑니다. 그래서 긴급 승격 시간을 4초로 짧게 잡고, 좁고 굽은 지형을 고려해 경계선을 물가 쪽으로 바짝 붙이는 편이 좋습니다. 물놀이 사망의 58%가 하천·계곡에서 발생합니다.',
+  siteRiverNote:'급류는 수 초 만에 사람을 휩쓸어갑니다. 긴급 승격 시간은 30초로 설정되어 있으니, 좁고 굽은 지형을 고려해 경계선을 물가 쪽으로 바짝 붙이는 편이 좋습니다. 물놀이 사망의 58%가 하천·계곡에서 발생합니다.',
   siteLakeNote:'수면이 잔잔해 파도 오탐이 적은 대신, 수심이 급변하는 지점이 위험합니다. 오탐이 적으므로 신뢰도 임계값을 조금 낮춰 원거리 감지를 늘리는 편이 유리합니다.',
   sitePoolNote:'대상이 크고 가까워 검출이 쉽습니다. 대신 인원 밀도가 높아 중복 카운트가 생기기 쉬우므로 확인 프레임을 늘려 안정화합니다. 경계선은 수심 경계나 다이빙 구역에 맞추세요.',
   siteDroneNote:'상공에서 내려다보므로 사람이 매우 작게 잡힙니다. 최소 인체 크기를 낮추고 종횡비 제약을 완화했습니다. 기체가 이동하면 화면 좌표 기준 경계선이 무의미해지므로, 시스템이 장면 이동을 감지하면 경계선 판정을 자동으로 보류합니다.',
@@ -333,7 +333,7 @@ Object.assign(I18N.en, {
   siteLede:'Risk behaves differently by location. Choosing a type adjusts detection parameters and escalation timing together.',
   siteBeach:'Beach', siteRiver:'River · valley', siteLake:'Lake · reservoir', sitePool:'Swimming pool', siteDrone:'Aerial drone',
   siteBeachNote:'Waves and rip currents dominate. Align the boundary with the surf line and keep confirmation frames at 2 or more to suppress foam false positives. 42% of Korean water-recreation deaths over five years occurred at sea.',
-  siteRiverNote:'Rapids can carry a person away within seconds, so escalation is shortened to 4 seconds and the boundary is best placed tight against the waterline for narrow, winding terrain. 58% of water-recreation deaths occur in rivers and valleys.',
+  siteRiverNote:'Rapids can carry a person away within seconds, so close watch matters; escalation to urgent is set at 30 seconds. For narrow, winding terrain, place the boundary tight against the waterline. 58% of water-recreation deaths occur in rivers and valleys.',
   siteLakeNote:'Calm water means fewer wave false positives, but sudden depth changes are the hazard. With less noise you can afford a lower confidence threshold to extend distant detection.',
   sitePoolNote:'Subjects are large and close, so detection is easy — but high occupancy makes duplicate counting likely, so confirmation frames are raised for stability. Align the boundary with the depth change or diving zone.',
   siteDroneNote:'Looking straight down, people appear very small, so the minimum body size is lowered and the aspect-ratio constraint relaxed. When the aircraft moves, a screen-space boundary becomes meaningless, so the system suspends boundary judgement whenever it detects scene motion.',
@@ -540,7 +540,7 @@ Object.assign(I18N.ko, {
   siteEyebrow:'설치 장소', siteTitle:'어디에 설치하나요',
   siteLede:'장소마다 위험이 다릅니다. 유형을 고르면 감지 설정과 알림 시간이 함께 맞춰집니다.',
   siteBeachNote:'파도와 이안류가 가장 큰 위험입니다. 위험 구역을 파도선에 맞춰 그리고, 파도를 사람으로 잘못 보지 않도록 다시 확인 횟수를 2회 이상 두세요. 최근 5년간 물놀이 사망의 42%가 바다에서 일어났습니다.',
-  siteRiverNote:'급류는 몇 초 만에 사람을 떠내려 보냅니다. 그래서 긴급 알림까지 시간을 4초로 짧게 잡았습니다. 굽은 물길에는 화면을 끌어 곡선으로 구역을 그리세요. 물놀이 사망의 58%가 하천과 계곡에서 일어납니다.',
+  siteRiverNote:'급류는 몇 초 만에 사람을 떠내려 보냅니다. 긴급 알림까지 시간은 30초로 설정되어 있습니다. 굽은 물길에는 화면을 끌어 곡선으로 구역을 그리세요. 물놀이 사망의 58%가 하천과 계곡에서 일어납니다.',
   siteLakeNote:'물결이 잔잔해 헛경보가 적은 대신, 수심이 갑자기 깊어지는 곳이 위험합니다. 헛경보가 적으니 감지 민감도를 조금 낮춰 멀리까지 살피는 편이 좋습니다.',
   sitePoolNote:'사람이 크고 가까워 잘 잡힙니다. 대신 붐비면 한 사람을 여러 번 셀 수 있으니 다시 확인 횟수를 늘려 안정시킵니다. 위험 구역은 수심 경계나 다이빙 구역에 맞추세요.',
   siteDroneNote:'하늘에서 내려다보면 사람이 아주 작게 보입니다. 그래서 작은 대상도 사람으로 인정하도록 맞춰 두었습니다. 드론이 움직이면 화면 기준으로 그린 구역이 의미가 없어지므로, 화면이 크게 바뀌면 구역 판정을 자동으로 잠시 멈춥니다.',
@@ -707,7 +707,7 @@ Object.assign(I18N.en, {
   siteEyebrow:'WHERE IS IT INSTALLED', siteTitle:'Where is it installed?',
   siteLede:'Every place carries a different risk. Picking a type adjusts the detection settings and alert timing together.',
   siteBeachNote:'Waves and rip currents are the main danger. Draw the zone along the surf line and keep the re-check count at 2 or more so foam is not mistaken for a person. 42% of Korean water-recreation deaths over five years happened at sea.',
-  siteRiverNote:'Rapids can sweep someone away in seconds, so the urgent alert is shortened to 4 seconds. For winding water, drag across the view to draw a curve. 58% of water-recreation deaths happen in rivers and valleys.',
+  siteRiverNote:'Rapids can sweep someone away in seconds. The urgent alert is set at 30 seconds. For winding water, drag across the view to draw a curve. 58% of water-recreation deaths happen in rivers and valleys.',
   siteLakeNote:'Calm water means fewer false alarms, but sudden depth changes are the hazard. With less noise you can lower the sensitivity a little to see further.',
   sitePoolNote:'People are large and close, so they are easy to spot. When it is busy one person can be counted twice, so raise the re-check count. Align the zone with the depth change or diving area.',
   siteDroneNote:'From above people look very small, so small targets are still accepted as people. When the drone moves, a zone drawn on screen no longer means anything, so zone checking pauses automatically whenever the view shifts sharply.',
@@ -1143,7 +1143,7 @@ I18N.zh = {
   siteBeach:'海水浴场', siteRiver:'河流 · 溪谷', siteLake:'湖泊 · 水库',
   sitePool:'游泳池', siteDrone:'无人机航拍',
   siteBeachNote:'海浪和离岸流是最大的危险。请沿浪线绘制危险区域，并把重复确认次数保持在 2 次以上，以免把浪花误认成人。近五年韩国戏水死亡事故中有 42% 发生在海边。',
-  siteRiverNote:'急流可能在几秒内把人冲走，因此升级为紧急的时间缩短到 4 秒。遇到弯曲的水道，请拖动画面画出曲线。58% 的戏水死亡事故发生在河流和溪谷。',
+  siteRiverNote:'急流可能在几秒内把人冲走。升级为紧急的时间设置为 30 秒。遇到弯曲的水道，请拖动画面画出曲线。58% 的戏水死亡事故发生在河流和溪谷。',
   siteLakeNote:'水面平静，误报较少，但水深骤变处很危险。既然干扰少，可以把检测灵敏度稍微调低一些，看得更远。',
   sitePoolNote:'人离得近、看起来大，容易被发现。但人多时同一个人可能被数两次，请提高重复确认次数。危险区域请对准水深分界或跳水区。',
   siteDroneNote:'从空中俯视时人看起来非常小，因此已调整为把小目标也认作人。无人机移动后，按屏幕坐标绘制的区域就失去意义，所以画面大幅变化时会自动暂停区域判定。',
@@ -1333,7 +1333,7 @@ Object.assign(I18N.ko, {
   validationStep1:'인터뷰', validationStep2:'직접 사용', validationStep3:'멈추는 지점 관찰',
   validationStep4:'문제 수정', validationStep5:'재테스트',
   alertGuideWatch:'주의', alertGuideWatchText:'진입을 확인하는 단계 · 소리 없음',
-  alertGuideAlert:'경고', alertGuideAlertText:'1.5초 이상 지속 · 경보음과 알림',
+  alertGuideAlert:'경고', alertGuideAlertText:'5초 이상 지속 · 경보음과 알림',
   alertGuideUrgent:'긴급', alertGuideUrgentText:'설정 시간 초과 · 반복 사이렌',
   peopleAbove:'위험 구역 사람',
   zoneModeLine:'경계선', zoneModeLineHelp:'경계선 바깥(물 쪽)에 사람이 있으면 위험',
@@ -1361,7 +1361,7 @@ Object.assign(I18N.en, {
   validationStep1:'Interview', validationStep2:'Hands-on use', validationStep3:'Observe where users stop',
   validationStep4:'Fix the issue', validationStep5:'Retest',
   alertGuideWatch:'WATCH', alertGuideWatchText:'Entry check · no sound',
-  alertGuideAlert:'ALERT', alertGuideAlertText:'Over 1.5s · sound and notifications',
+  alertGuideAlert:'ALERT', alertGuideAlertText:'Over 5s · sound and notifications',
   alertGuideUrgent:'URGENT', alertGuideUrgentText:'Past the set time · repeating siren',
   peopleAbove:'People in danger zone',
   zoneModeLine:'Boundary line', zoneModeLineHelp:'Danger is outside the line, on the water side',
@@ -1389,7 +1389,7 @@ Object.assign(I18N.zh, {
   validationStep1:'访谈', validationStep2:'亲自使用', validationStep3:'观察停顿位置',
   validationStep4:'修复问题', validationStep5:'再次测试',
   alertGuideWatch:'注意', alertGuideWatchText:'确认进入 · 无声音',
-  alertGuideAlert:'警告', alertGuideAlertText:'持续超过 1.5 秒 · 声音和通知',
+  alertGuideAlert:'警告', alertGuideAlertText:'持续超过 5 秒 · 声音和通知',
   alertGuideUrgent:'紧急', alertGuideUrgentText:'超过设定时间 · 重复警报声',
   peopleAbove:'危险区域内人数',
   zoneModeLine:'边界线', zoneModeLineHelp:'人在边界线外（水的一侧）即为危险',
@@ -1428,27 +1428,27 @@ const PRESETS = {
  *  빛 조건 프리셋과 곱해져 최종 파라미터가 된다.
  *  shape      : 사람으로 인정할 최소 크기·종횡비. 드론은 상공에서 내려다보므로
  *               대상이 작고 위에서 본 실루엣이라 가로세로가 비슷해진다.
- *  escalate   : 긴급 승격 기본 시간(초). 급류는 수 초 만에 휩쓸리므로 짧다.
+ *  escalate   : 긴급 승격 기본 시간(초). 모든 설치 유형에서 30초로 통일한다.
  *  motionAware: 화면이 크게 흔들리면 경계선 판정을 보류할지 여부. */
 const SITE_PRESETS = {
   beach: { icon: '🏖️', i18n: 'siteBeach', note: 'siteBeachNote', heading: 'headingBeach',
-           scoreScale: 1.00, minFrames: 2, escalate: 6, motionAware: false,
+           scoreScale: 1.00, minFrames: 2, escalate: 30, motionAware: false,
            shape: { minW: 5, minH: 7, minArea: 45, aspectMax: 2.6 },
            line: [{ x: 0.12, y: 0.66 }, { x: 0.88, y: 0.66 }] },
   river: { icon: '🏞️', i18n: 'siteRiver', note: 'siteRiverNote', heading: 'headingRiver',
-           scoreScale: 0.92, minFrames: 2, escalate: 4, motionAware: false,
+           scoreScale: 0.92, minFrames: 2, escalate: 30, motionAware: false,
            shape: { minW: 5, minH: 6, minArea: 40, aspectMax: 2.8 },
            line: [{ x: 0.10, y: 0.58 }, { x: 0.90, y: 0.62 }] },
   lake:  { icon: '🛶', i18n: 'siteLake', note: 'siteLakeNote', heading: 'headingLake',
-           scoreScale: 0.90, minFrames: 2, escalate: 7, motionAware: false,
+           scoreScale: 0.90, minFrames: 2, escalate: 30, motionAware: false,
            shape: { minW: 5, minH: 6, minArea: 40, aspectMax: 2.6 },
            line: [{ x: 0.12, y: 0.60 }, { x: 0.88, y: 0.60 }] },
   pool:  { icon: '🏊', i18n: 'sitePool', note: 'sitePoolNote', heading: 'headingPool',
-           scoreScale: 1.10, minFrames: 3, escalate: 5, motionAware: false,
+           scoreScale: 1.10, minFrames: 3, escalate: 30, motionAware: false,
            shape: { minW: 10, minH: 12, minArea: 160, aspectMax: 2.4 },
            line: [{ x: 0.10, y: 0.50 }, { x: 0.90, y: 0.50 }] },
   drone: { icon: '🚁', i18n: 'siteDrone', note: 'siteDroneNote', heading: 'headingDrone',
-           scoreScale: 0.85, minFrames: 3, escalate: 5, motionAware: true,
+           scoreScale: 0.85, minFrames: 3, escalate: 30, motionAware: true,
            shape: { minW: 3, minH: 3, minArea: 18, aspectMax: 3.2 },
            line: [{ x: 0.08, y: 0.50 }, { x: 0.92, y: 0.50 }] }
 };
@@ -1508,7 +1508,7 @@ const CONFIG = {
   latencyDegradeMs: 420,
   latencyRestoreMs: 220,
   /* 경보 */
-  watchToAlertMs: 1500,
+  watchToAlertMs: 5000,
   alertCooldownMs: 8000,
   criticalRepeatMs: 4000,
   /* 재연결 */
@@ -1680,7 +1680,7 @@ const state = {
   presetMode: 'auto',
   userThreshold: 0.40,
   userFrames: 2,
-  escalateSeconds: 6,
+  escalateSeconds: 30,
   events: [],
   contacts: [],
   audioContext: null,
@@ -1819,7 +1819,7 @@ window.addEventListener('unhandledrejection', event => {
 
 
 /* ============================================================
-   13-geometry-zone.js
+   13-geometry-zone.js — 구역 판정
    ============================================================ */
 'use strict';
 /* ══════════════════════════════════════════════════════════════════
@@ -1890,7 +1890,7 @@ function isInDangerZone(box, points, mode) {
 
 
 /* ============================================================
-   14-geometry-intersection.js
+   14-geometry-intersection.js — 구역 판정
    ============================================================ */
 'use strict';
 /** 이전 이름 유지 — 점 2개면 예전 직선 판정과 완전히 동일하게 동작한다. */
@@ -3364,7 +3364,7 @@ function setSiteType(key) {
   store.set('beachWatchSite', key);
   const site = activeSite();
   /* 설치 유형을 바꾸면 긴급 승격 시간의 기본값도 함께 따라간다.
-     급류(4초)와 호수(7초)의 적정값이 다르기 때문이다. */
+     모든 설치 유형이 30초로 통일되어 있다. */
   state.escalateSeconds = site.escalate;
   $('#tunerEscalate').value = site.escalate;
   store.set('beachWatchEscalate', site.escalate);
@@ -3938,7 +3938,7 @@ function setLineTilt(value) { setZoneAngle(value); }
 
 
 /* ============================================================
-   39-detect-pipeline.js
+   39-detect-pipeline.js — 사람 탐지
    ============================================================ */
 'use strict';
 /* ══════════════════════════════════════════════════════════════════
@@ -4069,7 +4069,7 @@ function adaptWorkload(camera, latency) {
 
 
 /* ============================================================
-   40-detect-loop.js
+   40-detect-loop.js — 사람 탐지
    ============================================================ */
 'use strict';
 let consecutiveErrors = 0;
@@ -4250,7 +4250,7 @@ function renderCamera(camera, people, source) {
 
 
 /* ============================================================
-   42-camera-alert.js
+   42-camera-alert.js — 경보 처리
    ============================================================ */
 'use strict';
 /** none → watch → alert → critical.
@@ -4305,7 +4305,7 @@ const LEVEL_RANK = { none: 0, watch: 1, alert: 2, critical: 3 };
 
 
 /* ============================================================
-   43-aggregate-alert.js
+   43-aggregate-alert.js — 경보 처리
    ============================================================ */
 'use strict';
 /** 여러 카메라 중 가장 위험한 상태를 사이드바에 대표로 표시한다. */
@@ -4364,7 +4364,7 @@ function updateAggregateAlert() {
 
 
 /* ============================================================
-   44-raise-alert.js
+   44-raise-alert.js — 경보 처리
    ============================================================ */
 'use strict';
 function raiseAlert(camera, level, count, dwellSeconds) {
@@ -4621,7 +4621,7 @@ function sendTestEmail() {
 
 
 /* ============================================================
-   46-alert-notify.js
+   46-alert-notify.js — 경보 처리
    ============================================================ */
 'use strict';
 /** 지금 이 사람에게 보내야 하는가.
@@ -4870,7 +4870,7 @@ function testContact(id) {
 
 
 /* ============================================================
-   48-siren.js
+   48-siren.js — 경보 처리
    ============================================================ */
 'use strict';
 /** 경고는 단발 비프, 긴급은 상하 스윕 사이렌. AudioContext는 한 번만 만들어 재사용한다. */
@@ -6114,8 +6114,10 @@ SelfTest.add('설치 유형: 5종 모두 필수 필드를 갖춘다', () => {
   });
   return missing.length === 0 || 'incomplete: ' + missing.join(', ');
 });
-SelfTest.add('설치 유형: 급류(강)는 해변보다 빨리 긴급 승격', () =>
-  SITE_PRESETS.river.escalate < SITE_PRESETS.beach.escalate || 'river not faster');
+SelfTest.add('설치 유형: 모든 긴급 승격 시간이 30초로 설정된다', () => {
+  const bad = Object.keys(SITE_PRESETS).filter(k => SITE_PRESETS[k].escalate !== 30);
+  return bad.length === 0 || 'escalate not 30s: ' + bad.join(', ');
+});
 SelfTest.add('설치 유형: 모든 기본 경계선이 화면 안에 있다', () => {
   const bad = Object.keys(SITE_PRESETS).filter(k =>
     SITE_PRESETS[k].line.some(p => p.x < 0 || p.x > 1 || p.y < 0 || p.y > 1));
@@ -8348,6 +8350,17 @@ Object.assign(I18N.ko, {
   authQuestionSchool:'졸업한 초등학교 이름은?', authQuestionTrip:'가장 기억에 남는 여행지는?',
   authQuestionNick:'어릴 적 별명은?', authQuestionCustom:'직접 입력',
   authRoleAdmin:'관리자', authRoleOperator:'운영자',
+  authPwMatchDiff:'비밀번호가 서로 다릅니다. 다시 확인해 주세요.',
+  authPwMatchOk:'비밀번호가 일치합니다.',
+  authVerifyEyebrow:'이메일 인증',
+  authVerifyLede:'아래 주소로 보낸 6자리 인증 코드를 입력하면 가입이 완료됩니다.',
+  authVerifyCode:'인증 코드 (6자리)',
+  authVerifyBack:'돌아가기', authVerifyResend:'인증 코드 재발송', authVerifySubmit:'인증하고 시작하기',
+  authVerifyHint:'메일이 오지 않으면 이 주소로 온 첫 메일(FormSubmit 활성화 요청)의 확인 링크를 누른 뒤 「인증 코드 재발송」을 눌러 주세요. 실제 존재하는 메일주소만 가입할 수 있습니다.',
+  authVerifySent:'인증 코드를 메일로 보냈습니다. 메일함을 확인하세요.',
+  authVerifySendFailed:'인증 메일 발송에 실패했습니다. 「인증 코드 재발송」을 눌러 주세요.',
+  authVerifyResent:'인증 코드를 다시 보냈습니다. 메일함을 확인하세요.',
+  authVerifyResendFailed:'메일 발송에 실패했습니다. 잠시 후 다시 시도해 주세요.',
   authAccountTitle:'내 계정', authCreatedAt:'가입일', authLastLogin:'최근 접속', authSecurityQuestion:'보안 질문',
   authNever:'기록 없음', authChangePassword:'비밀번호 변경', authCurrentPassword:'현재 비밀번호',
   authNewPassword:'새 비밀번호', authChangeSubmit:'변경 저장', authLogout:'로그아웃',
@@ -8391,6 +8404,17 @@ Object.assign(I18N.en, {
   authQuestionSchool:'Name of your elementary school?', authQuestionTrip:'Most memorable travel destination?',
   authQuestionNick:'Childhood nickname?', authQuestionCustom:'Write my own',
   authRoleAdmin:'Administrator', authRoleOperator:'Operator',
+  authPwMatchDiff:'The passwords do not match. Please check again.',
+  authPwMatchOk:'Passwords match.',
+  authVerifyEyebrow:'Email verification',
+  authVerifyLede:'Enter the 6-digit code we emailed to the address below to finish signing up.',
+  authVerifyCode:'Verification code (6 digits)',
+  authVerifyBack:'Go back', authVerifyResend:'Resend code', authVerifySubmit:'Verify and start',
+  authVerifyHint:'No email yet? Open the first email sent to this address (FormSubmit activation request), click its confirm link, then press "Resend code". Only real, existing mailboxes can sign up.',
+  authVerifySent:'We emailed you a verification code. Please check your inbox.',
+  authVerifySendFailed:'Sending the verification email failed. Press "Resend code".',
+  authVerifyResent:'A new code has been sent. Please check your inbox.',
+  authVerifyResendFailed:'Sending failed. Please try again shortly.',
   authAccountTitle:'My account', authCreatedAt:'Joined', authLastLogin:'Last sign-in', authSecurityQuestion:'Security question',
   authNever:'No record', authChangePassword:'Change password', authCurrentPassword:'Current password',
   authNewPassword:'New password', authChangeSubmit:'Save change', authLogout:'Sign out',
@@ -8434,6 +8458,17 @@ Object.assign(I18N.zh, {
   authQuestionSchool:'毕业的小学名称是？', authQuestionTrip:'最难忘的旅行地是？',
   authQuestionNick:'小时候的昵称是？', authQuestionCustom:'自定义',
   authRoleAdmin:'管理员', authRoleOperator:'操作员',
+  authPwMatchDiff:'两次输入的密码不一致，请重新确认。',
+  authPwMatchOk:'密码一致。',
+  authVerifyEyebrow:'邮箱验证',
+  authVerifyLede:'输入发送到下面地址的 6 位验证码即可完成注册。',
+  authVerifyCode:'验证码（6 位）',
+  authVerifyBack:'返回', authVerifyResend:'重新发送验证码', authVerifySubmit:'验证并开始',
+  authVerifyHint:'如果没收到邮件，请先打开发送到该地址的第一封邮件（FormSubmit 激活请求）并点击确认链接，然后按「重新发送验证码」。只有真实存在的邮箱才能注册。',
+  authVerifySent:'验证码已发送，请查收邮箱。',
+  authVerifySendFailed:'验证邮件发送失败，请按「重新发送验证码」。',
+  authVerifyResent:'已重新发送验证码，请查收邮箱。',
+  authVerifyResendFailed:'发送失败，请稍后重试。',
   authAccountTitle:'我的账户', authCreatedAt:'注册日期', authLastLogin:'最近登录', authSecurityQuestion:'安全问题',
   authNever:'无记录', authChangePassword:'修改密码', authCurrentPassword:'当前密码',
   authNewPassword:'新密码', authChangeSubmit:'保存修改', authLogout:'退出登录',

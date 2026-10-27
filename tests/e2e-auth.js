@@ -56,7 +56,7 @@ function stop(proc) {
 
   const dbFile = path.join(os.tmpdir(), 'beachwatch-e2e-' + Date.now() + '.db');
   const proc = spawn(process.execPath, [path.join(ROOT, 'server.js')], {
-    env: { ...process.env, PORT: String(PORT), BW_DB: dbFile },
+    env: { ...process.env, PORT: String(PORT), BW_DB: dbFile, BW_TEST_MODE: '1' },
     stdio: ['ignore', 'pipe', 'pipe']
   });
   let stderr = '';
@@ -102,7 +102,7 @@ function stop(proc) {
     }));
     check('초기 상태는 게스트', guest.user === null, JSON.stringify(guest));
 
-    /* 2. 회원가입 UI */
+    /* 2. 회원가입 UI — 가입 후 이메일 인증 코드 입력 단계를 거친다 */
     await page.click('#authButton');
     check('계정 다이얼로그 열림', await page.isVisible('#authDialog'));
     await page.click('#authTabSignup');
@@ -110,10 +110,30 @@ function stop(proc) {
     await page.fill('#signupName', 'UI 점검자');
     await page.fill('#signupEmail', EMAIL);
     await page.fill('#signupPassword', PASSWORD);
+    await page.fill('#signupPasswordConfirm', PASSWORD + '-오타');
+    await page.waitForFunction(() => document.querySelector('#signupPwMatch').classList.contains('different'),
+      null, { timeout: 4000 });
+    const mismatchText = await page.textContent('#signupPwMatch');
+    check('비밀번호 불일치 실시간 안내', mismatchText.indexOf('다릅니다') >= 0, mismatchText);
     await page.fill('#signupPasswordConfirm', PASSWORD);
+    await page.waitForFunction(() => document.querySelector('#signupPwMatch').classList.contains('same'),
+      null, { timeout: 4000 });
+    check('일치 시 안내로 전환', true);
     await page.selectOption('#signupQuestion', 'authQuestionPet');
     await page.fill('#signupAnswer', ANSWER);
+
+    /* 인증 코드는 서버 응답(자동 점검 모드 devCode)에서 받는다 */
+    const signupResponsePromise = page.waitForResponse(
+      r => r.url().includes('/api/auth/signup') && r.request().method() === 'POST',
+      { timeout: 15000 }
+    );
     await page.click('#signupSubmit');
+    const signupJson = await (await signupResponsePromise).json();
+    check('가입 접수 — 인증 코드 발송 안내 화면', signupJson.needsVerification === true &&
+      await page.isVisible('#authViewVerify'), JSON.stringify(signupJson));
+
+    await page.fill('#verifyCode', signupJson.devCode);
+    await page.click('#verifySubmit');
     await page.waitForFunction(
       () => window.AuthUI.state.user && window.AuthUI.state.user.email === 'ui-check@example.com',
       null, { timeout: 8000 }
@@ -123,16 +143,17 @@ function stop(proc) {
       user: window.AuthUI.state.user,
       accountVisible: !document.querySelector('#authViewAccount').hidden,
       name: document.querySelector('#accountName').textContent,
-      role: document.querySelector('#accountRole').textContent,
       question: document.querySelector('#accountQuestion').textContent,
-      created: document.querySelector('#accountCreated').textContent
+      created: document.querySelector('#accountCreated').textContent,
+      roleBadge: document.querySelector('#accountRole')
     }));
-    check('가입 후 자동 로그인', !!(afterSignup.user && afterSignup.user.email === EMAIL),
+    check('인증 후 자동 로그인', !!(afterSignup.user && afterSignup.user.email === EMAIL),
       JSON.stringify(afterSignup.user && afterSignup.user.email));
-    check('내 계정 화면에 이름·직함·보안질문 표시',
+    check('내 계정 화면에 이름·보안질문 표시',
       afterSignup.accountVisible && afterSignup.name === 'UI 점검자' &&
-      afterSignup.role.length > 0 && afterSignup.question === QUESTION,
-      JSON.stringify(afterSignup));
+      afterSignup.question === QUESTION,
+      JSON.stringify({ name: afterSignup.name, question: afterSignup.question }));
+    check('프로필에 역할 배지 없음 (관리자 문구 삭제)', afterSignup.roleBadge === null, '');
     check('가입일 표시 (DB 값)', afterSignup.created && afterSignup.created.length > 0, afterSignup.created);
 
     /* 3. 헤더 버튼이 사용자 이름으로 바뀐다 */
@@ -278,6 +299,29 @@ function stop(proc) {
     );
     const loginError = await page.textContent('#loginError');
     check('잘못된 비밀번호 오류 안내', loginError.trim().length > 0, loginError);
+
+    /* 9-b. 미인증 계정으로 로그인하면 인증 코드 입력 화면으로 안내된다 */
+    const EMAIL2 = 'ui-unverified@example.com';
+    await page.click('#authTabSignup');
+    await page.fill('#signupName', '미인증 점검자');
+    await page.fill('#signupEmail', EMAIL2);
+    await page.fill('#signupPassword', PASSWORD);
+    await page.fill('#signupPasswordConfirm', PASSWORD);
+    await page.selectOption('#signupQuestion', 'authQuestionNick');
+    await page.fill('#signupAnswer', '미인증');
+    await page.click('#signupSubmit');
+    await page.waitForFunction(() => !document.querySelector('#authViewVerify').hidden,
+      null, { timeout: 8000 });
+    await page.click('#verifyBack');                       // 인증하지 않고 나가기
+    await page.waitForFunction(() => !document.querySelector('#authViewLogin').hidden,
+      null, { timeout: 8000 });
+    await page.fill('#loginEmail', EMAIL2);
+    await page.fill('#loginPassword', PASSWORD);
+    await page.click('#loginSubmit');
+    await page.waitForFunction(email => !document.querySelector('#authViewVerify').hidden &&
+      document.querySelector('#verifyEmailText').textContent === email, EMAIL2, { timeout: 8000 });
+    check('미인증 계정 로그인 → 인증 코드 화면 안내', true);
+    await page.click('#verifyBack');
 
     /* 10. 언어를 바꿔도 계정 화면 문구가 따라온다 */
     await page.evaluate(() => window.applyLanguage('en'));

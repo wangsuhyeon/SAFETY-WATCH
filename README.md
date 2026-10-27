@@ -1,4 +1,4 @@
-# SAFETY-WATCH
+# Beach Watch
 
 브라우저에서 카메라 영상을 분석해 설정한 경계선이나 위험 영역에 사람이 들어오는 상황을 감지하는 수변 안전 관제 프로토타입입니다. 감지 결과는 화면 경보(경보음·음성 안내·토스트)와 등록한 수신자에게 보내는 이메일·웹훅으로 표시합니다. 이 도구는 보조 경보일 뿐이며, 실제 구조·구난 판단은 대신하지 않습니다.
 
@@ -50,7 +50,7 @@ npm start
 
 ### Render 단독 배포
 
-현재 접속 주소: https://beach-safety-watch.onrender.com/
+현재 접속 주소: https://safety-watch-oh5o.onrender.com/
 Render의 Node.js 서버가 웹 화면과 /api/* 계정 API를 함께 제공합니다. 별도 정적 호스팅이나 외부 DB 키는 필요하지 않습니다.
 
 기존 서비스: 수정한 코드를 연결된 Git 저장소에 올리고 Render에서 재배포합니다.

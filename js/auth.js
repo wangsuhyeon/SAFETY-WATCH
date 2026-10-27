@@ -50,7 +50,8 @@
     user: null,
     online: true,
     resetEmail: '',
-    resetQuestion: ''
+    resetQuestion: '',
+    pendingVerifyEmail: ''
   };
 
   /* 서버에서 받아 둔 마지막 값 — 언어를 바꿔도 다시 그릴 수 있게 보관한다. */
@@ -116,6 +117,7 @@
     if (els.viewLogin) els.viewLogin.hidden = which !== 'login';
     if (els.viewAccount) els.viewAccount.hidden = which !== 'account';
     if (els.viewReset) els.viewReset.hidden = which !== 'reset';
+    if (els.viewVerify) els.viewVerify.hidden = which !== 'verify';
     notice('');
     if (which === 'login') showAuthTab('login');
   }
@@ -134,6 +136,7 @@
     }
     fieldError(els.loginError, '');
     fieldError(els.signupError, '');
+    refreshPwMatch();
     notice('');
   }
 
@@ -155,12 +158,6 @@
     if (!user) return;
     if (els.accountName) els.accountName.textContent = user.name;
     if (els.accountEmail) els.accountEmail.textContent = user.email;
-    if (els.accountRole) {
-      els.accountRole.textContent = user.role === 'admin'
-        ? tr('authRoleAdmin', 'admin')
-        : tr('authRoleOperator', 'operator');
-      els.accountRole.dataset.role = user.role;
-    }
     if (els.accountCreated) els.accountCreated.textContent = formatDate(user.createdAt);
     if (els.accountLastLogin) els.accountLastLogin.textContent = formatDate(user.lastLoginAt);
     if (els.accountQuestion) els.accountQuestion.textContent = user.question || tr('authNever', '—');
@@ -326,6 +323,23 @@
     els.signupCustomWrap.hidden = els.signupQuestion.value !== '__custom';
   }
 
+  /* 비밀번호 ↔ 비밀번호 확인 실시간 대조 — 다르면 즉시 문구를 보여준다. */
+  function refreshPwMatch() {
+    if (!els.signupPwMatch) return;
+    const password = els.signupPassword && els.signupPassword.value || '';
+    const confirm = els.signupPasswordConfirm && els.signupPasswordConfirm.value || '';
+    if (!confirm || !password) {
+      els.signupPwMatch.textContent = '';
+      els.signupPwMatch.className = 'pw-match';
+      return;
+    }
+    const same = password === confirm;
+    els.signupPwMatch.textContent = same
+      ? tr('authPwMatchOk', '비밀번호가 일치합니다.')
+      : tr('authPwMatchDiff', '비밀번호가 서로 다릅니다. 다시 확인해 주세요.');
+    els.signupPwMatch.className = 'pw-match ' + (same ? 'same' : 'different');
+  }
+
   function chosenQuestion() {
     if (!els.signupQuestion) return '';
     if (els.signupQuestion.value === '__custom') {
@@ -347,6 +361,64 @@
     return state.user;
   }
 
+  /* ── 이메일 인증 ───────────────────────────────────────── */
+
+  function showVerifyView(email, introMessage) {
+    state.pendingVerifyEmail = email || '';
+    if (els.verifyEmailText) els.verifyEmailText.textContent = state.pendingVerifyEmail;
+    fieldError(els.verifyError, '');
+    if (els.verifyCode) els.verifyCode.value = '';
+    showView('verify');
+    if (introMessage) notice(introMessage);
+    if (els.verifyCode) els.verifyCode.focus();
+  }
+
+  async function submitVerify(event) {
+    if (event) event.preventDefault();
+    fieldError(els.verifyError, '');
+    const code = (els.verifyCode && els.verifyCode.value || '').trim();
+    if (!state.pendingVerifyEmail) return fieldError(els.verifyError, tr('errAuthMissing'));
+    if (!code) return fieldError(els.verifyError, tr('errAuthMissing'));
+
+    busy(els.verifySubmit, true);
+    try {
+      const data = await api('/api/auth/verify', {
+        body: { email: state.pendingVerifyEmail, code }
+      });
+      state.online = true;
+      applyUser(data.user);
+      state.pendingVerifyEmail = '';
+      if (els.signupForm) els.signupForm.reset();
+      resetSignupQuestionToggle();
+      if (els.verifyForm) els.verifyForm.reset();
+      showView('account');
+      notice(tr('authSignupDone'), 'ok');
+      logEvent('[계정] 이메일 인증 완료 · ' + data.user.email);
+    } catch (err) {
+      fieldError(els.verifyError, errorText(err));
+    } finally {
+      busy(els.verifySubmit, false);
+    }
+  }
+
+  async function submitVerifyResend() {
+    if (!state.pendingVerifyEmail) return;
+    busy(els.verifyResend, true);
+    try {
+      const data = await api('/api/auth/verify/resend', {
+        body: { email: state.pendingVerifyEmail }
+      });
+      fieldError(els.verifyError, '');
+      notice(data.emailSent === false
+        ? tr('authVerifyResendFailed', '메일 발송에 실패했습니다. 잠시 후 다시 시도해 주세요.')
+        : tr('authVerifyResent', '인증 코드를 다시 보냈습니다. 메일함을 확인하세요.'), 'ok');
+    } catch (err) {
+      fieldError(els.verifyError, errorText(err));
+    } finally {
+      busy(els.verifyResend, false);
+    }
+  }
+
   async function submitLogin(event) {
     if (event) event.preventDefault();
     fieldError(els.loginError, '');
@@ -366,6 +438,13 @@
       logEvent('[계정] ' + data.user.name + ' 로그인');
     } catch (err) {
       state.online = err.code !== 'NO_SERVER';
+      if (err && err.code === 'EMAIL_NOT_VERIFIED') {
+        /* 서버가 인증 코드를 새로 보냈다 — 인증 화면으로 안내 */
+        if (els.loginPassword) els.loginPassword.value = '';
+        showVerifyView(email, '');
+        logEvent('[계정] 미인증 계정 로그인 시도 · ' + email);
+        return;
+      }
       fieldError(els.loginError, errorText(err));
     } finally {
       busy(els.loginSubmit, false);
@@ -396,9 +475,19 @@
         body: { name, email, password, passwordConfirm, question, answer }
       });
       state.online = true;
+      if (data && data.needsVerification) {
+        /* 실제 메일주소 확인 단계 — 인증 코드 입력 화면으로 안내 */
+        showVerifyView(data.email,
+          (data.emailSent === false
+            ? tr('authVerifySendFailed', '인증 메일 발송에 실패했습니다. 「인증 코드 재발송」을 눌러 주세요.')
+            : tr('authVerifySent', '인증 코드를 메일로 보냈습니다. 메일함을 확인하세요.')));
+        logEvent('[계정] 인증 메일 발송 · ' + data.email);
+        return;
+      }
       applyUser(data.user);
       if (els.signupForm) els.signupForm.reset();
       resetSignupQuestionToggle();
+      refreshPwMatch();
       showView('account');
       notice(tr('authSignupDone'), 'ok');
       logEvent('[계정] 신규 가입 · ' + data.user.email + ' (' + data.user.role + ')');
@@ -560,6 +649,7 @@
     els.signupEmail = $('#signupEmail');
     els.signupPassword = $('#signupPassword');
     els.signupPasswordConfirm = $('#signupPasswordConfirm');
+    els.signupPwMatch = $('#signupPwMatch');
     els.signupQuestion = $('#signupQuestion');
     els.signupQuestionCustom = $('#signupQuestionCustom');
     els.signupCustomWrap = $('#signupCustomWrap');
@@ -570,10 +660,18 @@
     els.viewLogin = $('#authViewLogin');
     els.viewAccount = $('#authViewAccount');
     els.viewReset = $('#authViewReset');
+    els.viewVerify = $('#authViewVerify');
+
+    els.verifyForm = $('#authVerifyForm');
+    els.verifyEmailText = $('#verifyEmailText');
+    els.verifyCode = $('#verifyCode');
+    els.verifyError = $('#verifyError');
+    els.verifySubmit = $('#verifySubmit');
+    els.verifyResend = $('#verifyResend');
+    els.verifyBack = $('#verifyBack');
 
     els.accountName = $('#accountName');
     els.accountEmail = $('#accountEmail');
-    els.accountRole = $('#accountRole');
     els.accountCreated = $('#accountCreated');
     els.accountLastLogin = $('#accountLastLogin');
     els.accountQuestion = $('#accountQuestion');
@@ -625,10 +723,19 @@
 
     if (els.loginForm) els.loginForm.addEventListener('submit', submitLogin);
     if (els.signupForm) els.signupForm.addEventListener('submit', submitSignup);
+    if (els.verifyForm) els.verifyForm.addEventListener('submit', submitVerify);
+    if (els.verifyResend) els.verifyResend.addEventListener('click', submitVerifyResend);
+    if (els.verifyBack) els.verifyBack.addEventListener('click', () => {
+      state.pendingVerifyEmail = '';
+      showView('login');
+    });
     if (els.pwChangeForm) els.pwChangeForm.addEventListener('submit', submitPasswordChange);
     if (els.logoutButton) els.logoutButton.addEventListener('click', submitLogout);
 
     if (els.signupQuestion) els.signupQuestion.addEventListener('change', resetSignupQuestionToggle);
+
+    if (els.signupPassword) els.signupPassword.addEventListener('input', refreshPwMatch);
+    if (els.signupPasswordConfirm) els.signupPasswordConfirm.addEventListener('input', refreshPwMatch);
 
     if (els.recordsRefresh) els.recordsRefresh.addEventListener('click', () => loadDashboard());
     if (els.recordsClear) els.recordsClear.addEventListener('click', clearRecords);
