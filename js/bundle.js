@@ -553,7 +553,7 @@ Object.assign(I18N.ko, {
   zoneEdit:'그리기 시작', zoneEditDone:'그리기 끝', zoneUndo:'한 점 되돌리기', zoneReset:'처음 모양으로',
   zoneSimplify:'선 다듬기', zoneApplyAll:'다른 카메라에도 똑같이',
   zonePointCount:'점 {n}개',
-  zoneHintEdit:'화면을 <b>끌면 손으로 그리듯 곡선</b>이 그려집니다. 한 번 누르면 점이 하나 추가되고, 점을 끌면 옮겨집니다. 점을 두 번 누르면 지워집니다.',
+  zoneHintEdit:'화면을 <b>끌면 손으로 그리듯 곡선</b>이 그려집니다. 한 번 누르면 점이 하나 추가되고, 점을 끌면 옮겨집니다. 점을 눌러 선택한 뒤 <b>Delete 키</b>로도 지울 수 있고, 두 번 누르면 지워집니다.',
   zoneHintView:'그리기 시작을 누르면 화면에 직접 위험 구역을 그릴 수 있습니다.',
   zoneHintTouch:'화면을 손가락으로 <b>쓸면 곡선</b>이 그려집니다. 한 번 탭하면 점 추가, 점을 끌면 이동, 두 번 탭하면 삭제됩니다.',
   zoneMinPoints:'선은 점이 2개, 영역은 3개 이상 있어야 합니다.',
@@ -719,7 +719,7 @@ Object.assign(I18N.en, {
   zoneEdit:'Start drawing', zoneEditDone:'Done drawing', zoneUndo:'Undo one point', zoneReset:'Back to default',
   zoneSimplify:'Smooth the line', zoneApplyAll:'Copy to other cameras',
   zonePointCount:'{n} points',
-  zoneHintEdit:'<b>Drag to draw a freehand curve.</b> A single click adds one point, dragging a point moves it, double-clicking a point deletes it.',
+  zoneHintEdit:'<b>Drag to draw a freehand curve.</b> A single click adds one point, dragging a point moves it, double-clicking a point deletes it. Select a point and press Delete to remove it.',
   zoneHintView:'Press Start drawing to add, move, or delete points directly on the view.',
   zoneHintTouch:'<b>Swipe to draw a freehand curve.</b> Tap to add a point, drag a point to move it, double-tap to delete it.',
   zoneMinPoints:'A line needs 2 points and an area needs 3.',
@@ -1166,7 +1166,7 @@ I18N.zh = {
   zoneUndo:'撤销一个点', zoneReset:'恢复初始形状',
   zoneSimplify:'整理线条', zoneApplyAll:'其他摄像头也一样',
   zonePointCount:'{n} 个点', zoneModeTag:'{mode}',
-  zoneHintEdit:'<b>拖动画面即可像手绘一样画出曲线</b>。单击添加一个点，拖动点可移动，双击点即可删除。',
+  zoneHintEdit:'<b>拖动画面即可像手绘一样画出曲线</b>。单击添加一个点，拖动点可移动，双击点即可删除。选中一个点后按 Delete 键也可删除。',
   zoneHintView:'点击「开始绘制」，即可直接在画面上添加、移动或删除点。',
   zoneHintTouch:'<b>用手指划过即可画出曲线</b>。单击添加点，拖动点移动，双击删除。',
   zoneMinPoints:'线至少需要 2 个点，区域至少需要 3 个点。',
@@ -1428,27 +1428,36 @@ const PRESETS = {
  *  빛 조건 프리셋과 곱해져 최종 파라미터가 된다.
  *  shape      : 사람으로 인정할 최소 크기·종횡비. 드론은 상공에서 내려다보므로
  *               대상이 작고 위에서 본 실루엣이라 가로세로가 비슷해진다.
- *  escalate   : 긴급 승격 기본 시간(초). 모든 설치 유형에서 30초로 통일한다.
+ *  escalate   : 긴급 승격 기본 시간(초). 모든 설치 유형에서 30초로 통일하며,
+ *               사용자가 슬라이더로 언제든 조절할 수 있다.
+ *  confidence : 장소 선택 시 자동으로 맞춰지는 감지 민감도(%, tunerConfidence 슬라이더).
+ *               파도·물결 오탐이 잦은 곳은 높게, 잔잔해서 멀리 볼 수 있는 곳은 낮게.
+ *  frames     : 장소 선택 시 자동으로 맞춰지는 다시 확인 횟수(tunerFrames 슬라이더).
  *  motionAware: 화면이 크게 흔들리면 경계선 판정을 보류할지 여부. */
 const SITE_PRESETS = {
   beach: { icon: '🏖️', i18n: 'siteBeach', note: 'siteBeachNote', heading: 'headingBeach',
            scoreScale: 1.00, minFrames: 2, escalate: 30, motionAware: false,
+           confidence: 40, frames: 2,
            shape: { minW: 5, minH: 7, minArea: 45, aspectMax: 2.6 },
            line: [{ x: 0.12, y: 0.66 }, { x: 0.88, y: 0.66 }] },
   river: { icon: '🏞️', i18n: 'siteRiver', note: 'siteRiverNote', heading: 'headingRiver',
            scoreScale: 0.92, minFrames: 2, escalate: 30, motionAware: false,
+           confidence: 38, frames: 2,
            shape: { minW: 5, minH: 6, minArea: 40, aspectMax: 2.8 },
            line: [{ x: 0.10, y: 0.58 }, { x: 0.90, y: 0.62 }] },
   lake:  { icon: '🛶', i18n: 'siteLake', note: 'siteLakeNote', heading: 'headingLake',
            scoreScale: 0.90, minFrames: 2, escalate: 30, motionAware: false,
+           confidence: 36, frames: 2,
            shape: { minW: 5, minH: 6, minArea: 40, aspectMax: 2.6 },
            line: [{ x: 0.12, y: 0.60 }, { x: 0.88, y: 0.60 }] },
   pool:  { icon: '🏊', i18n: 'sitePool', note: 'sitePoolNote', heading: 'headingPool',
            scoreScale: 1.10, minFrames: 3, escalate: 30, motionAware: false,
+           confidence: 45, frames: 3,
            shape: { minW: 10, minH: 12, minArea: 160, aspectMax: 2.4 },
            line: [{ x: 0.10, y: 0.50 }, { x: 0.90, y: 0.50 }] },
   drone: { icon: '🚁', i18n: 'siteDrone', note: 'siteDroneNote', heading: 'headingDrone',
            scoreScale: 0.85, minFrames: 3, escalate: 30, motionAware: true,
+           confidence: 34, frames: 3,
            shape: { minW: 3, minH: 3, minArea: 18, aspectMax: 3.2 },
            line: [{ x: 0.08, y: 0.50 }, { x: 0.92, y: 0.50 }] }
 };
@@ -1746,6 +1755,13 @@ function applyLanguage(language, persist) {
   document.querySelectorAll('[data-i18n]').forEach(element => {
     element.innerHTML = tr(element.dataset.i18n);
   });
+  /* placeholder·aria-label 같은 속성 문자열도 함께 갱신한다. */
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+    element.setAttribute('placeholder', tr(element.dataset.i18nPlaceholder));
+  });
+  document.querySelectorAll('[data-i18n-aria]').forEach(element => {
+    element.setAttribute('aria-label', tr(element.dataset.i18nAria));
+  });
 
   setLabel('#cameraSelect option:first-child', 'cameraSelect');
   setLabel('#connect', 'connectFirst');
@@ -1768,6 +1784,10 @@ function applyLanguage(language, persist) {
   refreshImpact();
   renderEventLog();
   refreshEmailStatus();
+  /* 열화상 카드의 동적 문구(판정 라벨·안내 노트·정렬 상태 등)도 현재 언어로 다시 그린다. */
+  if (typeof ArduinoThermal !== 'undefined' && ArduinoThermal && typeof ArduinoThermal.refreshLanguage === 'function') {
+    ArduinoThermal.refreshLanguage();
+  }
 
   const languageSelect = $('#languageSelect');
   if (languageSelect) languageSelect.value = state.language;
@@ -2821,6 +2841,9 @@ function toggleControlRoom(force) {
    화살표키로 경계 구역의 점을 옮길 수 있게 한다.
    ══════════════════════════════════════════════════════════════════ */
 let keyboardPointIndex = 0;
+/* 사용자가 실제로 점을 선택했을 때만 true. 이 값이 있어야 Delete 키 삭제가
+   동작하므로, 모르는 사이에 "0번 점이 선택된" 상태로 엉뚱한 점을 지우지 않는다. */
+let keyboardPointActive = false;
 
 function nudgeZonePoint(dx, dy, big) {
   const camera = focusedCamera();
@@ -2846,13 +2869,35 @@ function selectNextZonePoint(delta) {
   const camera = focusedCamera();
   if (!camera || !camera.points.length) return;
   keyboardPointIndex = ((keyboardPointIndex + delta) % camera.points.length + camera.points.length) % camera.points.length;
-  const point = camera.points[keyboardPointIndex];
-  Array.from(camera.overlay.querySelectorAll('.handle')).forEach((el, i) =>
-    el.classList.toggle('selected', i === keyboardPointIndex));
+  keyboardPointActive = true;
+  syncHandleSelection(camera);
   announce(tr('zonePointSelected', {
     n: keyboardPointIndex + 1, total: camera.points.length,
-    x: Math.round(point.x * 100), y: Math.round(point.y * 100)
+    x: Math.round(camera.points[keyboardPointIndex].x * 100), y: Math.round(camera.points[keyboardPointIndex].y * 100)
   }));
+}
+
+/** 화면 손잡이에 선택 표시를 맞춘다. 손잡이는 다시 그려지는 요소라서
+    그릴 때마다 현재 선택 상태를 다시 적용해야 한다. */
+function syncHandleSelection(camera) {
+  const overlay = camera && camera.overlay;
+  if (!overlay) return;
+  Array.from(overlay.querySelectorAll('.handle')).forEach((el, i) =>
+    el.classList.toggle('selected', keyboardPointActive && i === keyboardPointIndex));
+}
+
+/** 선택한 점을 지운다 — Delete(또는 Backspace) 키. */
+function deleteSelectedZonePoint() {
+  if (!keyboardPointActive) return false;
+  const camera = focusedCamera();
+  if (!camera || keyboardPointIndex >= camera.points.length) {
+    keyboardPointActive = false;
+    return false;
+  }
+  const n = keyboardPointIndex + 1;
+  if (!removeZonePoint(camera, keyboardPointIndex)) return false;
+  announce(tr('zonePointDeleted', { n, total: camera.points.length }));
+  return true;
 }
 
 /** 입력 중인 칸에서는 단축키가 동작하면 안 된다. */
@@ -2875,6 +2920,11 @@ function handleShortcut(event) {
   if (state.editing && (event.key === 'Tab')) {
     selectNextZonePoint(event.shiftKey ? -1 : 1);
     event.preventDefault();
+    return;
+  }
+  /* 선택한 점을 Delete 키로 지운다 */
+  if (state.editing && (event.key === 'Delete' || event.key === 'Backspace')) {
+    if (deleteSelectedZonePoint()) event.preventDefault();
     return;
   }
 
@@ -3196,7 +3246,7 @@ function focusCamera(id) {
   /* 경보가 나면 초점이 자동으로 옮겨간다. 그때 이전 카메라를 편집 중이었다면
      state.drag(전역 인덱스)가 다른 카메라의 점 배열에 적용되어 엉뚱한 점이
      움직인다. 초점이 바뀌는 순간 편집 상태를 정리한다. */
-  if (state.focusedId !== id) { state.drag = -1; state.freehand = null; }
+  if (state.focusedId !== id) { state.drag = -1; state.freehand = null; keyboardPointActive = false; }
   state.focusedId = id;
   state.cameras.forEach(c => c.panel && c.panel.classList.toggle('focused', c.id === id));
   renderCameraBar();
@@ -3363,11 +3413,20 @@ function setSiteType(key) {
   state.siteType = key;
   store.set('beachWatchSite', key);
   const site = activeSite();
-  /* 설치 유형을 바꾸면 긴급 승격 시간의 기본값도 함께 따라간다.
-     모든 설치 유형이 30초로 통일되어 있다. */
+  /* 설치 유형을 바꾸면 감지 파라미터를 장소에 맞게 자동으로 맞춘다.
+     · 감지 민감도·다시 확인 횟수는 프리셋 값으로 즉시 덮어쓴다(스라이더에도 반영).
+     · 긴급 알림까지 시간은 기본 30초로 되돌릴 뿐, 사용자가 언제든
+       슬라이더로 직접 조절할 수 있다(조절하면 그 값이 저장된다). */
   state.escalateSeconds = site.escalate;
   $('#tunerEscalate').value = site.escalate;
   store.set('beachWatchEscalate', site.escalate);
+
+  state.userThreshold = site.confidence / 100;
+  state.userFrames = site.frames;
+  $('#tunerConfidence').value = site.confidence;
+  $('#tunerFrames').value = site.frames;
+  store.set('beachWatchThreshold', String(site.confidence));
+  store.set('beachWatchFrames', String(site.frames));
 
   const heading = $('.heading h1');
   if (heading) heading.textContent = tr(site.heading);
@@ -3384,7 +3443,7 @@ function setSiteType(key) {
   refreshTunerLabels();
   refreshBadges();
   state.cameras.forEach(camera => { camera.motion.moving = false; updatePanelMotion(camera); });
-  Diagnostics.log('site → ' + key + ' (escalate ' + site.escalate + 's)', 'info');
+  Diagnostics.log('site → ' + key + ' (민감도 ' + site.confidence + '% · 확인 ' + site.frames + '회 · escalate ' + site.escalate + 's)', 'info');
 }
 
 
@@ -3480,7 +3539,7 @@ function renderZoneHandles(camera) {
   if (state.freehand && state.freehand.active) return;   /* 그리는 중에는 손잡이를 숨긴다 */
   camera.points.forEach((point, index) => {
     const handle = document.createElement('div');
-    handle.className = 'handle';
+    handle.className = 'handle' + (keyboardPointActive && index === keyboardPointIndex ? ' selected' : '');
     handle.dataset.index = String(index);
     handle.setAttribute('aria-label', 'zone point ' + (index + 1));
     handle.style.left = (point.x * 100) + '%';
@@ -3590,6 +3649,13 @@ function bindBoundaryPointer(camera) {
         }
       }
       state.drag = Number(event.target.dataset.index);
+      /* 클릭 한 번으로도 점을 선택한다 — Delete 키 삭제·화살표 이동의 대상 */
+      keyboardPointIndex = state.drag;
+      keyboardPointActive = true;
+      Array.from(camera.overlay.querySelectorAll('.handle.selected')).forEach(el => {
+        if (el !== event.target) el.classList.remove('selected');
+      });
+      event.target.classList.add('selected');
       event.target.classList.add('dragging');
       /* 캡처는 오버레이에 건다. 손잡이 요소는 다시 그려질 수 있어서
          거기에 걸면 캡처가 조용히 풀린다. */
@@ -3598,8 +3664,11 @@ function bindBoundaryPointer(camera) {
       return;
     }
 
-    /* 빈 곳을 눌렀으면 '손으로 그리기' 시작.
+    /* 빈 곳을 눌렀으면 선택을 해제하고 '손으로 그리기' 시작.
        끌면 곡선이 그려지고, 움직이지 않고 떼면 점 하나만 추가된다. */
+    keyboardPointActive = false;
+    Array.from(camera.overlay.querySelectorAll('.handle.selected')).forEach(el =>
+      el.classList.remove('selected'));
     const point = pointerPosition(camera, event);
     state.freehand = { cameraId: camera.id, active: true, moved: false, points: [point] };
     overlay.setPointerCapture(event.pointerId);
@@ -3652,6 +3721,10 @@ function bindBoundaryPointer(camera) {
         const point = stroke.points[0];
         const index = insertIndexFor(camera.points, point, camera.zoneMode);
         camera.points.splice(index, 0, point);
+        /* 한 점 되돌리기가 "방금 찍은 점"을 정확히 없애도록 기록해 둔다.
+           새 점은 선이 꼬이지 않도록 배열 가운데에 끼워질 수 있으므로
+           (insertIndexFor) "배열의 마지막"과 "마지막에 찍은 점"은 다를 수 있다. */
+        (camera.placedStack || (camera.placedStack = [])).push(point);
       }
     } else {
       /* 끌어서 그렸다 → 궤적을 그대로 새 구역으로 삼는다.
@@ -3662,6 +3735,7 @@ function bindBoundaryPointer(camera) {
       }
       if (drawn.length >= zoneMinPoints(camera.zoneMode)) {
         camera.points = drawn;
+        camera.placedStack = [];   // 곡선 전체가 새로 찍힌 것 — 개별 점 기록은 버린다
         Diagnostics.log(tr('zoneDrawn', { n: drawn.length }), 'ok');
       } else {
         Diagnostics.log(tr('zoneMinPoints'), 'warn');
@@ -3703,7 +3777,18 @@ function removeZonePoint(camera, index) {
     Diagnostics.log(tr('zoneMinPoints'), 'warn');
     return false;
   }
+  const removed = camera.points[index];
   camera.points.splice(index, 1);
+  /* 되돌리기 기록에서도 같은 점을 제거한다(객체 참조로 찾는다) */
+  if (camera.placedStack) {
+    const at = camera.placedStack.indexOf(removed);
+    if (at >= 0) camera.placedStack.splice(at, 1);
+  }
+  /* 키보드 선택 상태를 배열 변화에 맞춘다 */
+  if (keyboardPointActive && camera.id === state.focusedId) {
+    if (index === keyboardPointIndex) keyboardPointActive = false;
+    else if (index < keyboardPointIndex) keyboardPointIndex -= 1;
+  }
   resetZoneBase(camera);
   drawBoundary(camera);
   syncMobileLineControls();
@@ -3732,6 +3817,7 @@ function setZoneMode(mode) {
        '위쪽 뚜껑'이 사라져 원래 그리던 파도선으로 돌아온다. */
     cam.points = polygonToPolyline(cam.points);
   }
+  cam.placedStack = [];   // 모양이 통째로 바뀌었으므로 개별 점 기록은 버린다
   cam.zoneMode = mode;
   drawBoundary(cam);
   syncMobileLineControls();
@@ -3754,6 +3840,17 @@ function polygonToPolyline(points) {
 
 function undoZonePoint() {
   const cam = focusedCamera();
+  /* "한 점 되돌리기"는 방금 찍은 점 하나를 없앤다. 새 점은 선이 꼬이지 않게
+     배열 가운데에 끼워질 수 있으므로(insertIndexFor), 배열의 마지막 요소와
+     마지막에 찍은 점은 다를 수 있다. 찍힌 순서를 스택에 기록해 둔 것을 쓴다. */
+  const stack = cam.placedStack || (cam.placedStack = []);
+  while (stack.length) {
+    const candidate = stack.pop();
+    const index = cam.points.indexOf(candidate);
+    if (index < 0) continue;               // 이미 다른 방법으로 지워진 점
+    if (removeZonePoint(cam, index)) return;
+  }
+  /* 기록이 없으면(자유 곡선 그리기 직후 등) 마지막 점을 지운다 */
   removeZonePoint(cam, cam.points.length - 1);
 }
 
@@ -3769,6 +3866,7 @@ function simplifyZone() {
     return;
   }
   cam.points = simplified;
+  cam.placedStack = [];
   drawBoundary(cam);
   syncMobileLineControls();
   persistBoundaries();
@@ -3779,6 +3877,7 @@ function resetZone() {
   const cam = focusedCamera();
   cam.zoneMode = 'line';
   cam.points = activeSite().line.map(p => ({ x: p.x, y: p.y }));
+  cam.placedStack = [];
   drawBoundary(cam);
   syncMobileLineControls();
   persistBoundaries();
@@ -3792,6 +3891,7 @@ function applyZoneToAll() {
     if (other.id === cam.id) return;
     other.points = cam.points.map(p => ({ x: p.x, y: p.y }));
     other.zoneMode = cam.zoneMode;
+    other.placedStack = [];
     drawBoundary(other);
     applied += 1;
   });
@@ -7408,7 +7508,7 @@ window.BeachWatch = {
   NorthStar, refreshNorthStar, acknowledgeAlert,
   setZoneAngle, rotatePoints, fitPointsInView, translatePointsToHeight, centroidOf, normalizeAngle,
   setPanelHint, resetZoneBase,
-  toggleControlRoom, nudgeZonePoint, selectNextZonePoint,
+  toggleControlRoom, nudgeZonePoint, selectNextZonePoint, deleteSelectedZonePoint, undoZonePoint,
   OfflineCache, prepareOffline, Speaker, captureSnapshot,
   /* 이메일 자동 발송 (FormSubmit) */
   emailConfigured, refreshEmailStatus, emailEndpoint, sendEmail, sendTestEmail
@@ -7485,6 +7585,8 @@ const ArduinoThermal = {
   _overlaySize: '',
   _heatOff: null,        // 32×24 히트맵 오프스크린 캔버스
   noDataWarned: false,
+  lastStatus: null,      // 마지막 열화상 판정 { kind, value, isHuman } — 언어 전환 시 다시 그리기용
+  rawIdle: true,         // 수신 원문 창이 아직 대기 문구를 보여주는지 여부
 
   init() {
     const btnConnect = document.getElementById('btnConnectArduino');
@@ -7560,7 +7662,7 @@ const ArduinoThermal = {
     const outTilt = document.getElementById('outThermalTilt');
     const outFov = document.getElementById('outThermalFov');
     if (btn) {
-      btn.textContent = this.align.enabled ? '시야 정렬 끄기' : '시야 정렬 켜기';
+      btn.textContent = this.align.enabled ? tr('thermalAlignOff') : tr('thermalAlignOn');
       btn.classList.toggle('primary', this.align.enabled);
       btn.classList.toggle('ghost', !this.align.enabled);
       btn.setAttribute('aria-pressed', String(this.align.enabled));
@@ -7569,8 +7671,8 @@ const ArduinoThermal = {
     if (tilt) tilt.value = this.align.tilt; if (outTilt) outTilt.textContent = this.align.tilt + '%';
     if (fov) fov.value = this.align.fov; if (outFov) outFov.textContent = this.align.fov + '%';
     if (st) {
-      st.textContent = !this.align.enabled ? '정렬 필요'
-        : (this.heatFrame ? '정렬됨 · 열화상 히트맵 표시 중' : '정렬 대기 · 심자를 피사체에 맞추세요');
+      st.textContent = !this.align.enabled ? tr('thermalAlignNeeded')
+        : (this.heatFrame ? tr('thermalAlignActive') : tr('thermalAlignWaiting'));
       st.className = 'align-state' + (this.heatFrame ? ' ok' : '');
     }
   },
@@ -7652,13 +7754,13 @@ const ArduinoThermal = {
     if (this.currentTemp > 0) {
       ctx.fillStyle = '#ffd45a';
       ctx.font = '12px ui-monospace, Menlo, monospace';
-      ctx.fillText('평균 ' + this.currentTemp.toFixed(1) + '°C', cx + 10, cy + 14);
+      ctx.fillText(tr('thermalAvgShort') + this.currentTemp.toFixed(1) + '°C', cx + 10, cy + 14);
     }
   },
 
   async connect() {
     if (!('serial' in navigator)) {
-      alert('이 브라우저는 Web Serial API를 지원하지 않습니다. Chrome 또는 Edge 브라우저를 사용해 주세요.');
+      alert(tr('thermalNoSerial'));
       if (typeof Diagnostics !== 'undefined') Diagnostics.countError('Web Serial API 미지원 브라우저');
       return;
     }
@@ -7717,7 +7819,7 @@ const ArduinoThermal = {
 
     const thermalState = document.getElementById('thermalState');
     if (thermalState) {
-      thermalState.textContent = '연결 실패';
+      thermalState.textContent = 'CONNECT FAILED';
       thermalState.className = 'state watch';
     }
     if (typeof Diagnostics !== 'undefined') Diagnostics.countError(reason);
@@ -7775,7 +7877,7 @@ const ArduinoThermal = {
       this._wdTimer = null;
       if (!this.keepReading || this.tempCount > 0) return;
       this.noDataWarned = true;
-      this.showWarn('아두이노는 연결됐지만 온도 값이 수신되지 않습니다 — 현재 보드의 스케치는 테스트 출력일 수 있습니다. 사이트 호환 측정 스케치(arduino/mlx90640_thermal_beachwatch.ino)를 업로드하고 해제 후 다시 연결하세요.');
+      this.showWarn(tr('thermalWarnNoData'));
       if (typeof Diagnostics !== 'undefined') Diagnostics.log('시리얼 데이터는 수신되는데 숫자/온도 값이 없습니다 → 측정용 스케치 업로드 필요', 'warn');
     }, 8000);
   },
@@ -7806,7 +7908,7 @@ const ArduinoThermal = {
            (테스트 스케치만 깔려 있는 경우가 전형적 — '연결 실패'라고 오인 방지) */
       if (this.bytesReceived > 0) {
         this.noDataWarned = true;
-        this.showWarn('아두이노에서 텍스트는 수신되지만 온도 값이 없습니다 — 현재 스케치는 측정이 아니라 테스트 출력입니다. 사이트 호환 측정 스케치(arduino/mlx90640_thermal_beachwatch.ino)를 업로드하세요.');
+        this.showWarn(tr('thermalWarnNoTemps'));
         if (typeof Diagnostics !== 'undefined') Diagnostics.log('전송률 ' + this.candidatesTried.join('·') + ' Baud 모두 시도 — 바이트는 수신되지만 온도 숫자가 없어 연결을 유지합니다. 측정용 스케치 업로드 필요.', 'warn');
         return;
       }
@@ -7959,6 +8061,7 @@ const ArduinoThermal = {
   noteRaw(text) {
     const t = (text || '').trim();
     if (!t) return;
+    this.rawIdle = false;
     this.lastRaw.push(t.length > 120 ? t.slice(0, 120) + '…' : t);
     if (this.lastRaw.length > 6) this.lastRaw.splice(0, this.lastRaw.length - 6);
     const el = document.getElementById('thermalRaw');
@@ -8004,7 +8107,7 @@ const ArduinoThermal = {
         const F = data.f;
         if (Array.isArray(F)) {
           const ok = F.length === 768 && F.every(v => Number.isFinite(parseFloat(v)));
-          if (오케이) this.setHeatFrame(F.map(Number));
+          if (ok) this.setHeatFrame(F.map(Number));
           /* 프레임 줄은 온도 판정에 쓰지 않는다 (temp/max 가 함께 있을 때만 처리) */
           if (data.temp === undefined && data.max === undefined) return;
         }
@@ -8174,20 +8277,9 @@ const ArduinoThermal = {
     ctx.fillText('min ' + lo + '°C', 8, H - 4);
   },
 
-  /* 일반(가시광) 카메라와 열화상의 동시 교차 검증.
-     열화상은 사람/객체를, 일반 카메라는 위험 구역 침범을 담당한다. */
-  evaluateCondition(value) {
-    const kind = this.classify(value);
-    const now = Date.now();
-    if (kind === 'person') {
-      this.lastHumanAt = now;
-    } else if (kind === 'hotObject') {
-      /* 뜨거운 객체(비생체)는 사람과 상충되는 판독 — 생체 추정을 즉시 초기화해
-         교차 검증에서 제외되도록 한다. */
-      this.lastHumanAt = 0;
-    }
-    const isHuman = kind === 'person' || (kind === 'low' && now - this.lastHumanAt <= this.humanWindowMs);
-
+  /* 열화상 판정 라벨·교차 검증 안내 문구를 그린다.
+     언어를 바꾸면 refreshLanguage() 가 마지막 판정 기준으로 다시 그린다. */
+  renderThermalStatus(kind, value, isHuman) {
     let risky = (typeof activeCameras === 'function' ? activeCameras() : [])
       .reduce((acc, c) => (c.riskCount || 0) > (acc.riskCount || 0) ? c : acc, { riskCount: 0, name: '' });
     if (typeof focusedCamera === 'function') {
@@ -8203,14 +8295,14 @@ const ArduinoThermal = {
     /* ── 열화상 단독 판정: 사람 / 고온 객체 / 저온 객체 ── */
     let label, color, chip, chipClass;
     if (kind === 'person') {
-      label = '사람(생체 열원) 확인'; color = '#e05142';
+      label = tr('thermalJudgmentPerson'); color = '#e05142';
       chip = isInsideDangerZone ? 'HUMAN_IN_ZONE' : 'HUMAN_DETECTED';
       chipClass = 'state alert';
     } else if (kind === 'hotObject') {
-      label = '고온 객체(비생체)'; color = '#8a5a17';
+      label = tr('thermalJudgmentHot'); color = '#8a5a17';
       chip = 'HOT_OBJECT'; chipClass = 'state watch';
     } else {
-      label = '객체/주변(저온)'; color = '#07374a';
+      label = tr('thermalJudgmentLow'); color = '#07374a';
       chip = 'NORMAL'; chipClass = 'state';
     }
     if (statusEl) { statusEl.textContent = label; statusEl.style.color = color; }
@@ -8219,23 +8311,59 @@ const ArduinoThermal = {
     /* ── 교차 검증 안내 문구 ── */
     const camerasOn = (typeof activeCameras === 'function' ? activeCameras() : []).length;
     let note, noteClass;
+    const tempText = value.toFixed(1) + '°C';
     if (isInsideDangerZone && isHuman) {
-      note = `교차 검증: 일반 카메라 위험 구역 ${risky.riskCount}명 + 열화상 생체 열원(${value.toFixed(1)}°C) → 익사 위험군 확정 · 사이렌 + 튜브 사출`;
+      note = tr('thermalNoteConfirmed', { count: risky.riskCount, value: tempText });
       noteClass = 'alert';
     } else if (isInsideDangerZone && !isHuman) {
-      note = `일반 카메라: 위험 구역 ${risky.riskCount}명 · 열화상 사람 미확인(${value.toFixed(1)}°C)`
-        + (kind === 'hotObject' ? ' — 42°C 초과 고온 객체로 판정되어 검증 제외' : '');
+      note = tr('thermalNoteCameraOnly', { count: risky.riskCount, value: tempText })
+        + (kind === 'hotObject' ? tr('thermalNoteHotExcluded') : '');
       noteClass = 'warn';
     } else if (!isInsideDangerZone && isHuman) {
-      note = `생체 열원(${value.toFixed(1)}°C) 감지 · 위험 구역은 비어 있음 — 지속 주시`;
+      note = tr('thermalNoteHumanOnly', { value: tempText });
       noteClass = 'warn';
     } else {
       note = camerasOn === 0
-        ? '일반 카메라 연결 전 — 위험 구역 판정 대기. 열화상 실시간 온도 표시는 계속 갱신됩니다.'
-        : `일반 카메라 ${camerasOn}대 + 열화상 동시 감시 · 위험 구역 비어 있음`;
+        ? tr('thermalNoteNoCamera')
+        : tr('thermalNoteWatching', { count: camerasOn });
       noteClass = 'ok';
     }
     if (noteEl) { noteEl.textContent = note; noteEl.className = 'thermal-note ' + noteClass; }
+
+    return { risky, isInsideDangerZone };
+  },
+
+  /* 언어 전환 — 열화상 카드의 동적 문구를 현재 언어로 다시 그린다. */
+  refreshLanguage() {
+    this.syncAlignUI();
+    const rawEl = document.getElementById('thermalRaw');
+    if (rawEl && this.rawIdle) rawEl.textContent = tr('thermalRawIdle');
+    if (this.lastStatus) {
+      this.renderThermalStatus(this.lastStatus.kind, this.lastStatus.value, this.lastStatus.isHuman);
+    } else {
+      const statusEl = document.getElementById('thermalStatusTag');
+      if (statusEl) { statusEl.textContent = tr('thermalJudgmentIdle'); statusEl.style.color = ''; }
+      const noteEl = document.getElementById('thermalDualNote');
+      if (noteEl) { noteEl.textContent = tr('thermalNoteIdle'); noteEl.className = 'thermal-note'; }
+    }
+  },
+
+  /* 일반(가시광) 카메라와 열화상의 동시 교차 검증.
+     열화상은 사람/객체를, 일반 카메라는 위험 구역 침범을 담당한다. */
+  evaluateCondition(value) {
+    const kind = this.classify(value);
+    const now = Date.now();
+    if (kind === 'person') {
+      this.lastHumanAt = now;
+    } else if (kind === 'hotObject') {
+      /* 뜨거운 객체(비생체)는 사람과 상충되는 판독 — 생체 추정을 즉시 초기화해
+         교차 검증에서 제외되도록 한다. */
+      this.lastHumanAt = 0;
+    }
+    const isHuman = kind === 'person' || (kind === 'low' && now - this.lastHumanAt <= this.humanWindowMs);
+
+    this.lastStatus = { kind, value, isHuman };
+    const { risky, isInsideDangerZone } = this.renderThermalStatus(kind, value, isHuman);
 
     /* ── ★ 복합 조건: 위험 구역 침범(일반 카메라) + 생체 열원(열화상) 동시 충족 ── */
     if (isInsideDangerZone && isHuman) {
@@ -8509,4 +8637,121 @@ Object.assign(I18N.zh, {
   authRecordsError:'无法加载记录。',
   authAccounts:'注册账户', authAccountsAdminOnly:'仅管理员可查看完整列表。',
   authAccountsError:'无法加载账户列表。'
+});
+
+/* ============================================================
+   열화상 카드 + placeholder/aria (언어 전환 완전 대응)
+   ============================================================ */
+Object.assign(I18N.ko, {
+  thermalTitle:'열화상 카메라 (아두이노)',
+  thermalLede:'시리얼 포트(USB)로 아두이노와 연결해 실시간 온도를 감시합니다. 열화상은 사람(생체 열원)과 뜨거운 객체(비생체)를 구분하고, 일반 카메라가 설정한 위험 구역 침범을 감지해 함께 교차 검증합니다.',
+  thermalLiveTemp:'실시간 온도', thermalPeakStat:'세션 최고', thermalAvgStat:'평균 온도',
+  thermalJudgmentStat:'열화상 판정', thermalJudgmentIdle:'대기',
+  thermalJudgmentPerson:'사람(생체 열원) 확인',
+  thermalJudgmentHot:'고온 객체(비생체)',
+  thermalJudgmentLow:'객체/주변(저온)',
+  thermalNoteIdle:'일반 카메라와 열화상 카메라를 함께 쓰면, 일반 카메라가 설정한 구역을 넘어선 인원을 감지하고 열화상 카메라가 사람(생체 열원) 여부를 구분해 교차 검증합니다. 두 조건을 동시에 만족할 때만 익사 위험군으로 확정합니다.',
+  thermalNoteConfirmed:'교차 검증: 일반 카메라 위험 구역 {count}명 + 열화상 생체 열원({value}) → 익사 위험군 확정 · 사이렌 + 튜브 사출',
+  thermalNoteCameraOnly:'일반 카메라: 위험 구역 {count}명 · 열화상 사람 미확인({value})',
+  thermalNoteHotExcluded:' — 42°C 초과 고온 객체로 판정되어 검증 제외',
+  thermalNoteHumanOnly:'생체 열원({value}) 감지 · 위험 구역은 비어 있음 — 지속 주시',
+  thermalNoteNoCamera:'일반 카메라 연결 전 — 위험 구역 판정 대기. 열화상 실시간 온도 표시는 계속 갱신됩니다.',
+  thermalNoteWatching:'일반 카메라 {count}대 + 열화상 동시 감시 · 위험 구역 비어 있음',
+  thermalConnectBtn:'아두이노 연결', thermalDisconnectBtn:'연결 해제',
+  thermalThresholdLabel:'생체 열원(사람) 임계값',
+  thermalThresholdHelp:'이 온도 이상이면 생체 열원(사람)으로 판정합니다. 42°C를 초과하는 열원은 사람이 아닌 뜨거운 객체(엔진·태양열 표면 등)로 구분하여 검증에서 제외합니다.',
+  thermalAlignTitle:'시야 정렬 (열화상 ↔ 일반 카메라)',
+  thermalAlignNeeded:'정렬 필요',
+  thermalAlignWaiting:'정렬 대기 · 심자를 피사체에 맞추세요',
+  thermalAlignActive:'정렬됨 · 열화상 히트맵 표시 중',
+  thermalAlignOn:'시야 정렬 켜기', thermalAlignOff:'시야 정렬 끄기',
+  thermalPan:'가로', thermalTilt:'세로', thermalFov:'시야 크기',
+  thermalAlignHelp:'영상 위에 그려지는 노란 사각형(열화상 시야)과 심자가 일반 카메라 화면과 같아지도록 열화상 카메라의 바라보는 면·각도 및 <b>가로/세로/크기</b>를 맞추세요. 두 카메라가 같은 장면을 보아야 온도 판정이 정확해집니다. 열화상 프레임이 오면 사각형 안에 히트맵이 표시됩니다.',
+  thermalRawIdle:'수신 원문 대기...',
+  thermalGraphAria:'열화상 온도 실시간 그래프',
+  thermalRawAria:'아두이노에서 수신한 원본 데이터',
+  thermalWarnNoData:'아두이노는 연결됐지만 온도 값이 수신되지 않습니다 — 현재 보드의 스케치는 테스트 출력일 수 있습니다. 사이트 호환 측정 스케치(arduino/mlx90640_thermal_beachwatch.ino)를 업로드하고 해제 후 다시 연결하세요.',
+  thermalWarnNoTemps:'아두이노에서 텍스트는 수신되지만 온도 값이 없습니다 — 현재 스케치는 측정이 아니라 테스트 출력입니다. 사이트 호환 측정 스케치(arduino/mlx90640_thermal_beachwatch.ino)를 업로드하세요.',
+  thermalNoSerial:'이 브라우저는 Web Serial API를 지원하지 않습니다. Chrome 또는 Edge 브라우저를 사용해 주세요.',
+  thermalAvgShort:'평균 ',
+  cameraLabelPlaceholder:'예: 1구역 남쪽',
+  contactAlertPlaceholder:'예: {camera}에 {count}명이 위험 구역에 있습니다.',
+  zonePointDeleted:'점 {n}을(를) 삭제했습니다. 남은 점 {total}개.',
+  scDelete:'(그리는 중) 선택한 점 삭제'
+});
+
+Object.assign(I18N.en, {
+  thermalTitle:'Thermal camera (Arduino)',
+  thermalLede:'Connect an Arduino over a serial port (USB) to monitor temperatures in real time. The thermal sensor separates people (body heat) from hot objects, cross-checking the danger-zone intrusions detected by the regular cameras.',
+  thermalLiveTemp:'Live temp', thermalPeakStat:'Session peak', thermalAvgStat:'Average',
+  thermalJudgmentStat:'Thermal verdict', thermalJudgmentIdle:'Standby',
+  thermalJudgmentPerson:'Human (body heat) detected',
+  thermalJudgmentHot:'Hot object (non-living)',
+  thermalJudgmentLow:'Object/surroundings (cool)',
+  thermalNoteIdle:'With a regular camera and a thermal camera together, the regular camera detects people past the drawn zone while the thermal camera checks whether they are human (body heat). Only when both agree is a drowning risk confirmed.',
+  thermalNoteConfirmed:'Cross-check: {count} person(s) in the danger zone (camera) + body heat {value} (thermal) → drowning risk confirmed · siren + tube launcher',
+  thermalNoteCameraOnly:'Camera: {count} person(s) in the danger zone · no human confirmed ({value})',
+  thermalNoteHotExcluded:' — excluded from verification: object hotter than 42°C',
+  thermalNoteHumanOnly:'Body heat {value} detected · danger zone is empty — keep watching',
+  thermalNoteNoCamera:'No regular camera yet — waiting for danger-zone verdicts. Live thermal temperature keeps updating.',
+  thermalNoteWatching:'{count} regular camera(s) + thermal watching together · danger zone is empty',
+  thermalConnectBtn:'Connect Arduino', thermalDisconnectBtn:'Disconnect',
+  thermalThresholdLabel:'Body heat (human) threshold',
+  thermalThresholdHelp:'Readings at or above this temperature count as a human body. Anything above 42°C is treated as a hot object (engine, sun-heated surface, etc.) and excluded from verification.',
+  thermalAlignTitle:'View alignment (thermal ↔ regular camera)',
+  thermalAlignNeeded:'Alignment needed',
+  thermalAlignWaiting:'Waiting · aim the crosshair at your subject',
+  thermalAlignActive:'Aligned · showing thermal heat map',
+  thermalAlignOn:'Enable view alignment', thermalAlignOff:'Disable view alignment',
+  thermalPan:'Pan', thermalTilt:'Tilt', thermalFov:'FOV size',
+  thermalAlignHelp:'Match the yellow rectangle (thermal view) and crosshair to the regular camera picture using <b>pan/tilt/size</b>. Both cameras must see the same scene for temperature verdicts to be accurate. Once frames arrive, a heat map appears inside the rectangle.',
+  thermalRawIdle:'Waiting for raw data...',
+  thermalGraphAria:'Live thermal temperature graph',
+  thermalRawAria:'Raw data received from the Arduino',
+  thermalWarnNoData:'The Arduino is connected but no temperature values arrive — the board may be running a test sketch. Upload the site-compatible measuring sketch (arduino/mlx90640_thermal_beachwatch.ino), then disconnect and reconnect.',
+  thermalWarnNoTemps:'Text arrives from the Arduino but without temperature values — the current sketch is a test output, not a measurement. Upload the site-compatible measuring sketch (arduino/mlx90640_thermal_beachwatch.ino).',
+  thermalNoSerial:'This browser does not support the Web Serial API. Please use Chrome or Edge.',
+  thermalAvgShort:'avg ',
+  cameraLabelPlaceholder:'e.g. Zone 1 south',
+  contactAlertPlaceholder:'e.g. {count} person(s) inside the zone at {camera}.',
+  zonePointDeleted:'Point {n} deleted. {total} point(s) left.',
+  scDelete:'(While editing) delete the selected point'
+});
+
+Object.assign(I18N.zh, {
+  thermalTitle:'热成像相机（Arduino）',
+  thermalLede:'通过串口（USB）连接 Arduino，实时监测温度。热成像会区分人体（生物热源）与高温物体，并与普通相机检测到的危险区域闯入进行交叉验证。',
+  thermalLiveTemp:'实时温度', thermalPeakStat:'本次最高', thermalAvgStat:'平均温度',
+  thermalJudgmentStat:'热成像判定', thermalJudgmentIdle:'待机',
+  thermalJudgmentPerson:'检测到人体（生物热源）',
+  thermalJudgmentHot:'高温物体（非生物）',
+  thermalJudgmentLow:'物体/环境（低温）',
+  thermalNoteIdle:'普通相机与热成像相机配合使用时，普通相机检测越过所画区域的人员，热成像相机判断其是否为人体（生物热源），两者交叉验证。只有同时满足两个条件才确认为溺水风险。',
+  thermalNoteConfirmed:'交叉验证：普通相机危险区域 {count} 人 + 热成像生物热源（{value}）→ 确认溺水风险 · 警笛 + 救生圈发射',
+  thermalNoteCameraOnly:'普通相机：危险区域 {count} 人 · 热成像未确认人体（{value}）',
+  thermalNoteHotExcluded:' —— 超过 42°C 的高温物体，已排除在验证之外',
+  thermalNoteHumanOnly:'检测到生物热源（{value}）· 危险区域为空 —— 持续关注',
+  thermalNoteNoCamera:'普通相机尚未连接 —— 等待危险区域判定。热成像实时温度持续更新。',
+  thermalNoteWatching:'普通相机 {count} 台 + 热成像同时监控 · 危险区域为空',
+  thermalConnectBtn:'连接 Arduino', thermalDisconnectBtn:'断开连接',
+  thermalThresholdLabel:'生物热源（人体）阈值',
+  thermalThresholdHelp:'达到或超过该温度即判定为人体（生物热源）。超过 42°C 的热源被视为高温物体（发动机、暴晒表面等），不参与验证。',
+  thermalAlignTitle:'视野对齐（热成像 ↔ 普通相机）',
+  thermalAlignNeeded:'需要对齐',
+  thermalAlignWaiting:'等待对齐 · 请将十字对准目标',
+  thermalAlignActive:'已对齐 · 正在显示热成像热图',
+  thermalAlignOn:'开启视野对齐', thermalAlignOff:'关闭视野对齐',
+  thermalPan:'水平', thermalTilt:'垂直', thermalFov:'视场大小',
+  thermalAlignHelp:'请调整热成像的朝向、角度及<b>水平/垂直/大小</b>，使画面上的黄色矩形（热成像视野）和十字与普通相机画面一致。两台相机必须看到同一场景，温度判定才准确。收到热成像帧后，矩形内会显示热图。',
+  thermalRawIdle:'等待原始数据...',
+  thermalGraphAria:'热成像温度实时曲线图',
+  thermalRawAria:'从 Arduino 接收的原始数据',
+  thermalWarnNoData:'Arduino 已连接但未收到温度值 —— 当前板子可能运行的是测试程序。请上传适配的测量程序（arduino/mlx90640_thermal_beachwatch.ino），然后断开并重新连接。',
+  thermalWarnNoTemps:'Arduino 发来的是文本但没有温度值 —— 当前程序是测试输出，不是测量。请上传适配的测量程序（arduino/mlx90640_thermal_beachwatch.ino）。',
+  thermalNoSerial:'此浏览器不支持 Web Serial API。请使用 Chrome 或 Edge 浏览器。',
+  thermalAvgShort:'平均 ',
+  cameraLabelPlaceholder:'例如：1 区南侧',
+  contactAlertPlaceholder:'例如：{camera} 危险区域内有 {count} 人。',
+  zonePointDeleted:'已删除第 {n} 个点。剩余 {total} 个。',
+  scDelete:'（绘制中）删除所选点'
 });
