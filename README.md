@@ -1,4 +1,4 @@
-# Beach Watch
+# SAFETY WATCH
 
 브라우저에서 카메라 영상을 분석해 설정한 경계선이나 위험 영역에 사람이 들어오는 상황을 감지하는 수변 안전 관제 프로토타입입니다. 감지 결과는 화면 경보(경보음·음성 안내·토스트)와 등록한 수신자에게 보내는 이메일·웹훅으로 표시합니다. 이 도구는 보조 경보일 뿐이며, 실제 구조·구난 판단은 대신하지 않습니다.
 
@@ -91,7 +91,7 @@ Build command: npm ci / Start command: npm start / Health check: /api/health
 로컬에서 "서버 응답을 받지 못했습니다"라는 메시지가 나오면:
 
 1. 프로젝트 폴더에서 `npm start`를 실행합니다.
-2. 터미널에 `Beach Watch server → http://localhost:3000`이 표시되는지 확인합니다.
+2. 터미널에 `SAFETY WATCH server → http://localhost:3000`이 표시되는지 확인합니다.
 3. `http://localhost:3000/api/health`를 열어 JSON 응답을 확인하고, 페이지도 `http://localhost:3000`에서 엽니다.
 4. 정적 미리보기 서버나 `file://` 주소에서 열었다면 위 주소로 다시 접속합니다.
 

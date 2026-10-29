@@ -1,21 +1,20 @@
 'use strict';
 
 /* ============================================================
-   Beach Watch — 배포 환경 E2E 점검
+   SAFETY WATCH — 배포 환경 E2E 점검
    실행: node tests/e2e-deployed.js https://<주소>.onrender.com
    ------------------------------------------------------------
    배포된 주소에서 다음을 검증한다.
    1. 웹 페이지 · 정적 번들 로드 (아두이노/열화상 Web Serial 연동 코드 포함)
-   2. /api/health — SQLite DB 연결
-   3. 회원가입 → 이메일 인증 대기 상태 접수 (DB 쓰기, 세션 미발급)
-   4. 미인증 계정 로그인 차단 (실제 메일주소만 가입·로그인 가능)
-   5. 잘못된 인증 코드 거부 · 인증 코드 재발송
-   6. 미인증 상태에서도 연결/감지 이벤트가 DB에 저장되는지
+   2. /api/health — SQLite/Postgres DB 연결
+   3. 회원가입 → 계정 생성 + 세션 발급 (DB 쓰기)
+   4. 정상 로그인
+   5. 연결/감지 이벤트가 DB에 저장되는지
 
    ※ 실제 USB 하드웨어(아두이노/MLX90640)는 브라우저 Web Serial로
      사용자 PC에 직접 연결되므로, 원격 E2E는 "연결 이벤트가 DB에
-     기록되는 경로"를 검증한다. 인증 완료 → 세션 → 기록 조회까지의
-     전체 흐름은 로컬 npm test(BW_TEST_MODE)에서 검증한다.
+     기록되는 경로"를 검증한다. 세션 → 기록 조회까지의
+     전체 흐름은 로컬 npm test 에서 검증한다.
    ============================================================ */
 
 const BASE = (process.argv[2] || '').replace(/\/+$/, '');
@@ -99,7 +98,7 @@ async function warmUp() {
   check('DB 연결 (sqlite/postgres)', health.status === 200 && health.data && health.data.ok === true &&
     (health.data.db === 'sqlite' || health.data.db === 'postgres'), JSON.stringify(health.data));
 
-  /* 3. 테스트 계정 가입 (DB 쓰기 · 미인증 상태) */
+  /* 3. 테스트 계정 가입 (DB 쓰기 · 세션 발급) */
   const stamp = Date.now();
   const USER = {
     name: 'E2E 점검봇',
@@ -110,36 +109,23 @@ async function warmUp() {
     answer: '렌더'
   };
   const signup = await call('POST', '/api/auth/signup', USER);
-  check('테스트 계정 가입 접수 (인증 대기)', signup.status === 201 && signup.data &&
-    signup.data.needsVerification === true && signup.data.email === USER.email,
+  check('테스트 계정 가입 (계정 생성)', signup.status === 201 && signup.data &&
+    signup.data.ok === true && signup.data.user && signup.data.user.email === USER.email,
     'status=' + signup.status);
-  check('가입 시 세션 쿠키 미발급 (인증 전)', !signup.cookie, '');
-  check('인증 메일 발송 시도', signup.data && signup.data.emailSent !== undefined,
-    'emailSent=' + (signup.data && signup.data.emailSent));
+  check('가입 시 세션 쿠키 발급', /bw_session=/.test(signup.cookie), signup.cookie.slice(0, 40));
 
   const healthAfterSignup = await call('GET', '/api/health');
-  check('DB에 미인증 계정 기록 저장',
+  check('DB에 계정 기록 저장',
     healthAfterSignup.data && healthAfterSignup.data.users > (health.data.users || 0),
     'users ' + (health.data.users || 0) + ' → ' + (healthAfterSignup.data && healthAfterSignup.data.users));
 
-  /* 4. 미인증 계정은 로그인할 수 없다 (실제 메일주소만 통과) */
-  const unverified = await call('POST', '/api/auth/login', { email: USER.email, password: USER.password });
-  check('미인증 계정 로그인 차단 (403)',
-    unverified.status === 403 && unverified.data.code === 'EMAIL_NOT_VERIFIED',
-    unverified.status + '/' + (unverified.data && unverified.data.code));
+  /* 4. 정상 로그인 */
+  const login = await call('POST', '/api/auth/login', { email: USER.email, password: USER.password });
+  check('가입한 계정으로 로그인 (200)', login.status === 200 && login.data.ok === true &&
+    login.data.user && login.data.user.email === USER.email,
+    login.status + '/' + (login.data && login.data.code));
 
-  /* 5. 인증 코드 게이트 — 잘못된 코드는 거부된다 */
-  const badCode = await call('POST', '/api/auth/verify', { email: USER.email, code: '000000' });
-  check('잘못된 인증 코드 거부 (401)',
-    badCode.status === 401 && badCode.data.code === 'BAD_CODE',
-    badCode.status + '/' + (badCode.data && badCode.data.code));
-
-  /* 6. 인증 코드 재발송 (메일 파이프라인 동작) */
-  const resend = await call('POST', '/api/auth/verify/resend', { email: USER.email });
-  check('인증 코드 재발송', resend.status === 200 && resend.data.ok === true,
-    'status=' + resend.status + ' emailSent=' + (resend.data && resend.data.emailSent));
-
-  /* 7. 미인증 상태에서도 이벤트 기록은 저장된다 (계정 연결은 로그인 후) */
+  /* 5. 연결/감지 이벤트는 로그인 없이도 기록된다 (계정 연결은 로그인 후) */
   const events = [
     { message: '[E2E] 아두이노(열화상 카메라) 시리얼 포트 연결 — 9600 Baud · 전송률 자동 감지 완료', kind: 'ok', camera: 'MLX90640' },
     { message: '[E2E] 열화상 감지 생체 열원(36.5°C) 감지 (위험 구역 외곽)', kind: 'info', camera: 'MLX90640' },
@@ -152,8 +138,8 @@ async function warmUp() {
   const failed = results.filter(r => !r.ok);
   console.log('\n=== 결과: ' + (results.length - failed.length) + '/' + results.length + ' 통과' +
     (failed.length ? ' — 실패 항목 있음' : ' — 전부 통과') + ' ===\n');
-  console.log('※ 배포 환경에서는 실제 메일함이 필요해 이벤트 조회(로그인 세션)까지는 검증하지 않는다.');
-  console.log('  전체 흐름(인증 → 세션 → 기록 지속성)은 로컬 npm test(BW_TEST_MODE)에서 검증된다.\n');
+  console.log('※ 배포 환경에서는 이벤트 조회(로그인 세션)까지는 검증하지 않는다.');
+  console.log('  전체 흐름(가입 → 세션 → 기록 지속성)은 로컬 npm test 에서 검증된다.\n');
   if (failed.length) {
     failed.forEach(f => console.log(' - ' + f.name + ' :: ' + f.detail));
     process.exit(1);

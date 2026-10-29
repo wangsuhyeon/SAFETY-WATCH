@@ -1,7 +1,7 @@
 'use strict';
 
 /* ============================================================
-   Beach Watch — 인증 API 자동 점검
+   SAFETY WATCH — 인증 API 자동 점검
    실행: npm test   (또는 node tests/api-check.js)
    서버를 임시 포트로 띄워 가입 → 로그인 → 기록 → 보안질문 재설정까지 검증한다.
    ============================================================ */
@@ -57,7 +57,7 @@ function stop(proc) {
   const dbFile = path.join(os.tmpdir(), 'beachwatch-api-' + Date.now() + '.db');
 
   const proc = spawn(process.execPath, [path.join(ROOT, 'server.js')], {
-    env: { ...process.env, PORT: String(PORT), BW_DB: dbFile, BW_TEST_MODE: '1' },
+    env: { ...process.env, PORT: String(PORT), BW_DB: dbFile },
     stdio: ['ignore', 'pipe', 'pipe']
   });
   let stderr = '';
@@ -93,39 +93,17 @@ function stop(proc) {
     check('DB 연결 (sqlite 파일 오픈)', health.data && health.data.ok === true,
       JSON.stringify(health.data));
 
-    /* 2. 회원가입 — 미인증 상태로 만들고 인증 코드를 메일로 보낸다 */
+    /* 2. 회원가입 — 계정 생성 후 바로 세션을 발급한다 */
     const signup = await call('POST', '/api/auth/signup', USER);
-    check('회원가입 접수 (인증 대기)', signup.status === 201 && signup.data &&
-      signup.data.needsVerification === true && signup.data.email === USER.email,
+    check('회원가입 성공 (계정 생성)', signup.status === 201 && signup.data &&
+      signup.data.ok === true && signup.data.user && signup.data.user.email === USER.email,
       'status=' + signup.status);
-    check('가입 시 세션 쿠키 미발급 (인증 전)', !signup.cookie, signup.cookie.slice(0, 40));
-    check('자동 점검 모드에서 인증 코드 수신 (devCode)',
-      /^\d{6}$/.test(signup.data && signup.data.devCode || ''), JSON.stringify(signup.data && signup.data.devCode));
+    check('첫 가입자에게 admin 부여', signup.data && signup.data.user && signup.data.user.role === 'admin',
+      signup.data && signup.data.user && signup.data.user.role);
+    check('가입 시 세션 쿠키 발급', /bw_session=/.test(signup.cookie), signup.cookie.slice(0, 40));
+    const adminCookie = signup.cookie;
 
-    /* 2-b. 잘못된 인증 코드 거부 (아직 가입 코드가 유효한 상태) */
-    const badCode = await call('POST', '/api/auth/verify', {
-      email: USER.email, code: (signup.data.devCode || '') === '000000' ? '111111' : '000000'
-    });
-    check('잘못된 인증 코드 거부 (401)',
-      badCode.status === 401 && badCode.data.code === 'BAD_CODE',
-      badCode.status + '/' + (badCode.data && badCode.data.code));
-
-    /* 2-c. 미인증 상태로 로그인 시도 → 차단 + 새 인증 코드 발송(코드 갱신) */
-    const unverified = await call('POST', '/api/auth/login', { email: USER.email, password: USER.password });
-    check('미인증 계정 로그인 차단 (403)',
-      unverified.status === 403 && unverified.data.code === 'EMAIL_NOT_VERIFIED',
-      unverified.status + '/' + (unverified.data && unverified.data.code));
-
-    /* 2-d. 인증 코드 확인 → 계정 활성화 + 세션 발급 (최신 코드 사용) */
-    const verify = await call('POST', '/api/auth/verify', { email: USER.email, code: unverified.data.devCode });
-    check('이메일 인증 완료 (세션 발급)', verify.status === 200 && verify.data.user &&
-      verify.data.user.email === USER.email, 'status=' + verify.status);
-    check('첫 가입자에게 admin 부여', verify.data && verify.data.user && verify.data.user.role === 'admin',
-      verify.data && verify.data.user && verify.data.user.role);
-    check('인증 시 세션 쿠키 발급', /bw_session=/.test(verify.cookie), verify.cookie.slice(0, 40));
-    const adminCookie = verify.cookie;
-
-    /* 3. 인증된 계정 중복 가입 거부 */
+    /* 3. 중복 가입 거부 */
     const dup = await call('POST', '/api/auth/signup', USER);
     check('중복 이메일 거부 (409)', dup.status === 409 && dup.data.code === 'EMAIL_EXISTS',
       'status=' + dup.status);
@@ -215,12 +193,10 @@ function stop(proc) {
       name: '운영자', email: 'operator' + stamp + '@example.com', password: 'operator12',
       question: '좋아하는 음식은?', answer: '김밥'
     });
-    const secondVerify = await call('POST', '/api/auth/verify', {
-      email: 'operator' + stamp + '@example.com', code: second.data.devCode
-    });
-    const secondRole = secondVerify.data && secondVerify.data.user && secondVerify.data.user.role;
+    const secondRole = second.data && second.data.user && second.data.user.role;
     check('두 번째 가입자는 operator', secondRole === 'operator', secondRole);
-    const forbidden = await call('GET', '/api/users', undefined, secondVerify.cookie);
+    const secondCookie = second.cookie;
+    const forbidden = await call('GET', '/api/users', undefined, secondCookie);
     check('비관리자 계정 목록 거부 (403)', forbidden.status === 403, 'status=' + forbidden.status);
 
     /* 13-b. 감지·경보 이벤트 저장 */
@@ -249,7 +225,7 @@ function stop(proc) {
       !list[0].payload || list[0].payload.snapshot === undefined,
       JSON.stringify(list[0].payload));
 
-    const ownEvents = await call('GET', '/api/events?limit=10', undefined, secondVerify.cookie);
+    const ownEvents = await call('GET', '/api/events?limit=10', undefined, secondCookie);
     check('비관리자는 본인 기록만 조회 (scope=own)',
       ownEvents.data.scope === 'own' && (ownEvents.data.events || []).length === 0,
       ownEvents.data.scope + '/' + (ownEvents.data.events || []).length);
@@ -260,7 +236,7 @@ function stop(proc) {
       !!s && s.users >= 2 && s.events === 2 && s.alerts === 1 && s.todayEvents === 2 && s.todayAlerts === 1,
       JSON.stringify(s));
 
-    const clearDenied = await call('POST', '/api/events/clear', undefined, secondVerify.cookie);
+    const clearDenied = await call('POST', '/api/events/clear', undefined, secondCookie);
     check('기록 비우기는 관리자만 (403)', clearDenied.status === 403, 'status=' + clearDenied.status);
 
     const cleared = await call('POST', '/api/events/clear', undefined, relogin.cookie);

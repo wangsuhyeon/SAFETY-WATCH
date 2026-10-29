@@ -1,7 +1,7 @@
 'use strict';
 
 /* ============================================================
-   Beach Watch — 인증/계정 백엔드 (Express + SQLite)
+   SAFETY WATCH — 인증/계정 백엔드 (Express + SQLite)
    ------------------------------------------------------------
    · 정적 사이트(index.html, css/, js/)와 API를 한 포트에서 서빙
    · 계정·세션·접속 기록은 data/beachwatch.db 에 저장된다
@@ -33,45 +33,6 @@ const COOKIE_NAME = 'bw_session';
 const SCHEMA_FILE = db.driver === 'postgres' ? 'schema.postgres.sql' : 'schema.sql';
 const ready = db.exec(fs.readFileSync(path.join(__dirname, 'lib', SCHEMA_FILE), 'utf8'));
 
-/* 기존 SQLite DB에 이메일 인증 컬럼이 없으면 보완한다.
-   (기존 사용자는 이미 쓰던 계정이므로 verified=1 로 자동 승인.
-    Postgres 는 스키마를 새로 만드므로 이 보정이 필요 없다) */
-const schemaReady = (async () => {
-  await ready;
-  if (db.driver !== 'sqlite') return;
-  const cols = (await db.prepare('PRAGMA table_info(users)').all()).map(c => c.name);
-  const needed = [
-    ['verified',           "ALTER TABLE users ADD COLUMN verified INTEGER NOT NULL DEFAULT 1"],
-    ['email_code_hash',    'ALTER TABLE users ADD COLUMN email_code_hash TEXT'],
-    ['email_code_salt',    'ALTER TABLE users ADD COLUMN email_code_salt TEXT'],
-    ['email_code_expires', 'ALTER TABLE users ADD COLUMN email_code_expires TEXT']
-  ];
-  for (const [col, ddl] of needed) {
-    if (!cols.includes(col)) await db.exec(ddl);
-  }
-})();
-
-/* 자동 점검(e2e) 전용 — BW_TEST_MODE=1 일 때만 응답에 인증 코드(devCode)를
-   포함한다. 실제 배포에서는 이 환경변수를 설정하지 않는다. */
-const TEST_MODE = process.env.BW_TEST_MODE === '1';
-
-/* Gmail SMTP 발송기 — SMTP_USER/SMTP_PASS(앱 비밀번호)가 설정될 때만 사용.
-   (Render는 SMTP 아웃바운드를 차단하므로, SMTP는 로컬 실행 시에만 유효.
-    클라우드 배포에서는 Brevo HTTPS API 를 사용한다.) */
-let mailer = null;
-if (process.env.SMTP_USER && process.env.SMTP_PASS) {
-  try {
-    const nodemailer = require('nodemailer');
-    mailer = nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
-    });
-    console.log('[verify-mail] Gmail SMTP 발송기 준비 완료 (' + process.env.SMTP_USER + ')');
-  } catch (e) {
-    console.error('[verify-mail] nodemailer 초기화 실패:', e.message);
-  }
-}
-
 /* 이벤트 등급 — 경보성 등급은 통계에서 "경보"로 집계한다. */
 const EVENT_KINDS = ['info', 'ok', 'warn', 'watch', 'alert', 'critical', 'error'];
 const ALERT_KINDS = ['alert', 'critical', 'error'];
@@ -101,125 +62,6 @@ function verifySecret(secret, salt, expectedHash) {
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-
-/* ── 이메일 인증 (실제 메일주소만 가입 가능하도록) ────────── */
-
-const EMAIL_CODE_TTL_MS = 1000 * 60 * 10;   // 인증 코드 유효 10분
-
-function generateEmailCode() {
-  return String(crypto.randomInt(0, 1000000)).padStart(6, '0');
-}
-
-/** 인증 코드 저장(해시만 보관) — 코드 재발송 때마다 덮어쓴다. */
-async function setEmailCode(userId, code) {
-  const { salt, hash } = hashSecret(code);
-  (await db.prepare(
-    'UPDATE users SET email_code_hash = ?, email_code_salt = ?, email_code_expires = ?, updated_at = ? WHERE id = ?'
-  ).run(hash, salt, new Date(Date.now() + EMAIL_CODE_TTL_MS).toISOString(), nowISO(), userId));
-}
-
-async function clearEmailCode(userId) {
-  (await db.prepare(
-    'UPDATE users SET email_code_hash = NULL, email_code_salt = NULL, email_code_expires = NULL WHERE id = ?'
-  ).run(userId));
-}
-
-/** 무료 메일 전달 서비스 FormSubmit AJAX 로 인증 코드 메일을 보낸다.
-    ※ FormSubmit 은 Origin/Referer 가 없는 서버 간 요청을 거부하므로
-      사이트 주소를 헤더로 반드시 넣는다 (그래서 "웹 서버로 열어라" 오류 방지).
-    ※ 또한 각 수신 주소로 오는 메일이 '최초 1회'는 활성화 확인을 요청한다 —
-      수신자가 활성화 링크를 누른 뒤 재발송하면 코드가 도착한다. */
-async function sendVerificationEmail(email, name, code, origin) {
-  const site = origin || process.env.RENDER_EXTERNAL_URL || 'https://safety-watch-oh5o.onrender.com';
-  const subject = '[Beach Watch] 이메일 인증 코드: ' + code;
-  const message = [
-    (name ? name + '님, ' : '') + 'Beach Watch 가입/로그인 인증 코드입니다.',
-    '',
-    '인증 코드: ' + code,
-    '',
-    '· 10분 안에 화면에 입력하세요.',
-    '· 메일이 오지 않으면 이 주소로 온 첫 메일(FormSubmit 활성화 요청)에서',
-    '  확인 링크를 누른 뒤, 화면의 「인증 코드 재발송」을 누르면 도착합니다.'
-  ].join('\n');
-
-  /** 1순위 — Brevo HTTPS API (BREVO_API_KEY/BREVO_SENDER 설정 시).
-      Render는 SMTP 포트(465/587)를 차단하므로 클라우드 발송은 HTTPS API로만 가능. */
-  if (process.env.BREVO_API_KEY && process.env.BREVO_SENDER) {
-    try {
-      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-        method: 'POST',
-        headers: {
-          'api-key': process.env.BREVO_API_KEY,
-          'content-type': 'application/json',
-          'accept': 'application/json'
-        },
-        body: JSON.stringify({
-          sender: { name: 'Beach Watch', email: process.env.BREVO_SENDER },
-          to: [{ email }],
-          subject,
-          textContent: message
-        }),
-        signal: AbortSignal.timeout(15000)
-      });
-      if (res.ok) return true;
-      const err = await res.text().catch(() => '');
-      console.error('[verify-mail] Brevo HTTP ' + res.status + ' ' + err.slice(0, 300));
-      return false;
-    } catch (e) {
-      console.error('[verify-mail] Brevo 실패:', e.message);
-      return false;
-    }
-  }
-
-  /* 2순위 — Gmail SMTP (로컬 등 SMTP 포트가 열린 환경에서만 유효). */
-  if (mailer) {
-    try {
-      await mailer.sendMail({
-        from: '"Beach Watch" <' + process.env.SMTP_USER + '>',
-        to: email,
-        subject,
-        text: message
-      });
-      return true;
-    } catch (e) {
-      console.error('[verify-mail] SMTP 실패:', e.message);
-      return false;
-    }
-  }
-
-  /* 2순위 — FormSubmit 폴백(로컬 등 서버 IP가 차단되지 않은 환경). */
-  try {
-    const res = await fetch('https://formsubmit.co/ajax/' + encodeURIComponent(email), {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'accept': 'application/json',
-        'Origin': site,
-        'Referer': site + '/'
-      },
-      body: JSON.stringify({ _subject: subject, _template: 'box', _captcha: 'false', message }),
-      signal: AbortSignal.timeout(15000)
-    });
-    if (!res.ok) { console.error('[verify-mail] HTTP ' + res.status + ' origin=' + site); return false; }
-    const data = await res.json().catch(() => null);
-    /* success:false 는 활성화 대기 등 실제 미발송 상태다. */
-    if (!(data && data.success === true)) {
-      console.error('[verify-mail] rejected origin=' + site + ' resp=' + JSON.stringify(data).slice(0, 300));
-      return false;
-    }
-    return true;
-  } catch (e) {
-    console.error('[verify-mail]', e.message);
-    return false;
-  }
-}
-
-/** 이메일 인증 코드 응답 (자동 점검 모드에서만 코드 노출) */
-function verificationPayload(email, sent, code) {
-  const payload = { ok: true, needsVerification: true, email, emailSent: !!sent };
-  if (TEST_MODE && code) payload.devCode = code;
-  return payload;
-}
 
 function publicUser(row) {
   if (!row) return null;
@@ -257,13 +99,6 @@ function safeJSON(text) {
 function clientIP(req) {
   return (req.headers['x-forwarded-for'] || '').split(',')[0].trim()
     || req.socket.remoteAddress || '';
-}
-
-/** 사이트 공개 주소 — FormSubmit 에 Origin/Referer 로 넘겨 서버 발송을 허용받는다. */
-function siteOrigin(req) {
-  const proto = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
-  const host = req.headers['x-forwarded-host'] || req.headers.host || '';
-  return proto + '://' + host;
 }
 
 async function logAuth(action, req, extra) {
@@ -426,7 +261,7 @@ for (const method of ['get', 'post', 'use']) {
       : handler));
 }
 app.use((req, res, next) => db.runContext(() => next()));
-app.use(async (req, res, next) => { await schemaReady; next(); });
+app.use(async (req, res, next) => { await ready; next(); });
 
 /* Render, Railway 등 HTTPS 프록시 뒤에서 secure 쿠키를 정확히 발급한다. */
 app.set('trust proxy', 1);
@@ -449,8 +284,7 @@ app.get('/api/health', async (req, res) => {
 /* 임시 진단 — 아웃바운드 포트 확인 후 제거 예정 */
 /* (제거됨: Render는 SMTP 465/587 아웃바운드를 차단, HTTPS 443만 허용 확인) */
 
-/* 회원가입 — 계정을 미인증 상태로 만들고 이메일로 인증 코드를 발송한다.
-   실제 메일함(코드 수신)이 확인된 주소만 인증 후 로그인할 수 있다. */
+/* 회원가입 — 계정을 만들고 바로 세션을 발급한다. */
 app.post('/api/auth/signup', loginRateLimit, async (req, res) => {
   const { name, email, password, passwordConfirm, question, answer } = req.body || {};
 
@@ -464,60 +298,47 @@ app.post('/api/auth/signup', loginRateLimit, async (req, res) => {
   if (!answer || String(answer).trim().length < 2) return fail(res, 400, 'INVALID_ANSWER', '보안 질문 답변을 입력하세요.');
 
   const normalizedEmail = String(email).trim();
-  const existing = (await db.prepare('SELECT * FROM users WHERE lower(email) = lower(?)').get(normalizedEmail));
-  if (existing && existing.verified) return fail(res, 409, 'EMAIL_EXISTS', '이미 가입된 이메일입니다.');
+  const existing = (await db.prepare('SELECT id FROM users WHERE lower(email) = lower(?)').get(normalizedEmail));
+  if (existing) return fail(res, 409, 'EMAIL_EXISTS', '이미 가입된 이메일입니다.');
 
   const pw = hashSecret(password);
   const ans = hashSecret(String(answer).trim().toLowerCase());
   const ts = nowISO();
-  const code = generateEmailCode();
 
-  /* 미인증 가입 중이면 입력 값을 새로 저장해 오타를 고칠 수 있게 하고,
-     코드만 다시 보낸다. (인증되지 않은 계정은 로그인할 수 없다) */
+  /* 계정 INSERT + 세션 INSERT 를 한 트랜잭션으로 묶어 원자성을 보장한다.
+     (중간에 끊기면 "계정만 있는" 불완전 가입이 생기고,
+      쿠키 손상·브라우저 오류 같은 실제 오류를 반복 가입으로 오인하게 된다) */
   let user;
+  let token;
   let stage = 'begin';
   try {
-    if (existing && !existing.verified) {
-      stage = 'update';
-      (await db.prepare(
-        `UPDATE users SET name = ?, password_hash = ?, password_salt = ?, question = ?,
-                            answer_hash = ?, answer_salt = ?, updated_at = ? WHERE id = ?`
-      ).run(
-        String(name).trim(), pw.hash, pw.salt, String(question).trim(),
-        ans.hash, ans.salt, ts, existing.id
+    await db.transaction(async () => {
+      const count = (await db.prepare('SELECT CAST(COUNT(*) AS INTEGER) AS n FROM users').get()).n;
+      stage = 'insert';
+      const info = (await db.prepare(
+        `INSERT INTO users (name, email, password_hash, password_salt, question, answer_hash, answer_salt,
+                            role, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         RETURNING id`
+      ).get(
+        String(name).trim(), normalizedEmail, pw.hash, pw.salt,
+        String(question).trim(), ans.hash, ans.salt,
+        count === 0 ? 'admin' : 'operator', ts, ts
       ));
-      (await setEmailCode(existing.id, code));
-      user = (await db.prepare('SELECT * FROM users WHERE id = ?').get(existing.id));
-    } else {
-      await db.transaction(async () => {
-        stage = 'insert';
-        const count = (await db.prepare('SELECT CAST(COUNT(*) AS INTEGER) AS n FROM users').get()).n;
-        const info = (await db.prepare(
-          `INSERT INTO users (name, email, password_hash, password_salt, question, answer_hash, answer_salt,
-                              role, verified, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
-           RETURNING id`
-        ).get(
-          String(name).trim(), normalizedEmail, pw.hash, pw.salt,
-          String(question).trim(), ans.hash, ans.salt,
-          count === 0 ? 'admin' : 'operator', ts, ts
-        ));
-        stage = 'select-user';
-        user = (await db.prepare('SELECT * FROM users WHERE id = ?').get(Number(info.id)));
-        stage = 'set-code';
-        (await setEmailCode(user.id, code));
-      });
-    }
+      stage = 'select-user';
+      user = (await db.prepare('SELECT * FROM users WHERE id = ?').get(Number(info.id)));
+      stage = 'insert-session';
+      token = (await insertSession(user, req));
+    });
   } catch (error) {
     if (isUniqueViolation(error)) return fail(res, 409, 'EMAIL_EXISTS', '이미 가입된 이메일입니다.');
     console.error('[signup] stage=' + stage);
     return fail(res, 500, 'SERVER_ERROR', '회원가입 처리 중 오류가 발생했습니다.');
   }
 
-  /* 자동 점검 모드에서는 외부 메일 발송을 건너뛴다(네트워크 무관·빠른 검증). */
-  const sent = TEST_MODE ? true : await sendVerificationEmail(normalizedEmail, user.name, code, siteOrigin(req));
-  (await logAuth('signup', req, { userId: user.id, email: user.email, detail: '인증 대기' }));
-  res.status(201).json(verificationPayload(user.email, sent, code));
+  setSessionCookie(req, res, token);
+  (await logAuth('signup', req, { userId: user.id, email: user.email, detail: user.role }));
+  res.status(201).json({ ok: true, user: publicUser(user) });
 });
 
 /* 로그인 */
@@ -551,21 +372,6 @@ app.post('/api/auth/login', loginRateLimit, async (req, res) => {
     return fail(res, 401, 'INVALID_CREDENTIALS', '이메일 또는 비밀번호가 올바르지 않습니다.');
   }
 
-  /* 실제 메일주소 인증 전에는 로그인할 수 없다 — 코드를 새로 보내고 안내한다. */
-  if (!user.verified) {
-    const code = generateEmailCode();
-    const sent = TEST_MODE ? true : await sendVerificationEmail(user.email, user.name, code, siteOrigin(req));
-    (await setEmailCode(user.id, code));
-    (await logAuth('login_unverified', req, { userId: user.id, email: user.email, detail: '미인증 계정 — 인증 코드 재발송' }));
-    const body = {
-      ok: false, code: 'EMAIL_NOT_VERIFIED',
-      message: '이메일 인증이 필요합니다. ' + user.email + ' 로 보낸 인증 코드를 입력하세요.',
-      email: user.email, emailSent: !!sent
-    };
-    if (TEST_MODE && code) body.devCode = code;
-    return res.status(403).json(body);
-  }
-
   (await db.prepare('UPDATE users SET failed_count = 0, locked_until = NULL, last_login_at = ?, updated_at = ? WHERE id = ?')
     .run(nowISO(), nowISO(), user.id));
 
@@ -573,61 +379,6 @@ app.post('/api/auth/login', loginRateLimit, async (req, res) => {
   (await createSession(fresh, req, res));
   (await logAuth('login', req, { userId: fresh.id, email: fresh.email }));
   res.json({ ok: true, user: publicUser(fresh) });
-});
-
-/* 이메일 인증 코드 확인 — 성공 시 계정을 인증 처리하고 세션을 발급한다 */
-app.post('/api/auth/verify', loginRateLimit, async (req, res) => {
-  const { email, code } = req.body || {};
-  if (!email || !code) return fail(res, 400, 'MISSING', '이메일과 인증 코드를 입력하세요.');
-
-  const user = (await db.prepare('SELECT * FROM users WHERE lower(email) = lower(?)').get(String(email).trim()));
-  if (!user) return fail(res, 404, 'NOT_FOUND', '가입된 이메일이 없습니다.');
-
-  /* 이미 인증된 계정이면 바로 세션을 발급한다. */
-  if (user.verified) {
-    const token = (await insertSession(user, req));
-    setSessionCookie(req, res, token);
-    (await logAuth('login', req, { userId: user.id, email: user.email }));
-    return res.json({ ok: true, user: publicUser(user) });
-  }
-
-  if (!user.email_code_hash || !user.email_code_expires) {
-    return fail(res, 400, 'EMAIL_CODE_REQUIRED', '인증 코드가 없습니다. 메일을 다시 보내세요.');
-  }
-  if (new Date(user.email_code_expires).getTime() < Date.now()) {
-    (await logAuth('verify_failed', req, { userId: user.id, email: user.email, detail: '코드 만료' }));
-    return fail(res, 400, 'CODE_EXPIRED', '인증 코드가 만료되었습니다. 재발송 후 다시 시도하세요.');
-  }
-  if (!verifySecret(String(code).trim(), user.email_code_salt, user.email_code_hash)) {
-    (await logAuth('verify_failed', req, { userId: user.id, email: user.email, detail: '코드 불일치' }));
-    return fail(res, 401, 'BAD_CODE', '인증 코드가 올바르지 않습니다.');
-  }
-
-  (await db.prepare('UPDATE users SET verified = 1, failed_count = 0, locked_until = NULL, updated_at = ? WHERE id = ?')
-    .run(nowISO(), user.id));
-  (await clearEmailCode(user.id));
-
-  const fresh = (await db.prepare('SELECT * FROM users WHERE id = ?').get(user.id));
-  const token = (await insertSession(fresh, req));
-  setSessionCookie(req, res, token);
-  (await logAuth('email_verified', req, { userId: fresh.id, email: fresh.email, detail: '가입 완료 · ' + fresh.role }));
-  res.json({ ok: true, user: publicUser(fresh) });
-});
-
-/* 인증 코드 재발송 (미인증 계정) */
-app.post('/api/auth/verify/resend', loginRateLimit, async (req, res) => {
-  const { email } = req.body || {};
-  if (!email || !EMAIL_RE.test(String(email))) return fail(res, 400, 'INVALID_EMAIL', '올바른 이메일 주소를 입력하세요.');
-
-  const user = (await db.prepare('SELECT * FROM users WHERE lower(email) = lower(?)').get(String(email).trim()));
-  if (!user) return fail(res, 404, 'NOT_FOUND', '가입된 이메일이 없습니다.');
-  if (user.verified) return fail(res, 400, 'ALREADY_VERIFIED', '이미 인증된 계정입니다. 로그인해 주세요.');
-
-  const code = generateEmailCode();
-  const sent = TEST_MODE ? true : await sendVerificationEmail(user.email, user.name, code, siteOrigin(req));
-  (await setEmailCode(user.id, code));
-  (await logAuth('verify_resend', req, { userId: user.id, email: user.email }));
-  res.json(verificationPayload(user.email, sent, code));
 });
 
 /* 로그아웃 */
@@ -838,6 +589,6 @@ app.use((err, req, res, next) => {
 module.exports = { app, ready };
 
 if (require.main === module) ready.then(() => app.listen(PORT, () => {
-  console.log('Beach Watch server → http://localhost:' + PORT);
+  console.log('SAFETY WATCH server → http://localhost:' + PORT);
   console.log('DB: ' + path.relative(ROOT, DB_FILE));
 })).catch(() => { console.error('Database initialization failed. Check database settings.'); process.exitCode = 1; });

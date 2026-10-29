@@ -1,5 +1,5 @@
 
--- Beach Watch — Supabase(Postgres) 스키마
+-- SAFETY WATCH — Supabase(Postgres) 스키마
 -- SUPABASE_DB_URL 이 설정된 서버가 기동할 때 자동 실행된다.
 -- 시간 필드는 SQLite 버전과 동일하게 TEXT(ISO 8601)로 둔다.
 
@@ -13,10 +13,6 @@
     answer_hash        TEXT    NOT NULL,
     answer_salt        TEXT    NOT NULL,
     role               TEXT    NOT NULL DEFAULT 'operator',
-    verified           INTEGER NOT NULL DEFAULT 0,
-    email_code_hash    TEXT,
-    email_code_salt    TEXT,
-    email_code_expires TEXT,
     created_at         TEXT    NOT NULL,
     updated_at         TEXT    NOT NULL,
     last_login_at      TEXT,

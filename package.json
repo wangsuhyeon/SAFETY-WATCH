@@ -2,7 +2,7 @@
   "name": "beach-watch",
   "version": "1.0.0",
   "private": true,
-  "description": "Beach Watch AI water safety monitoring - auth + SQLite backend",
+  "description": "SAFETY WATCH AI water safety monitoring - auth + SQLite backend",
   "main": "server.js",
   "engines": {
     "node": ">=22.13.0"
@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "express": "^4.22.3",
-    "nodemailer": "^10.2.1",
     "pg": "^8.16.0"
   },
   "devDependencies": {

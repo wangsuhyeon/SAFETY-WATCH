@@ -1,7 +1,7 @@
 'use strict';
 
 /* ============================================================
-   Beach Watch — 계정 UI (로그인 · 회원가입 · 비밀번호 찾기)
+   SAFETY WATCH — 계정 UI (로그인 · 회원가입 · 비밀번호 찾기)
    ------------------------------------------------------------
    · Express API와 SQLite, HttpOnly 세션 쿠키를 사용합니다.
    ============================================================ */
@@ -50,8 +50,7 @@
     user: null,
     online: true,
     resetEmail: '',
-    resetQuestion: '',
-    pendingVerifyEmail: ''
+    resetQuestion: ''
   };
 
   /* 서버에서 받아 둔 마지막 값 — 언어를 바꿔도 다시 그릴 수 있게 보관한다. */
@@ -117,7 +116,6 @@
     if (els.viewLogin) els.viewLogin.hidden = which !== 'login';
     if (els.viewAccount) els.viewAccount.hidden = which !== 'account';
     if (els.viewReset) els.viewReset.hidden = which !== 'reset';
-    if (els.viewVerify) els.viewVerify.hidden = which !== 'verify';
     notice('');
     if (which === 'login') showAuthTab('login');
   }
@@ -361,64 +359,6 @@
     return state.user;
   }
 
-  /* ── 이메일 인증 ───────────────────────────────────────── */
-
-  function showVerifyView(email, introMessage) {
-    state.pendingVerifyEmail = email || '';
-    if (els.verifyEmailText) els.verifyEmailText.textContent = state.pendingVerifyEmail;
-    fieldError(els.verifyError, '');
-    if (els.verifyCode) els.verifyCode.value = '';
-    showView('verify');
-    if (introMessage) notice(introMessage);
-    if (els.verifyCode) els.verifyCode.focus();
-  }
-
-  async function submitVerify(event) {
-    if (event) event.preventDefault();
-    fieldError(els.verifyError, '');
-    const code = (els.verifyCode && els.verifyCode.value || '').trim();
-    if (!state.pendingVerifyEmail) return fieldError(els.verifyError, tr('errAuthMissing'));
-    if (!code) return fieldError(els.verifyError, tr('errAuthMissing'));
-
-    busy(els.verifySubmit, true);
-    try {
-      const data = await api('/api/auth/verify', {
-        body: { email: state.pendingVerifyEmail, code }
-      });
-      state.online = true;
-      applyUser(data.user);
-      state.pendingVerifyEmail = '';
-      if (els.signupForm) els.signupForm.reset();
-      resetSignupQuestionToggle();
-      if (els.verifyForm) els.verifyForm.reset();
-      showView('account');
-      notice(tr('authSignupDone'), 'ok');
-      logEvent('[계정] 이메일 인증 완료 · ' + data.user.email);
-    } catch (err) {
-      fieldError(els.verifyError, errorText(err));
-    } finally {
-      busy(els.verifySubmit, false);
-    }
-  }
-
-  async function submitVerifyResend() {
-    if (!state.pendingVerifyEmail) return;
-    busy(els.verifyResend, true);
-    try {
-      const data = await api('/api/auth/verify/resend', {
-        body: { email: state.pendingVerifyEmail }
-      });
-      fieldError(els.verifyError, '');
-      notice(data.emailSent === false
-        ? tr('authVerifyResendFailed', '메일 발송에 실패했습니다. 잠시 후 다시 시도해 주세요.')
-        : tr('authVerifyResent', '인증 코드를 다시 보냈습니다. 메일함을 확인하세요.'), 'ok');
-    } catch (err) {
-      fieldError(els.verifyError, errorText(err));
-    } finally {
-      busy(els.verifyResend, false);
-    }
-  }
-
   async function submitLogin(event) {
     if (event) event.preventDefault();
     fieldError(els.loginError, '');
@@ -438,13 +378,6 @@
       logEvent('[계정] ' + data.user.name + ' 로그인');
     } catch (err) {
       state.online = err.code !== 'NO_SERVER';
-      if (err && err.code === 'EMAIL_NOT_VERIFIED') {
-        /* 서버가 인증 코드를 새로 보냈다 — 인증 화면으로 안내 */
-        if (els.loginPassword) els.loginPassword.value = '';
-        showVerifyView(email, '');
-        logEvent('[계정] 미인증 계정 로그인 시도 · ' + email);
-        return;
-      }
       fieldError(els.loginError, errorText(err));
     } finally {
       busy(els.loginSubmit, false);
@@ -475,15 +408,6 @@
         body: { name, email, password, passwordConfirm, question, answer }
       });
       state.online = true;
-      if (data && data.needsVerification) {
-        /* 실제 메일주소 확인 단계 — 인증 코드 입력 화면으로 안내 */
-        showVerifyView(data.email,
-          (data.emailSent === false
-            ? tr('authVerifySendFailed', '인증 메일 발송에 실패했습니다. 「인증 코드 재발송」을 눌러 주세요.')
-            : tr('authVerifySent', '인증 코드를 메일로 보냈습니다. 메일함을 확인하세요.')));
-        logEvent('[계정] 인증 메일 발송 · ' + data.email);
-        return;
-      }
       applyUser(data.user);
       if (els.signupForm) els.signupForm.reset();
       resetSignupQuestionToggle();
@@ -660,15 +584,6 @@
     els.viewLogin = $('#authViewLogin');
     els.viewAccount = $('#authViewAccount');
     els.viewReset = $('#authViewReset');
-    els.viewVerify = $('#authViewVerify');
-
-    els.verifyForm = $('#authVerifyForm');
-    els.verifyEmailText = $('#verifyEmailText');
-    els.verifyCode = $('#verifyCode');
-    els.verifyError = $('#verifyError');
-    els.verifySubmit = $('#verifySubmit');
-    els.verifyResend = $('#verifyResend');
-    els.verifyBack = $('#verifyBack');
 
     els.accountName = $('#accountName');
     els.accountEmail = $('#accountEmail');
@@ -723,12 +638,6 @@
 
     if (els.loginForm) els.loginForm.addEventListener('submit', submitLogin);
     if (els.signupForm) els.signupForm.addEventListener('submit', submitSignup);
-    if (els.verifyForm) els.verifyForm.addEventListener('submit', submitVerify);
-    if (els.verifyResend) els.verifyResend.addEventListener('click', submitVerifyResend);
-    if (els.verifyBack) els.verifyBack.addEventListener('click', () => {
-      state.pendingVerifyEmail = '';
-      showView('login');
-    });
     if (els.pwChangeForm) els.pwChangeForm.addEventListener('submit', submitPasswordChange);
     if (els.logoutButton) els.logoutButton.addEventListener('click', submitLogout);
 

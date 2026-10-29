@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="AI 기반 수변 실시간 안전 모니터링 — 해수욕장·강·호수·드론 카메라를 최대 5대까지 온디바이스로 감시합니다.">
   <meta name="color-scheme" content="light">
-  <title>Beach Watch · AI 수변 안전 관제</title>
+  <title>SAFETY WATCH · AI 수변 안전 관제</title>
   <link rel="stylesheet" href="css/bundle.css">
   <link rel="stylesheet" href="css/auth.css">
 </head>
@@ -13,7 +13,7 @@
 <a class="skip-link" href="#stage" data-i18n="skipToMonitor">본문(관제 화면)으로 건너뛰기</a>
 <main class="app">
   <header class="top">
-    <div class="brand"><span>BEACH</span> WATCH</div>
+    <div class="brand"><span>SAFETY</span> WATCH</div>
     <div class="top-actions">
       <button class="settings-button" id="controlRoom" type="button" aria-pressed="false" data-i18n="controlRoom">관제 모드</button>
       <button class="settings-button" id="shortcutHelp" type="button" aria-haspopup="dialog" data-i18n="shortcutsShort">단축키</button>
@@ -508,24 +508,6 @@
           <div class="dialog-error" id="signupError"></div>
           <div class="dialog-actions"><button class="primary" type="submit" id="signupSubmit" data-i18n="authSignupSubmit">가입하고 시작하기</button></div>
         </form>
-      </section>
-
-      <section class="auth-view" id="authViewVerify" hidden>
-        <div class="eyebrow" data-i18n="authVerifyEyebrow">이메일 인증</div>
-        <p class="auth-lede">
-          <span data-i18n="authVerifyLede">아래 주소로 보낸 6자리 인증 코드를 입력하면 가입이 완료됩니다.</span>
-          <b class="auth-verify-email" id="verifyEmailText"></b>
-        </p>
-        <form class="auth-form" id="authVerifyForm" novalidate>
-          <label><span data-i18n="authVerifyCode">인증 코드 (6자리)</span><input id="verifyCode" class="auth-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required></label>
-          <div class="dialog-error" id="verifyError"></div>
-          <div class="dialog-actions">
-            <button type="button" id="verifyBack" data-i18n="authVerifyBack">돌아가기</button>
-            <button type="button" id="verifyResend" data-i18n="authVerifyResend">인증 코드 재발송</button>
-            <button class="primary" type="submit" id="verifySubmit" data-i18n="authVerifySubmit">인증하고 시작하기</button>
-          </div>
-        </form>
-        <p class="auth-hint" data-i18n="authVerifyHint">메일이 오지 않으면 이 주소로 온 첫 메일(FormSubmit 활성화 요청)의 확인 링크를 누른 뒤 「인증 코드 재발송」을 눌러 주세요. 실제 존재하는 메일주소만 가입할 수 있습니다.</p>
       </section>
 
       <section class="auth-view" id="authViewAccount" hidden>
