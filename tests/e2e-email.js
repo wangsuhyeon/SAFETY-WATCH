@@ -118,6 +118,16 @@ function check(name, ok, detail) {
     await browser.close(); server.close(); process.exit(1);
   }
 
+  // 레고 시연 모드는 기본 OFF이고, 버튼을 누르면 aria 상태와 표시가 양방향으로 바뀐다.
+  const legoMode = page.locator('#legoDemoMode');
+  check('레고 시연 모드 기본 OFF', await legoMode.getAttribute('aria-pressed') === 'false');
+  await legoMode.click();
+  check('레고 시연 모드 ON 전환', await legoMode.getAttribute('aria-pressed') === 'true' &&
+    (await legoMode.textContent()).includes('ON'));
+  await legoMode.click();
+  check('레고 시연 모드 OFF 복귀', await legoMode.getAttribute('aria-pressed') === 'false' &&
+    (await legoMode.textContent()).includes('OFF'));
+
   // 1) 내장 자가진단
   const st = await page.evaluate(() => window.BeachWatch.selfTest());
   check('내장 SelfTest 통과 (' + st.passed + '/' + st.total + ')', st.failures.length === 0,

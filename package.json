@@ -12,7 +12,8 @@
     "test": "node tests/api-check.js",
     "test:e2e": "node tests/e2e-auth.js",
     "test:race": "node tests/e2e-signup-race.js",
-    "test:email": "node tests/e2e-email.js"
+    "test:email": "node tests/e2e-email.js",
+    "test:lego": "node tests/lego-detector.js"
   },
   "dependencies": {
     "express": "^4.22.3",

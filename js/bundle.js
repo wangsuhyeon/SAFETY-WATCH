@@ -47,16 +47,16 @@ const I18N = {
     
     safetyStatus:'SAFETY STATUS', ready:'READY', waiting:'감지 대기 중',
     readyText:'카메라를 연결하면 경계선 감시가 시작됩니다. 카메라가 없다면 시뮬레이션으로 동작을 확인할 수 있습니다.',
-    boundaryPoints:'경계선 포인트', peopleAbove:'선 위 사람',
+    boundaryPoints:'경계선 포인트', peopleAbove:'선 위 위험 대상',
      monitoringText:'전체 화면과 확대 구역을 동시에 분석해 먼 바다의 사람까지 감시합니다.',
     latestEvent:'LATEST EVENT', alertLog:'경보 기록', noEvents:'아직 발생한 경보가 없습니다.', exportEvents:'이벤트 CSV 내보내기',
       lineAlert:'경계 침범',
     levelWatch:'주의', levelAlert:'경고', levelCritical:'긴급',
     watchTitle:'경계선 밖 대상 확인 중', watchText:'{count}명이 경계선을 벗어났습니다. 지속 여부를 확인하는 중입니다.',
-    alertTitle:'경계선 침범 사람 감지', alertCount:'경계선 밖에 사람 {count}명이 있습니다.',
-    criticalTitle:'긴급 · 장시간 이탈', criticalText:'{count}명이 {seconds}초째 경계선 밖에 머물고 있습니다. 즉시 확인이 필요합니다.',
-    adminAlertTitle:'관리자 안전 알림', adminAlertBody:'[{level}] 경계선 밖에 사람 {count}명이 감지되었습니다.',
-    eventAlert:'[{level}] 경계선 밖 {count}명 감지', 
+    alertTitle:'경계선 침범 대상 감지', alertCount:'경계선 밖에 위험 대상 {count}개가 있습니다.',
+    criticalTitle:'긴급 · 장시간 이탈', criticalText:'위험 대상 {count}개가 {seconds}초째 경계선 밖에 머물고 있습니다. 즉시 확인이 필요합니다.',
+    adminAlertTitle:'관리자 안전 알림', adminAlertBody:'[{level}] 경계선 밖에 위험 대상 {count}개가 감지되었습니다.',
+    eventAlert:'[{level}] 경계선 밖 위험 대상 {count}개 감지',
     eventCameraLost:'카메라 신호 끊김 — 자동 재연결을 시도합니다', eventCameraBack:'카메라 재연결 성공',
     eventSimStart:'시뮬레이션 시작', 
 
@@ -141,16 +141,16 @@ const I18N = {
 
     safetyStatus:'SAFETY STATUS', ready:'READY', waiting:'Waiting for detection',
     readyText:'Connect a camera to begin boundary monitoring. No camera? Run the simulation to see how it behaves.',
-    boundaryPoints:'Boundary points', peopleAbove:'People past line',
+    boundaryPoints:'Boundary points', peopleAbove:'Targets past line',
      monitoringText:'The full frame and magnified tiles are analysed together so distant swimmers are not missed.',
     latestEvent:'LATEST EVENT', alertLog:'Alert log', noEvents:'No alerts have occurred yet.', exportEvents:'Export events as CSV',
       lineAlert:'LINE ALERT',
     levelWatch:'WATCH', levelAlert:'ALERT', levelCritical:'CRITICAL',
-    watchTitle:'Verifying subject past the boundary', watchText:'{count} person(s) crossed the boundary. Confirming persistence.',
-    alertTitle:'Boundary crossing detected', alertCount:'{count} person(s) are past the boundary.',
-    criticalTitle:'CRITICAL · prolonged exposure', criticalText:'{count} person(s) have stayed past the boundary for {seconds}s. Immediate check required.',
-    adminAlertTitle:'Beach Safety Administrator Alert', adminAlertBody:'[{level}] {count} person(s) detected past the boundary.',
-    eventAlert:'[{level}] {count} person(s) past the boundary', 
+    watchTitle:'Verifying target past the boundary', watchText:'{count} target(s) crossed the boundary. Confirming persistence.',
+    alertTitle:'Target crossed boundary', alertCount:'{count} target(s) are past the boundary.',
+    criticalTitle:'CRITICAL · prolonged exposure', criticalText:'{count} target(s) have stayed past the boundary for {seconds}s. Immediate check required.',
+    adminAlertTitle:'Beach Safety Administrator Alert', adminAlertBody:'[{level}] {count} target(s) detected past the boundary.',
+    eventAlert:'[{level}] {count} target(s) past the boundary',
     eventCameraLost:'Camera signal lost — attempting automatic reconnection', eventCameraBack:'Camera reconnected',
     eventSimStart:'Simulation started', 
 
@@ -359,7 +359,7 @@ Object.assign(I18N.en, {
    ══════════════════════════════════════════════════════════════════ */
 Object.assign(I18N.ko, {
   /* 감지 표시 · 상태 (삼항 연산자 안에서만 쓰여 정리 과정에 함께 빠졌던 항목) */
-  person:'사람', distantPerson:'원거리 사람', monitoring:'경계 구역 감시 중',
+  person:'사람', distantPerson:'원거리 사람', legoObject:'레고 물체(실험)', monitoring:'경계 구역 감시 중',
 
   /* 경계 구역 편집 */
   zoneEyebrow:'DANGER ZONE', zoneTitle:'경계 구역 편집',
@@ -414,7 +414,7 @@ Object.assign(I18N.ko, {
 });
 
 Object.assign(I18N.en, {
-  person:'PERSON', distantPerson:'DISTANT PERSON', monitoring:'Zone monitoring active',
+  person:'PERSON', distantPerson:'DISTANT PERSON', legoObject:'LEGO OBJECT (TEST)', monitoring:'Zone monitoring active',
   zoneEyebrow:'DANGER ZONE', zoneTitle:'Danger zone editor',
   zoneLede:'Surf lines and safe areas are not straight. Place as many points as you need and draw a shape that follows the terrain.',
   zoneModeLine:'Line (polyline)', zoneModeLineHelp:'Danger is anything past (above) the line',
@@ -489,22 +489,25 @@ Object.assign(I18N.ko, {
   /* 관제 화면 */
   monitoringEyebrow:'실시간 안전 감시', dangerBoundary:'위험 구역',
   simulationFlag:'체험 모드 · 실제 영상 아님', simCameraName:'체험용 화면', simLiveStatus:'체험 모드 진행 중',
-  person:'사람', distantPerson:'멀리 있는 사람', lineAlert:'위험 구역 진입',
+  person:'사람', distantPerson:'멀리 있는 사람', legoObject:'레고 물체(실험)', lineAlert:'위험 구역 진입',
+  legoDemoOff:'레고 시연 모드: OFF', legoDemoOn:'레고 시연 모드: ON',
+  legoModeActive:'감지 모드: 레고 전용', cocoModeActive:'감지 모드: COCO 사람 감지',
+  legoModeLoadFailed:'레고 모델을 불러오지 못해 이전 감지 모드로 돌아갑니다.',
   cameraPreview:'카메라 화면', cameraOffline:'카메라 꺼짐', cameraLive:'실시간 카메라',
   cameraNotConnected:'카메라 없음', cameraConnected:'카메라 연결됨 · {resolution}',
 
   /* 안전 상태 */
   safetyStatus:'안전 상태', ready:'대기', waiting:'감시 대기 중',
   readyText:'카메라를 연결하면 위험 구역 감시가 시작됩니다. 카메라가 없다면 체험 모드로 어떻게 동작하는지 볼 수 있습니다.',
-  boundaryPoints:'구역 점 개수', peopleAbove:'위험 구역 사람',
+  boundaryPoints:'구역 점 개수', peopleAbove:'위험 구역 대상',
   monitoring:'위험 구역 감시 중',
   monitoringText:'화면 전체와 확대한 칸을 함께 살펴, 멀리 있는 사람까지 찾아냅니다.',
   levelWatch:'주의', levelAlert:'경고', levelCritical:'긴급',
-  watchTitle:'위험 구역 진입 확인 중', watchText:'{count}명이 위험 구역에 들어왔습니다. 실제 사람이 맞는지 확인하는 중입니다.',
-  alertTitle:'위험 구역에 사람 있음', alertCount:'위험 구역에 사람 {count}명이 있습니다.',
-  criticalTitle:'긴급 · 오래 머무는 중', criticalText:'{count}명이 {seconds}초째 위험 구역에 있습니다. 즉시 확인이 필요합니다.',
-  adminAlertTitle:'위험 알림', adminAlertBody:'[{level}] 위험 구역에 사람 {count}명이 있습니다.',
-  eventAlert:'[{level}] 위험 구역에 {count}명', latestEvent:'최근 경보', alertLog:'경보 기록',
+  watchTitle:'위험 구역 진입 확인 중', watchText:'위험 대상 {count}개가 위험 구역에 들어왔습니다. 지속 여부를 확인하는 중입니다.',
+  alertTitle:'위험 구역에 대상 있음', alertCount:'위험 구역에 위험 대상 {count}개가 있습니다.',
+  criticalTitle:'긴급 · 오래 머무는 중', criticalText:'위험 대상 {count}개가 {seconds}초째 위험 구역에 있습니다. 즉시 확인이 필요합니다.',
+  adminAlertTitle:'위험 알림', adminAlertBody:'[{level}] 위험 구역에 위험 대상 {count}개가 있습니다.',
+  eventAlert:'[{level}] 위험 구역에 위험 대상 {count}개', latestEvent:'최근 경보', alertLog:'경보 기록',
   noEvents:'아직 발생한 경보가 없습니다.', exportEvents:'경보 기록 내려받기',
   eventSimStart:'체험 모드 시작', eventSimStop:'체험 모드 종료',
   eventCameraLost:'카메라 연결이 끊겨 다시 연결하는 중입니다', eventCameraBack:'카메라가 다시 연결되었습니다',
@@ -659,21 +662,24 @@ Object.assign(I18N.en, {
 
   monitoringEyebrow:'LIVE SAFETY MONITORING', dangerBoundary:'DANGER ZONE',
   simulationFlag:'DEMO MODE · NOT LIVE FOOTAGE', simCameraName:'DEMO VIEW', simLiveStatus:'Demo mode running',
-  person:'PERSON', distantPerson:'FAR AWAY', lineAlert:'IN DANGER ZONE',
+  person:'PERSON', distantPerson:'FAR AWAY', legoObject:'LEGO OBJECT (TEST)', lineAlert:'IN DANGER ZONE',
+  legoDemoOff:'LEGO demo mode: OFF', legoDemoOn:'LEGO demo mode: ON',
+  legoModeActive:'Detection mode: LEGO only', cocoModeActive:'Detection mode: COCO person detection',
+  legoModeLoadFailed:'Could not load the LEGO model; restoring the previous detection mode.',
   cameraPreview:'CAMERA VIEW', cameraOffline:'CAMERA OFF', cameraLive:'LIVE CAMERA',
   cameraNotConnected:'No camera', cameraConnected:'Camera connected · {resolution}',
 
   safetyStatus:'SAFETY STATUS', ready:'READY', waiting:'Waiting to monitor',
   readyText:'Connect a camera and danger-zone monitoring begins. No camera? Demo mode shows exactly how it behaves.',
-  boundaryPoints:'Zone points', peopleAbove:'People in zone',
+  boundaryPoints:'Zone points', peopleAbove:'Targets in zone',
   monitoring:'Watching the danger zone',
   monitoringText:'The whole view and magnified tiles are checked together, so people far out are not missed.',
   levelWatch:'WATCH', levelAlert:'ALERT', levelCritical:'URGENT',
-  watchTitle:'Checking entry into the zone', watchText:'{count} person(s) entered the danger zone. Confirming this is a real person.',
-  alertTitle:'Person in the danger zone', alertCount:'{count} person(s) are in the danger zone.',
-  criticalTitle:'URGENT · staying too long', criticalText:'{count} person(s) have been in the danger zone for {seconds}s. Check immediately.',
-  adminAlertTitle:'Danger alert', adminAlertBody:'[{level}] {count} person(s) in the danger zone.',
-  eventAlert:'[{level}] {count} in the danger zone', latestEvent:'LATEST ALERT', alertLog:'Alert history',
+  watchTitle:'Checking entry into the zone', watchText:'{count} target(s) entered the danger zone. Confirming persistence.',
+  alertTitle:'Target in the danger zone', alertCount:'{count} target(s) are in the danger zone.',
+  criticalTitle:'URGENT · staying too long', criticalText:'{count} target(s) have been in the danger zone for {seconds}s. Check immediately.',
+  adminAlertTitle:'Danger alert', adminAlertBody:'[{level}] {count} target(s) in the danger zone.',
+  eventAlert:'[{level}] {count} target(s) in the danger zone', latestEvent:'LATEST ALERT', alertLog:'Alert history',
   noEvents:'No alerts yet.', exportEvents:'Download alert history',
   eventSimStart:'Demo mode started', eventSimStop:'Demo mode stopped',
   eventCameraLost:'Camera disconnected — reconnecting', eventCameraBack:'Camera reconnected',
@@ -1042,21 +1048,21 @@ I18N.zh = {
   cameraPreview:'摄像头画面', cameraNotConnected:'没有摄像头',
   safetyStatus:'安全状态', ready:'待机', waiting:'等待开始监控',
   readyText:'连接摄像头后即开始监控危险区域。没有摄像头时，可用体验模式查看运行方式。',
-  boundaryPoints:'区域点数', peopleAbove:'危险区域内人数',
+  boundaryPoints:'区域点数', peopleAbove:'危险区域内目标数',
   monitoringText:'同时查看整幅画面和放大后的分块，连远处的人也不会漏掉。',
   latestEvent:'最近警报', alertLog:'警报记录', noEvents:'还没有发生警报。',
   exportEvents:'下载警报记录',
   lineAlert:'进入危险区域',
   levelWatch:'注意', levelAlert:'警告', levelCritical:'紧急',
   watchTitle:'正在确认是否进入危险区域',
-  watchText:'有 {count} 人进入危险区域，正在确认是否为真人。',
-  alertTitle:'危险区域内有人',
-  alertCount:'危险区域内有 {count} 人。',
+  watchText:'有 {count} 个目标进入危险区域，正在确认持续情况。',
+  alertTitle:'目标进入危险区域',
+  alertCount:'危险区域内有 {count} 个目标。',
   criticalTitle:'紧急 · 滞留过久',
-  criticalText:'{count} 人已在危险区域停留 {seconds} 秒，请立即确认。',
+  criticalText:'{count} 个目标已在危险区域停留 {seconds} 秒，请立即确认。',
   adminAlertTitle:'危险警报',
-  adminAlertBody:'[{level}] 危险区域内有 {count} 人。',
-  eventAlert:'[{level}] 危险区域内 {count} 人',
+  adminAlertBody:'[{level}] 危险区域内有 {count} 个目标。',
+  eventAlert:'[{level}] 危险区域内 {count} 个目标',
   eventCameraLost:'摄像头断开，正在重新连接',
   eventCameraBack:'摄像头已重新连接',
   eventSimStart:'体验模式已开始',
@@ -1157,7 +1163,10 @@ I18N.zh = {
   docLinks:'详细内容请见仓库文档 — <b>README.md</b>（问题定义·使用方法·影响·开发记录·路线图） · <b>TECHNICAL.md</b>（AI 流程·稳定性·验证策略） · <b>AI_STACK.md</b>（AI 技术详细分析） · <b>TEAM.md</b>（团队使命·北极星指标·团队规则·每周节奏） · <b>DATASET_PLAN.md</b>（数据集·模型改进计划） · <b>RELAY.md</b>（短信·邮件自动发送对接） · <b>IMPACT.md</b>（指标计算依据） · <b>DEMO_SCRIPT.md</b>（演示视频脚本）',
   cycleShared:'轮流查看 {count} 台摄像头。每台摄像头每 {seconds} 秒被重新查看一次。',
   dedupeReport:'合并重叠：检测 {raw} 处 → 人数 {merged} 人',
-  person:'人', distantPerson:'远处的人', monitoring:'正在监控危险区域',
+  person:'人', distantPerson:'远处的人', legoObject:'乐高物体（测试）', monitoring:'正在监控危险区域',
+  legoDemoOff:'乐高演示模式：关闭', legoDemoOn:'乐高演示模式：开启',
+  legoModeActive:'检测模式：仅乐高', cocoModeActive:'检测模式：COCO 人物检测',
+  legoModeLoadFailed:'无法加载乐高模型，已恢复之前的检测模式。',
   zoneEyebrow:'危险区域', zoneTitle:'绘制危险区域',
   zoneLede:'浪线和禁游区域并不是直线。<b>像用手扫过一样拖动画面</b>，直接画出你想要的曲线。',
   zoneModeLine:'画线', zoneModeLineHelp:'人在线的外侧（水的一侧）即为危险',
@@ -1335,7 +1344,7 @@ Object.assign(I18N.ko, {
   alertGuideWatch:'주의', alertGuideWatchText:'진입을 확인하는 단계 · 소리 없음',
   alertGuideAlert:'경고', alertGuideAlertText:'5초 이상 지속 · 경보음과 알림',
   alertGuideUrgent:'긴급', alertGuideUrgentText:'설정 시간 초과 · 반복 사이렌',
-  peopleAbove:'위험 구역 사람',
+  peopleAbove:'위험 구역 대상',
   zoneModeLine:'경계선', zoneModeLineHelp:'경계선 바깥(물 쪽)에 사람이 있으면 위험',
   zoneModePolygon:'위험 영역', zoneModePolygonHelp:'지정한 영역 안에 사람이 들어오면 위험',
   emailEyebrow:'EMAIL', emailTitle:'이메일 자동 발송',
@@ -1363,7 +1372,7 @@ Object.assign(I18N.en, {
   alertGuideWatch:'WATCH', alertGuideWatchText:'Entry check · no sound',
   alertGuideAlert:'ALERT', alertGuideAlertText:'Over 5s · sound and notifications',
   alertGuideUrgent:'URGENT', alertGuideUrgentText:'Past the set time · repeating siren',
-  peopleAbove:'People in danger zone',
+  peopleAbove:'Targets in danger zone',
   zoneModeLine:'Boundary line', zoneModeLineHelp:'Danger is outside the line, on the water side',
   zoneModePolygon:'Danger area', zoneModePolygonHelp:'Danger is inside the selected area',
   emailEyebrow:'EMAIL', emailTitle:'Automatic email alerts',
@@ -1391,7 +1400,7 @@ Object.assign(I18N.zh, {
   alertGuideWatch:'注意', alertGuideWatchText:'确认进入 · 无声音',
   alertGuideAlert:'警告', alertGuideAlertText:'持续超过 5 秒 · 声音和通知',
   alertGuideUrgent:'紧急', alertGuideUrgentText:'超过设定时间 · 重复警报声',
-  peopleAbove:'危险区域内人数',
+  peopleAbove:'危险区域内目标数',
   zoneModeLine:'边界线', zoneModeLineHelp:'人在边界线外（水的一侧）即为危险',
   zoneModePolygon:'危险区域', zoneModePolygonHelp:'人进入指定区域内即为危险',
   emailEyebrow:'EMAIL', emailTitle:'邮件自动发送',
@@ -1668,6 +1677,8 @@ const state = {
   rrIndex: 0,
   model: null,
   backend: '',
+  /* 레고 시연 모드 ON이면 COCO-SSD를 추론하지 않고 레고 감지기만 사용한다. */
+  legoDemo: false,
   /* 정밀 모드 — 타일을 더 잘게 나누고 좌우 반전 재검사를 추가한다.
      기본값 꺼짐. 느린 기기에서 켜면 지연이 늘어난다. */
   precision: false,
@@ -1739,6 +1750,14 @@ function setLabel(selector, key) {
   if (element) element.textContent = tr(key);
 }
 
+function updateLegoDemoButton() {
+  const button = $('#legoDemoMode');
+  if (!button) return;
+  button.textContent = tr(state.legoDemo ? 'legoDemoOn' : 'legoDemoOff');
+  button.setAttribute('aria-pressed', String(state.legoDemo));
+  button.classList.toggle('primary', state.legoDemo);
+}
+
 /** 버튼 툴팁도 언어에 맞춰 갱신한다 */
 function refreshButtonTips() {
   document.querySelectorAll('[data-tip-key]').forEach(el => { el.title = tr(el.dataset.tipKey); });
@@ -1767,6 +1786,7 @@ function applyLanguage(language, persist) {
   setLabel('#connect', 'connectFirst');
   setLabel('#disconnect', 'disconnectAll');
   setLabel('#simulate', 'runSimulation');
+  updateLegoDemoButton();
 
   const heading = $('.heading h1');
   if (heading) heading.textContent = tr(activeSite().heading);
@@ -2189,6 +2209,7 @@ function isPlausiblePerson(person, shape) {
 
 /** 프레임 간 동일 인물 판정. 프레임 사이 이동을 허용해야 하므로 관대하게 본다. */
 function isSameCandidate(a, b) {
+  if ((a.kind || 'person') !== (b.kind || 'person')) return false;
   if (intersectionOverUnion(a, b) > CONFIG.trackIou) return true;
   const distance = centerDistance(a, b);
   const tolerance = Math.max(8, Math.max(a.bbox[2], a.bbox[3], b.bbox[2], b.bbox[3]) * 0.55);
@@ -2548,7 +2569,7 @@ const OfflineCache = {
     const self = this;
     window.fetch = function (input, init) {
       const url = typeof input === 'string' ? input : (input && input.url) || '';
-      const cacheable = /tfjs|tensorflow|coco-ssd|tfhub|storage\.googleapis\.com|\.bin(\?|$)|model\.json/i.test(url);
+      const cacheable = /tfjs|tensorflow|coco-ssd|onnxruntime|tfhub|storage\.googleapis\.com|\.bin(\?|$)|\.onnx(\?|$)|model\.json/i.test(url);
       if (!cacheable || (init && init.method && init.method !== 'GET')) {
         return self.originalFetch.call(window, input, init);
       }
@@ -4054,6 +4075,23 @@ async function detectPeople(camera) {
   const thresholds = activeThresholds(camera);
   SceneAnalyzer.update(camera, source.element);
 
+  if (state.legoDemo) {
+    const legoFound = await window.LegoDetector.detect(source.element);
+    const legoCandidates = legoFound.filter(p => p.bbox[2] >= 3 && p.bbox[3] >= 3);
+    const idRef = { value: camera.nextPersonId };
+    const tracked = trackCandidates(legoCandidates, camera.previousPeople, idRef);
+    camera.nextPersonId = idRef.value;
+    camera.previousPeople = carryTracks(tracked, camera.previousPeople);
+    return {
+      people: tracked.filter(p =>
+        p.hits >= thresholds.confirmFrames &&
+        p.averageScore >= thresholds.minAverageScore &&
+        p.sizeStable !== false
+      ),
+      raw: legoFound.length
+    };
+  }
+
   /* 1) 전체 프레임 1회 */
   const found = (await state.model.detect(source.element, CONFIG.maxDetectionsFull, thresholds.fullScore))
     .filter(p => p.class === 'person')
@@ -4128,8 +4166,9 @@ async function detectPeople(camera) {
 
   const rawCount = found.length;
 
-  /* 3) 중복 병합 → 형태 필터 → 시간적 검증 */
-  const candidates = clusterObservations(found).filter(p => isPlausiblePerson(p, thresholds.shape));
+  /* 3) 중복 병합 → 사람 형태 필터 → 시간적 검증 */
+  const candidates = clusterObservations(found).filter(p => isPlausiblePerson(p, thresholds.shape))
+    .map(p => Object.assign({}, p, { kind: 'person' }));
   const idRef = { value: camera.nextPersonId };
   const tracked = trackCandidates(candidates, camera.previousPeople, idRef);
   camera.nextPersonId = idRef.value;
@@ -4185,8 +4224,11 @@ async function detectLoop() {
   if (!state.detecting) { loopRunning = false; return; }
   loopRunning = true;
   const active = activeCameras().filter(cameraReady);
+  const modelReady = state.legoDemo
+    ? Boolean(window.LegoDetector && window.LegoDetector.isReady())
+    : Boolean(state.model);
 
-  if (active.length && (state.model || active.some(c => c.simulating))) {
+  if (active.length && (modelReady || active.some(c => c.simulating))) {
     const camera = active[state.rrIndex % active.length];
     state.rrIndex = (state.rrIndex + 1) % Math.max(1, active.length);
     const started = nowMs();
@@ -4194,7 +4236,7 @@ async function detectLoop() {
       let result;
       if (camera.simulating) {
         result = { people: camera.sim.syntheticPeople(), raw: camera.sim.rawCount() };
-      } else if (state.model) {
+      } else if (modelReady) {
         result = await detectPeople(camera);
       } else {
         result = { people: [], raw: 0 };
@@ -4286,6 +4328,7 @@ function renderCamera(camera, people, source) {
   /* 카메라가 움직이는 동안에는 화면 좌표 기준 경계선이 무의미하므로 판정을 멈춘다. */
   const boundaryOn = autoFlag('boundaryDetection') && !camera.motion.moving;
   const riskIds = new Set();
+  const riskTypeCounts = { person: 0, lego: 0 };
   const now = Date.now();
 
   people.forEach(person => {
@@ -4314,10 +4357,14 @@ function renderCamera(camera, people, source) {
     tag.className = 'tag';
     tag.textContent = crossed
       ? tr('lineAlert') + ' #' + person.id + ' · ' + dwell.toFixed(0) + tr('unitSeconds')
-      : tr(distant ? 'distantPerson' : 'person') + ' ' + Math.round(person.score * 100) + '%';
+      : tr(person.kind === 'lego' ? 'legoObject' : (distant ? 'distantPerson' : 'person')) +
+        ' ' + Math.round(person.score * 100) + '%';
     element.append(tag);
     camera.detections.append(element);
-    if (crossed) riskIds.add(person.id);
+    if (crossed) {
+      riskIds.add(person.id);
+      riskTypeCounts[person.kind === 'lego' ? 'lego' : 'person'] += 1;
+    }
   });
 
   /* 위험 대상 체류 시간 갱신.
@@ -4339,6 +4386,7 @@ function renderCamera(camera, people, source) {
      바다에서는 멀리 있는 여러 사람이 각각 하나의 박스로 잡히므로, 박스 개수가
      그대로 인원 수가 되어야 "2명 있습니다"가 화면과 일치한다. */
   camera.riskCount = riskIds.size;
+  camera.riskTypeCounts = riskTypeCounts;
   /* 유예를 포함한 수. 한 프레임 놓쳤을 때 상황이 끝난 것으로 오판하지 않기 위해
      '아직 진행 중인가'를 판단할 때만 쓴다. */
   camera.riskTracked = camera.riskSince.size;
@@ -4582,6 +4630,9 @@ function contactsForLevel(level, contacts) {
 
 /** 웹훅으로 보낼 본문. 받는 쪽이 파싱하기 쉽도록 평평한 구조로 둔다. */
 function buildAlertPayload(camera, level, count, dwellSeconds, contact, isTest) {
+  const riskTypes = camera && camera.riskTypeCounts;
+  const peopleInZone = riskTypes ? riskTypes.person : count;
+  const legoInZone = riskTypes ? riskTypes.lego : 0;
   const defaultMessage = isTest ? tr('testAlertBody')
     : tr('adminAlertBody', { level: tr(level === 'critical' ? 'levelCritical' : 'levelAlert'), count });
   const template = String(contact.messageTemplate || '').trim();
@@ -4598,7 +4649,9 @@ function buildAlertPayload(camera, level, count, dwellSeconds, contact, isTest) 
     site: state.siteType,
     camera: camera ? camera.name : '',
     zoneMode: camera ? camera.zoneMode : 'line',
-    peopleInZone: count,
+    peopleInZone,
+    legoInZone,
+    targetsInZone: count,
     dwellSeconds: Math.round(dwellSeconds || 0),
     recipient: { name: contact.name, role: contact.role },
     message,
@@ -4671,6 +4724,8 @@ function emailTemplateParams(contact, payload) {
     camera: payload ? payload.camera : '',
     level: payload ? payload.level : '',
     people_in_zone: payload ? payload.peopleInZone : 0,
+    lego_in_zone: payload ? payload.legoInZone : 0,
+    targets_in_zone: payload ? payload.targetsInZone : 0,
     dwell_seconds: payload ? payload.dwellSeconds : 0,
     site: payload ? payload.site : '',
     timestamp: payload ? payload.timestamp : new Date().toISOString()
@@ -5704,17 +5759,25 @@ async function ensureCocoSsd() {
 'use strict';
 /** 모델은 카메라 수와 무관하게 하나만 로드해 공유한다. */
 async function loadModel() {
-  if (state.model) return true;
+  if (state.legoDemo && window.LegoDetector && window.LegoDetector.isReady()) return true;
+  if (!state.legoDemo && state.model) return true;
   statusTitle.textContent = tr('modelPreparing');
   for (let attempt = 1; attempt <= CONFIG.modelRetries; attempt++) {
     try {
       /* 모델 가중치도 캐시에서 먼저 찾도록 이 구간만 fetch 를 감싼다 */
       OfflineCache.patchFetch();
-      await ensureTf();
-      await ensureCocoSsd();
-      await tf.ready();
-      state.model = await cocoSsd.load({ base: 'mobilenet_v2' });
-      state.backend = (tf.getBackend && tf.getBackend()) || 'unknown';
+      if (state.legoDemo) {
+        if (!window.LegoDetector) throw new Error('Lego detector unavailable');
+        await window.LegoDetector.load();
+        state.backend = 'onnx-' + window.LegoDetector.backend();
+        Diagnostics.log('[LEGO] 시연 모드 모델 준비됨 (일반 레고 물체 감지)', 'warn');
+      } else {
+        await ensureTf();
+        await ensureCocoSsd();
+        await tf.ready();
+        state.model = await cocoSsd.load({ base: 'mobilenet_v2' });
+        state.backend = (tf.getBackend && tf.getBackend()) || 'unknown';
+      }
       Diagnostics.log(tr('modelReady', { backend: state.backend }), 'ok');
       if (OfflineCache.hits > 0) Diagnostics.log(tr('offlineUsedCache', { what: tr('offlineModel') }), 'ok');
       refreshBadges();
@@ -5765,6 +5828,29 @@ async function ensureDetectionRunning() {
   }
   if (!state.detecting) resumeDetection();
   return true;
+}
+
+async function toggleLegoDemoMode() {
+  const button = $('#legoDemoMode');
+  if (button) button.disabled = true;
+  const previousMode = state.legoDemo;
+  const restart = state.detecting;
+
+  if (restart) stopDetection(false);
+  state.legoDemo = !previousMode;
+  updateLegoDemoButton();
+
+  let ready = true;
+  if (restart) ready = await ensureDetectionRunning();
+  if (!ready) {
+    state.legoDemo = previousMode;
+    updateLegoDemoButton();
+    if (restart) await ensureDetectionRunning();
+    Diagnostics.log(tr('legoModeLoadFailed'), 'error');
+  } else {
+    Diagnostics.log(tr(state.legoDemo ? 'legoModeActive' : 'cocoModeActive'), 'info');
+  }
+  if (button) button.disabled = false;
 }
 
 function resumeDetection() {
@@ -7298,6 +7384,7 @@ function bindUi() {
     state.cameras.forEach(c => { if (!c.online && !c.simulating) connectCamera(c, false); });
   });
   $('#disconnect').addEventListener('click', disconnectAll);
+  $('#legoDemoMode').addEventListener('click', toggleLegoDemoMode);
   $('#simulate').addEventListener('click', () => {
     const existing = state.cameras.find(c => c.simulating);
     if (existing) { teardownSource(existing); removeCamera(existing.id); return; }

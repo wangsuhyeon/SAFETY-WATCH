@@ -39,6 +39,7 @@
         <button class="primary" id="connect" data-i18n="connectFirst">카메라 연결</button>
         <button id="simulate" data-i18n="runSimulation">시뮬레이션 실행</button>
         <button class="danger" id="disconnect" data-i18n="disconnectAll">전체 연결 종료</button>
+        <button id="legoDemoMode" type="button" data-i18n="legoDemoOff" aria-pressed="false">레고 시연 모드: OFF</button>
       </div>
 
       <section class="zone-card" id="zoneEditor" aria-label="danger zone editor">
@@ -594,6 +595,8 @@
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js"></script>
+<script src="js/lego-detector.js"></script>
 <!-- 스크립트는 js/01..82 순서를 유지한 채 js/bundle.js 하나로 합쳤다 (순서 변경 금지) -->
 <script src="js/bundle.js"></script>
 <script src="js/backend.js"></script>

@@ -265,6 +265,8 @@ Apache License 2.0을 따르는 배포물(위 구성 요소를 재배포하는 �
 | Express 4 | 웹 서버 · 인증 API | MIT |
 | `playwright-core` | 자동화 점검 스크립트 (`tests/`) | Apache License 2.0 |
 | `node:sqlite` (Node.js 내장) | 계정 · 이벤트 저장 | Node.js 라이선스 |
+| ONNX Runtime Web 1.20.1 | 브라우저 내 레고 감지 추론 | MIT |
+| [`mw00/yolov7-lego`](https://huggingface.co/mw00/yolov7-lego) 사전학습 가중치 | 레고 물체 감지 모델 (미니피겨 전용 아님) | 모델 카드 표기: CC0-1.0 |
 
 음성 안내(Web Speech API), 경보음(Web Audio API), 열화상 시리얼 연결(Web Serial API),
 전체화면 관제 모드(Fullscreen API)처럼 브라우저 플랫폼 기능을 쓰는 부분은
