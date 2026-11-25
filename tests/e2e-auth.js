@@ -219,6 +219,49 @@ function stop(proc) {
       records.accountsVisible && records.accountRows >= 1,
       JSON.stringify({ scope: records.scope, rows: records.accountRows }));
 
+    /* 계정 화면의 기록 비우기는 클라이언트 큐를 먼저 정리한 뒤 DB를 비운다. */
+    await page.evaluate(() => window.pushEvent('[E2E clear queued] 아직 전송 대기 중', 'info'));
+    await page.click('#eventsClear');
+    await page.waitForFunction(() => document.querySelector('#statEvents').textContent === '0',
+      null, { timeout: 8000 });
+    const afterClear = await page.evaluate(async () => ({
+      rows: (await fetch('/api/events?limit=20').then(r => r.json())).events.length,
+      notice: document.querySelector('#authNotice').textContent
+    }));
+    check('계정의 기록 비우기 버튼이 대기 중인 기록까지 삭제',
+      afterClear.rows === 0 && afterClear.notice.indexOf('지웠') >= 0,
+      JSON.stringify(afterClear));
+
+    await page.evaluate(async () => {
+      window.pushI18nEvent('eventCameraLost', { camera: 'E2E camera' }, 'warn', { camera: 'E2E camera' });
+      await window.BeachWatchEvents.flush();
+    });
+    await page.click('#eventsRefresh');
+    await page.waitForFunction(() => Array.from(document.querySelectorAll('#accountEvents .auth-record'))
+      .some(row => row.textContent.indexOf('E2E camera') >= 0), null, { timeout: 8000 });
+    const savedLocalizedEvent = await page.evaluate(async () => (await fetch('/api/events?limit=1').then(r => r.json())).events[0]);
+    check('이벤트 번역 키와 변수가 DB에 함께 저장됨',
+      savedLocalizedEvent && savedLocalizedEvent.payload &&
+      savedLocalizedEvent.payload.i18nKey === 'eventCameraLost' &&
+      savedLocalizedEvent.payload.i18nVars.camera === 'E2E camera',
+      JSON.stringify(savedLocalizedEvent && savedLocalizedEvent.payload));
+
+    await page.click('#authClose');
+    await page.click('#runSelfTest');
+    await page.evaluate(() => {
+      window.setStatusError('cameraPermissionHelp');
+      window.applyLanguage('en');
+    });
+    await page.waitForFunction(() =>
+      document.querySelector('#statusText').textContent.indexOf('Allow camera access') >= 0 &&
+      document.querySelector('#eventLog').textContent.indexOf('Camera disconnected') >= 0 &&
+      document.querySelector('#accountEvents').textContent.indexOf('Camera disconnected') >= 0 &&
+      document.querySelector('#diagLog').textContent.indexOf('Self-check passed') >= 0,
+    null, { timeout: 8000 });
+    check('언어 전환 시 시스템 오류·이벤트 기록·계정 기록·진단 로그 갱신', true);
+    await page.evaluate(() => { window.clearStatusError(); window.applyLanguage('ko'); });
+    await page.click('#authButton');
+
     /* 5. 비밀번호 변경 */
     await page.fill('#pwCurrent', PASSWORD);
     await page.fill('#pwNew', NEW_PASSWORD);

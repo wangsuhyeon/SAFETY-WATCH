@@ -235,6 +235,16 @@ function sanitizeEvent(input) {
     if (value === null || value === undefined) return;
     if (typeof value === 'string') payload[key] = value.slice(0, 300);
     else if (typeof value === 'number' || typeof value === 'boolean') payload[key] = value;
+    else if (key === 'i18nVars' && typeof value === 'object' && !Array.isArray(value)) {
+      const variables = {};
+      Object.keys(value).forEach(name => {
+        const item = value[name];
+        if (typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean') {
+          variables[name] = item;
+        }
+      });
+      payload.i18nVars = variables;
+    }
   });
 
   let payloadText = JSON.stringify(payload);

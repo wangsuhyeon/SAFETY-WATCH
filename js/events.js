@@ -17,7 +17,9 @@
   const queue = [];
   const stats = { sent: 0, dropped: 0, failed: 0 };
   let timer = null;
+  let activeFlush = null;
   let online = true;
+  let paused = false;
 
   /* 서버로 보낼 수 있는 형태로만 추린다. */
   function sanitize(message, kind, extra) {
@@ -37,6 +39,16 @@
         if (value === null || value === undefined) return;
         if (typeof value === 'string') event[key] = value.slice(0, 300);
         else if (typeof value === 'number' || typeof value === 'boolean') event[key] = value;
+        else if (key === 'i18nVars' && typeof value === 'object' && !Array.isArray(value)) {
+          const variables = {};
+          Object.keys(value).forEach(name => {
+            const item = value[name];
+            if (typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean') {
+              variables[name] = item;
+            }
+          });
+          event.i18nVars = variables;
+        }
       });
     }
     return event;
@@ -48,6 +60,7 @@
   }
 
   function enqueue(message, kind, extra) {
+    if (paused) { stats.dropped += 1; return; }
     const ownerId = window.AuthUI && window.AuthUI.state.user && window.AuthUI.state.user.id;
     if (!ownerId) return;
     const event = sanitize(message, kind, extra);
@@ -62,24 +75,48 @@
 
   async function flush(useKeepalive) {
     if (timer) { clearTimeout(timer); timer = null; }
+    if (activeFlush) {
+      await activeFlush;
+      if (paused && queue.length) return flush(useKeepalive);
+      return;
+    }
     if (!queue.length) return;
 
     const batch = queue.splice(0, MAX_BATCH);
-    try {
-      const ownerId = window.AuthUI && window.AuthUI.state.user && window.AuthUI.state.user.id;
-      const owned = batch.filter(event => event.__ownerId === ownerId);
-      stats.dropped += batch.length - owned.length;
-      if (owned.length) await window.BeachWatchBackend.saveEvents(
-        owned.map(({ __ownerId, ...event }) => event), ownerId, useKeepalive);
-      stats.sent += owned.length;
-      online = true;
-    } catch (e) {
-      /* 서버가 없는 정적 실행이거나 일시적 오류 — 큐를 비워 메모리를 지킨다. */
-      stats.dropped += batch.length;
-      stats.failed += 1;
-      online = false;
-    }
+    const currentFlush = (async () => {
+      try {
+        const ownerId = window.AuthUI && window.AuthUI.state.user && window.AuthUI.state.user.id;
+        const owned = batch.filter(event => event.__ownerId === ownerId);
+        stats.dropped += batch.length - owned.length;
+        if (owned.length) await window.BeachWatchBackend.saveEvents(
+          owned.map(({ __ownerId, ...event }) => event), ownerId, useKeepalive);
+        stats.sent += owned.length;
+        online = true;
+      } catch (e) {
+        /* 서버가 없는 정적 실행이거나 일시적 오류 — 큐를 비워 메모리를 지킨다. */
+        stats.dropped += batch.length;
+        stats.failed += 1;
+        online = false;
+      }
+    })();
+    activeFlush = currentFlush;
+    try { await currentFlush; }
+    finally { if (activeFlush === currentFlush) activeFlush = null; }
 
+    if (queue.length) {
+      if (paused) await flush(useKeepalive);
+      else schedule();
+    }
+  }
+
+  async function pauseAndFlush() {
+    paused = true;
+    if (timer) { clearTimeout(timer); timer = null; }
+    while (queue.length || activeFlush) await flush(false);
+  }
+
+  function resume() {
+    paused = false;
     if (queue.length) schedule();
   }
 
@@ -109,6 +146,8 @@
   /* 개발자 도구·자동 점검용 */
   window.BeachWatchEvents = {
     flush,
+    pauseAndFlush,
+    resume,
     queue: () => queue.slice(),
     stats: () => Object.assign({ online }, stats),
     isWrapped: () => typeof window.pushEvent === 'function'

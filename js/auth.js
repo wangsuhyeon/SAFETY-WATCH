@@ -91,9 +91,10 @@
     button.setAttribute('aria-busy', isBusy ? 'true' : 'false');
   }
 
-  function logEvent(text) {
+  function logEvent(key, variables) {
     try {
-      if (typeof window.pushEvent === 'function') window.pushEvent(text, 'info');
+      if (typeof window.pushI18nEvent === 'function') window.pushI18nEvent(key, variables || {}, 'info');
+      else if (typeof window.pushEvent === 'function') window.pushEvent(tr(key), 'info');
     } catch (e) { /* 이벤트 로그를 쓸 수 없는 화면 */ }
   }
 
@@ -197,7 +198,9 @@
       when.textContent = formatDate(entry.createdAt);
 
       const text = document.createElement('span');
-      text.textContent = entry.message;
+      text.textContent = typeof window.formatEventRecord === 'function'
+        ? window.formatEventRecord(entry)
+        : entry.message;
 
       row.append(when, text);
 
@@ -303,13 +306,20 @@
 
   async function clearRecords() {
     busy(els.recordsClear, true);
+    const eventRecorder = window.BeachWatchEvents;
+    let recorderPaused = false;
     try {
-      const data = await api('/api/events/clear');
+      if (eventRecorder && typeof eventRecorder.pauseAndFlush === 'function') {
+        await eventRecorder.pauseAndFlush();
+        recorderPaused = true;
+      }
+      const data = await api('/api/events/clear', { method: 'POST' });
       notice(tr('authRecordsCleared') + ' (' + (data.deleted || 0) + ')', 'ok');
       await loadDashboard();
     } catch (err) {
       notice(errorText(err));
     } finally {
+      if (recorderPaused && eventRecorder && typeof eventRecorder.resume === 'function') eventRecorder.resume();
       busy(els.recordsClear, false);
     }
   }
@@ -375,7 +385,7 @@
       if (els.loginPassword) els.loginPassword.value = '';
       showView('account');
       notice(tr('authSignedIn') + ' · ' + data.user.name, 'ok');
-      logEvent('[계정] ' + data.user.name + ' 로그인');
+      logEvent('authEventLogin', { name: data.user.name });
     } catch (err) {
       state.online = err.code !== 'NO_SERVER';
       fieldError(els.loginError, errorText(err));
@@ -414,7 +424,10 @@
       refreshPwMatch();
       showView('account');
       notice(tr('authSignupDone'), 'ok');
-      logEvent('[계정] 신규 가입 · ' + data.user.email + ' (' + data.user.role + ')');
+      logEvent('authEventSignup', {
+        email: data.user.email,
+        roleKey: data.user.role === 'admin' ? 'authRoleAdmin' : 'authRoleOperator'
+      });
     } catch (err) {
       state.online = err.code !== 'NO_SERVER';
       fieldError(els.signupError, errorText(err));
@@ -438,7 +451,7 @@
     if (els.pwChangeForm) els.pwChangeForm.reset();
     showView('login');
     notice(tr('authSignedOut'), 'ok');
-    if (previous) logEvent('[계정] ' + previous + ' 로그아웃');
+    if (previous) logEvent('authEventLogout', { name: previous });
   }
 
   async function submitPasswordChange(event) {
@@ -453,7 +466,7 @@
       await api('/api/auth/password/change', { body: { currentPassword, newPassword } });
       if (els.pwChangeForm) els.pwChangeForm.reset();
       notice(tr('authPasswordChanged'), 'ok');
-      logEvent('[계정] 비밀번호 변경');
+      logEvent('authEventPasswordChange');
     } catch (err) {
       fieldError(els.pwError, errorText(err));
     } finally {
@@ -501,7 +514,7 @@
       notice(tr('authResetDone'), 'ok');
       if (els.loginEmail && state.resetEmail) els.loginEmail.value = state.resetEmail;
       if (els.loginPassword) els.loginPassword.focus();
-      logEvent('[계정] 비밀번호 재설정 · ' + state.resetEmail);
+      logEvent('authEventPasswordReset', { email: state.resetEmail });
     } catch (err) {
       fieldError(els.resetError2, errorText(err));
     } finally {

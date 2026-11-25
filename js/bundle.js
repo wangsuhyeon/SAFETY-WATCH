@@ -56,9 +56,9 @@ const I18N = {
     alertTitle:'경계선 침범 대상 감지', alertCount:'경계선 밖에 위험 대상 {count}개가 있습니다.',
     criticalTitle:'긴급 · 장시간 이탈', criticalText:'위험 대상 {count}개가 {seconds}초째 경계선 밖에 머물고 있습니다. 즉시 확인이 필요합니다.',
     adminAlertTitle:'관리자 안전 알림', adminAlertBody:'[{level}] 경계선 밖에 위험 대상 {count}개가 감지되었습니다.',
-    eventAlert:'[{level}] 경계선 밖 위험 대상 {count}개 감지',
-    eventCameraLost:'카메라 신호 끊김 — 자동 재연결을 시도합니다', eventCameraBack:'카메라 재연결 성공',
-    eventSimStart:'시뮬레이션 시작', 
+    eventAlert:'[{level}] {camera} · 경계선 밖 위험 대상 {count}개 감지',
+    eventCameraLost:'{camera} · 카메라 신호 끊김 — 자동 재연결을 시도합니다', eventCameraBack:'{camera} · 카메라 재연결 성공',
+    eventSimStart:'시뮬레이션 시작', eventSimStartNamed:'{camera} · 시뮬레이션 시작',
 
     
     automation:'AUTOMATION', boundaryDetection:'경계선 침범 감지', adminNotification:'관리자 알림',
@@ -150,9 +150,9 @@ const I18N = {
     alertTitle:'Target crossed boundary', alertCount:'{count} target(s) are past the boundary.',
     criticalTitle:'CRITICAL · prolonged exposure', criticalText:'{count} target(s) have stayed past the boundary for {seconds}s. Immediate check required.',
     adminAlertTitle:'Beach Safety Administrator Alert', adminAlertBody:'[{level}] {count} target(s) detected past the boundary.',
-    eventAlert:'[{level}] {count} target(s) past the boundary',
-    eventCameraLost:'Camera signal lost — attempting automatic reconnection', eventCameraBack:'Camera reconnected',
-    eventSimStart:'Simulation started', 
+    eventAlert:'[{level}] {camera} · {count} target(s) past the boundary',
+    eventCameraLost:'{camera} · Camera signal lost — attempting automatic reconnection', eventCameraBack:'{camera} · Camera reconnected',
+    eventSimStart:'Simulation started', eventSimStartNamed:'{camera} · Simulation started',
 
     automation:'AUTOMATION', boundaryDetection:'Boundary crossing detection', adminNotification:'Administrator notification',
     warningLight:'On-site warning light', sirenToggle:'Audible alarm',
@@ -493,6 +493,27 @@ Object.assign(I18N.ko, {
   legoDemoOff:'레고 시연 모드: OFF', legoDemoOn:'레고 시연 모드: ON',
   legoModeActive:'감지 모드: 레고 전용', cocoModeActive:'감지 모드: COCO 사람 감지',
   legoModeLoadFailed:'레고 모델을 불러오지 못해 이전 감지 모드로 돌아갑니다.',
+  cameraErrorPermission:'브라우저에서 카메라 권한을 허용해 주세요.',
+  cameraErrorNotFound:'사용 가능한 카메라를 찾을 수 없습니다.',
+  cameraErrorBusy:'카메라가 다른 앱에서 사용 중이거나 접근할 수 없습니다.',
+  cameraErrorConstraints:'요청한 카메라 설정을 지원하지 않습니다.',
+  cameraErrorSecurity:'카메라는 HTTPS 또는 localhost에서만 사용할 수 있습니다.',
+  cameraErrorAbort:'카메라 연결이 취소되었습니다.',
+  cameraErrorGeneric:'브라우저에서 카메라를 열지 못했습니다.',
+  camConnectingScreen:'{name} 화면 공유 연결 중…', camConnectingFile:'{name} 파일 연결 중…',
+  camConnectingStream:'{name} 스트림 연결 중 ({kind})',
+  streamLostDetail:'{name} · 스트림 연결 끊김 — {reason}',
+  streamReasonTrackEnded:'카메라 트랙 종료', streamReasonTrackMuted:'카메라 트랙 일시 중지',
+  streamReasonVideoError:'영상 오류', streamReasonVideoStalled:'영상 수신 정지',
+  streamReasonVideoEnded:'영상 종료', streamReasonVideoEmptied:'영상 소스 초기화',
+  streamReasonStreamStalled:'새 프레임 수신 중지', streamReasonHlsFatal:'HLS 스트림 오류',
+  streamReasonUnknown:'알 수 없는 오류',
+  reconnectGiveUp:'{name} · {attempts}회 재연결 실패', reconnectWait:'{name} · {delay}ms 후 재연결 ({attempt}회)',
+  authEventLogin:'[계정] {name} 로그인', authEventSignup:'[계정] 신규 가입 · {email} ({role})',
+  authEventLogout:'[계정] {name} 로그아웃', authEventPasswordChange:'[계정] 비밀번호 변경',
+  authEventPasswordReset:'[계정] 비밀번호 재설정 · {email}',
+  thermalEventRisk:'[열화상] 위험 대상 {count}개와 생체 열원 {temperature}°C 확인 — 안전장치 작동',
+  thermalEventDetected:'[열화상] 생체 열원 {temperature}°C 감지 (위험 구역 외곽)',
   cameraPreview:'카메라 화면', cameraOffline:'카메라 꺼짐', cameraLive:'실시간 카메라',
   cameraNotConnected:'카메라 없음', cameraConnected:'카메라 연결됨 · {resolution}',
 
@@ -507,10 +528,10 @@ Object.assign(I18N.ko, {
   alertTitle:'위험 구역에 대상 있음', alertCount:'위험 구역에 위험 대상 {count}개가 있습니다.',
   criticalTitle:'긴급 · 오래 머무는 중', criticalText:'위험 대상 {count}개가 {seconds}초째 위험 구역에 있습니다. 즉시 확인이 필요합니다.',
   adminAlertTitle:'위험 알림', adminAlertBody:'[{level}] 위험 구역에 위험 대상 {count}개가 있습니다.',
-  eventAlert:'[{level}] 위험 구역에 위험 대상 {count}개', latestEvent:'최근 경보', alertLog:'경보 기록',
+  eventAlert:'[{level}] {camera} · 위험 구역에 위험 대상 {count}개', latestEvent:'최근 경보', alertLog:'경보 기록',
   noEvents:'아직 발생한 경보가 없습니다.', exportEvents:'경보 기록 내려받기',
-  eventSimStart:'체험 모드 시작', eventSimStop:'체험 모드 종료',
-  eventCameraLost:'카메라 연결이 끊겨 다시 연결하는 중입니다', eventCameraBack:'카메라가 다시 연결되었습니다',
+  eventSimStart:'체험 모드 시작', eventSimStartNamed:'{camera} · 체험 모드 시작', eventSimStop:'체험 모드 종료',
+  eventCameraLost:'{camera} · 카메라 연결이 끊겨 다시 연결하는 중입니다', eventCameraBack:'{camera} · 카메라가 다시 연결되었습니다',
 
   /* 카메라 */
   addCamera:'＋ 카메라 추가', connectFirst:'카메라 연결', disconnectAll:'전체 끄기',
@@ -666,6 +687,28 @@ Object.assign(I18N.en, {
   legoDemoOff:'LEGO demo mode: OFF', legoDemoOn:'LEGO demo mode: ON',
   legoModeActive:'Detection mode: LEGO only', cocoModeActive:'Detection mode: COCO person detection',
   legoModeLoadFailed:'Could not load the LEGO model; restoring the previous detection mode.',
+  cameraErrorPermission:'Allow camera access in your browser.',
+  cameraErrorNotFound:'No available camera was found.',
+  cameraErrorBusy:'The camera is in use by another app or cannot be accessed.',
+  cameraErrorConstraints:'The requested camera settings are not supported.',
+  cameraErrorSecurity:'Camera access requires HTTPS or localhost.',
+  cameraErrorAbort:'The camera connection was cancelled.',
+  cameraErrorGeneric:'The browser could not open the camera.',
+  camConnectingScreen:'Connecting screen share for {name}…', camConnectingFile:'Opening video file for {name}…',
+  camConnectingStream:'Connecting stream for {name} ({kind})',
+  streamLostDetail:'{name} · Stream lost — {reason}',
+  streamReasonTrackEnded:'camera track ended', streamReasonTrackMuted:'camera track muted',
+  streamReasonVideoError:'video error', streamReasonVideoStalled:'video stalled',
+  streamReasonVideoEnded:'video ended', streamReasonVideoEmptied:'video source emptied',
+  streamReasonStreamStalled:'no new frames received', streamReasonHlsFatal:'fatal HLS stream error',
+  streamReasonUnknown:'unknown error',
+  reconnectGiveUp:'{name} · reconnection failed after {attempts} attempts',
+  reconnectWait:'{name} · reconnecting in {delay}ms (attempt {attempt})',
+  authEventLogin:'[Account] {name} signed in', authEventSignup:'[Account] New signup · {email} ({role})',
+  authEventLogout:'[Account] {name} signed out', authEventPasswordChange:'[Account] Password changed',
+  authEventPasswordReset:'[Account] Password reset · {email}',
+  thermalEventRisk:'[Thermal] {count} target(s) and a {temperature}°C heat source detected — safety action triggered',
+  thermalEventDetected:'[Thermal] Heat source detected at {temperature}°C (outside danger zone)',
   cameraPreview:'CAMERA VIEW', cameraOffline:'CAMERA OFF', cameraLive:'LIVE CAMERA',
   cameraNotConnected:'No camera', cameraConnected:'Camera connected · {resolution}',
 
@@ -679,10 +722,10 @@ Object.assign(I18N.en, {
   alertTitle:'Target in the danger zone', alertCount:'{count} target(s) are in the danger zone.',
   criticalTitle:'URGENT · staying too long', criticalText:'{count} target(s) have been in the danger zone for {seconds}s. Check immediately.',
   adminAlertTitle:'Danger alert', adminAlertBody:'[{level}] {count} target(s) in the danger zone.',
-  eventAlert:'[{level}] {count} target(s) in the danger zone', latestEvent:'LATEST ALERT', alertLog:'Alert history',
+  eventAlert:'[{level}] {camera} · {count} target(s) in the danger zone', latestEvent:'LATEST ALERT', alertLog:'Alert history',
   noEvents:'No alerts yet.', exportEvents:'Download alert history',
-  eventSimStart:'Demo mode started', eventSimStop:'Demo mode stopped',
-  eventCameraLost:'Camera disconnected — reconnecting', eventCameraBack:'Camera reconnected',
+  eventSimStart:'Demo mode started', eventSimStartNamed:'{camera} · Demo mode started', eventSimStop:'Demo mode stopped',
+  eventCameraLost:'{camera} · Camera disconnected — reconnecting', eventCameraBack:'{camera} · Camera reconnected',
 
   addCamera:'＋ Add camera', connectFirst:'Connect camera', disconnectAll:'Turn all off',
   runSimulation:'Start demo mode', stopSimulation:'Stop demo mode',
@@ -1062,10 +1105,11 @@ I18N.zh = {
   criticalText:'{count} 个目标已在危险区域停留 {seconds} 秒，请立即确认。',
   adminAlertTitle:'危险警报',
   adminAlertBody:'[{level}] 危险区域内有 {count} 个目标。',
-  eventAlert:'[{level}] 危险区域内 {count} 个目标',
-  eventCameraLost:'摄像头断开，正在重新连接',
-  eventCameraBack:'摄像头已重新连接',
+  eventAlert:'[{level}] {camera} · 危险区域内 {count} 个目标',
+  eventCameraLost:'{camera} · 摄像头断开，正在重新连接',
+  eventCameraBack:'{camera} · 摄像头已重新连接',
   eventSimStart:'体验模式已开始',
+  eventSimStartNamed:'{camera} · 体验模式已开始',
   automation:'自动动作',
   boundaryDetection:'危险区域检测', adminNotification:'发送危险通知',
   warningLight:'屏幕警示灯', sirenToggle:'警报声',
@@ -1167,6 +1211,28 @@ I18N.zh = {
   legoDemoOff:'乐高演示模式：关闭', legoDemoOn:'乐高演示模式：开启',
   legoModeActive:'检测模式：仅乐高', cocoModeActive:'检测模式：COCO 人物检测',
   legoModeLoadFailed:'无法加载乐高模型，已恢复之前的检测模式。',
+  cameraErrorPermission:'请在浏览器中允许使用摄像头。',
+  cameraErrorNotFound:'找不到可用的摄像头。',
+  cameraErrorBusy:'摄像头正在被其他应用使用或无法访问。',
+  cameraErrorConstraints:'摄像头不支持请求的设置。',
+  cameraErrorSecurity:'摄像头仅能在 HTTPS 或 localhost 中使用。',
+  cameraErrorAbort:'摄像头连接已取消。',
+  cameraErrorGeneric:'浏览器无法打开摄像头。',
+  camConnectingScreen:'正在为 {name} 连接屏幕共享…', camConnectingFile:'正在为 {name} 打开视频文件…',
+  camConnectingStream:'正在连接 {name} 的视频流（{kind}）',
+  streamLostDetail:'{name} · 视频流断开 — {reason}',
+  streamReasonTrackEnded:'摄像头轨道已结束', streamReasonTrackMuted:'摄像头轨道已暂停',
+  streamReasonVideoError:'视频错误', streamReasonVideoStalled:'视频接收停止',
+  streamReasonVideoEnded:'视频已结束', streamReasonVideoEmptied:'视频源已清空',
+  streamReasonStreamStalled:'未收到新画面', streamReasonHlsFatal:'HLS 视频流严重错误',
+  streamReasonUnknown:'未知错误',
+  reconnectGiveUp:'{name} · 重试 {attempts} 次后仍无法连接',
+  reconnectWait:'{name} · {delay}ms 后重连（第 {attempt} 次）',
+  authEventLogin:'[账户] {name} 已登录', authEventSignup:'[账户] 新用户注册 · {email} ({role})',
+  authEventLogout:'[账户] {name} 已退出', authEventPasswordChange:'[账户] 已修改密码',
+  authEventPasswordReset:'[账户] 密码已重置 · {email}',
+  thermalEventRisk:'[热成像] 检测到 {count} 个危险目标和 {temperature}°C 热源 — 已触发安全措施',
+  thermalEventDetected:'[热成像] 检测到 {temperature}°C 热源（危险区域外）',
   zoneEyebrow:'危险区域', zoneTitle:'绘制危险区域',
   zoneLede:'浪线和禁游区域并不是直线。<b>像用手扫过一样拖动画面</b>，直接画出你想要的曲线。',
   zoneModeLine:'画线', zoneModeLineHelp:'人在线的外侧（水的一侧）即为危险',
@@ -1686,6 +1752,8 @@ const state = {
   halted: false,
   /* 마지막 실패 사유. 경보가 없을 때 사이드바에 계속 표시한다 */
   lastError: '',
+  lastErrorKey: '',
+  lastErrorVars: null,
   /* 화면 위 그리기 안내문을 사용자가 닫았는가 */
   hintDismissed: false,
   editing: false,
@@ -1694,6 +1762,8 @@ const state = {
   lastHandleTap: null,
   /* 집계 */
   alertLevel: 'none',
+  healthKey: 'healthIdle',
+  healthTone: '',
   metrics: { latency: 0, fps: 0, cycle: 0, realCycle: 0, frames: 0, errors: 0, alerts: 0, peak: 0,
              startedAt: 0, tiles: CONFIG.tilesX * CONFIG.tilesY, raw: 0, merged: 0 },
   scene: 'clear',
@@ -1732,18 +1802,165 @@ function activeCameras() {
 /* ══════════════════════════════════════════════════════════════════
    5. 다국어 적용
    ══════════════════════════════════════════════════════════════════ */
-function tr(key, variables) {
+let lastI18nFormat = null;
+
+function tr(key, variables, trackTranslation) {
   const table = I18N[state.language] || I18N.ko;
   let value = table[key];
   if (value === undefined) value = I18N.ko[key];
   if (value === undefined) return key;
   if (variables) {
     Object.keys(variables).forEach(name => {
-      value = value.split('{' + name + '}').join(variables[name]);
+      const replacement = variables[name] == null ? '' : String(variables[name]);
+      value = value.split('{' + name + '}').join(replacement);
     });
+  }
+  if (trackTranslation !== false) {
+    lastI18nFormat = {
+      key,
+      text: value,
+      vars: Object.assign({}, variables || {}),
+      at: Date.now()
+    };
   }
   return value;
 }
+
+function formatI18nMessage(key, variables, prefix, suffix) {
+  const values = Object.assign({}, variables || {});
+  if (values.reasonKey) values.reason = tr(values.reasonKey, null, false);
+  if (values.roleKey) values.role = tr(values.roleKey, null, false);
+  if (values.levelKey) values.level = tr(values.levelKey, null, false);
+  const message = tr(key, values, false);
+  return String(prefix || '') + message + String(suffix || '');
+}
+
+function localizeLegacyEvent(message) {
+  const text = String(message || '');
+  const separators = [
+    ['eventCameraLost', [
+      '카메라 신호 끊김 — 자동 재연결을 시도합니다',
+      '카메라 연결이 끊겨 다시 연결하는 중입니다',
+      'Camera signal lost — attempting automatic reconnection',
+      'Camera disconnected — reconnecting',
+      '摄像头断开，正在重新连接'
+    ]],
+    ['eventCameraBack', [
+      '카메라 재연결 성공', '카메라가 다시 연결되었습니다', 'Camera reconnected', '摄像头已重新连接'
+    ]],
+    ['eventSimStart', ['시뮬레이션 시작', '체험 모드 시작', 'Simulation started', 'Demo mode started', '体验模式已开始']]
+  ];
+  for (const [key, suffixes] of separators) {
+    for (const suffix of suffixes) {
+      const marker = ' · ' + suffix;
+      if (text.endsWith(marker)) return formatI18nMessage(key, { camera: text.slice(0, -marker.length) });
+    }
+  }
+
+  let match = text.match(/^\[계정\]\s+(.+?) 로그인$/);
+  if (match) return formatI18nMessage('authEventLogin', { name: match[1] });
+  match = text.match(/^\[계정\]\s+(.+?) 로그아웃$/);
+  if (match) return formatI18nMessage('authEventLogout', { name: match[1] });
+  match = text.match(/^\[계정\] 신규 가입 · (.+?) \((admin|operator)\)$/);
+  if (match) return formatI18nMessage('authEventSignup', {
+    email: match[1], roleKey: match[2] === 'admin' ? 'authRoleAdmin' : 'authRoleOperator'
+  });
+  match = text.match(/^\[계정\] 비밀번호 재설정 · (.+)$/);
+  if (match) return formatI18nMessage('authEventPasswordReset', { email: match[1] });
+  if (text === '[계정] 비밀번호 변경') return formatI18nMessage('authEventPasswordChange');
+
+  match = text.match(/^\[열화상\] 위험 구역 내 인원\((\d+)명\) \+ 열화상 생체 열원\(([\d.]+)°C\)/);
+  if (match) return formatI18nMessage('thermalEventRisk', { count: Number(match[1]), temperature: match[2] });
+  match = text.match(/^\[열화상 감지\] 생체 열원\(([\d.]+)°C\)/);
+  if (match) return formatI18nMessage('thermalEventDetected', { temperature: match[1] });
+  return text;
+}
+
+function formatEventRecord(entry) {
+  if (!entry) return '';
+  const payload = entry.payload && typeof entry.payload === 'object' ? entry.payload : {};
+  const key = entry.i18nKey || payload.i18nKey;
+  if (key) {
+    return formatI18nMessage(key, entry.i18nVars || payload.i18nVars || {},
+      entry.i18nPrefix || payload.i18nPrefix, entry.i18nSuffix || payload.i18nSuffix);
+  }
+  const levelKey = ({ watch: 'levelWatch', alert: 'levelAlert', critical: 'levelCritical', error: 'levelCritical' })[
+    payload.level || entry.level
+  ];
+  const count = payload.targetsInZone == null
+    ? (payload.count == null ? entry.count : payload.count)
+    : payload.targetsInZone;
+  if (levelKey && count != null) {
+    return formatI18nMessage('eventAlert', {
+      camera: entry.camera || payload.camera || '', levelKey, count
+    });
+  }
+  return localizeLegacyEvent(entry.message);
+}
+
+function takeI18nMetadata(message) {
+  const previous = lastI18nFormat;
+  lastI18nFormat = null;
+  if (!previous || Date.now() - previous.at > 1000) return null;
+  const text = String(message == null ? '' : message);
+  if (text === previous.text) {
+    return { i18nKey: previous.key, i18nVars: previous.vars };
+  }
+  if (previous.text && text.endsWith(previous.text)) {
+    return {
+      i18nKey: previous.key, i18nVars: previous.vars,
+      i18nPrefix: text.slice(0, text.length - previous.text.length)
+    };
+  }
+  if (previous.text && text.startsWith(previous.text)) {
+    return {
+      i18nKey: previous.key, i18nVars: previous.vars,
+      i18nSuffix: text.slice(previous.text.length)
+    };
+  }
+  return null;
+}
+
+function setStatusError(key, variables) {
+  state.lastErrorKey = key || '';
+  state.lastErrorVars = variables || null;
+  state.lastError = key ? formatI18nMessage(key, variables) : '';
+}
+
+function clearStatusError() { setStatusError('', null); }
+
+function currentStatusError() {
+  return state.lastErrorKey ? formatI18nMessage(state.lastErrorKey, state.lastErrorVars) : state.lastError;
+}
+
+function cameraErrorVariables(error) {
+  const name = error && error.name;
+  const reasonKeys = {
+    NotAllowedError: 'cameraErrorPermission',
+    PermissionDeniedError: 'cameraErrorPermission',
+    NotFoundError: 'cameraErrorNotFound',
+    DevicesNotFoundError: 'cameraErrorNotFound',
+    NotReadableError: 'cameraErrorBusy',
+    TrackStartError: 'cameraErrorBusy',
+    OverconstrainedError: 'cameraErrorConstraints',
+    ConstraintNotSatisfiedError: 'cameraErrorConstraints',
+    SecurityError: 'cameraErrorSecurity',
+    AbortError: 'cameraErrorAbort'
+  };
+  return reasonKeys[name]
+    ? { reasonKey: reasonKeys[name] }
+    : { reason: error && error.message ? error.message : String(error || '') };
+}
+
+function pushI18nEvent(key, variables, kind, extra) {
+  const values = variables || {};
+  const metadata = Object.assign({}, extra || {}, { i18nKey: key, i18nVars: values });
+  return pushEvent(formatI18nMessage(key, values), kind, metadata);
+}
+
+window.formatI18nMessage = formatI18nMessage;
+window.formatEventRecord = formatEventRecord;
+window.pushI18nEvent = pushI18nEvent;
 
 function setLabel(selector, key) {
   const element = $(selector);
@@ -1787,6 +2004,7 @@ function applyLanguage(language, persist) {
   setLabel('#disconnect', 'disconnectAll');
   setLabel('#simulate', 'runSimulation');
   updateLegoDemoButton();
+  setHealth(state.healthKey || 'healthIdle', state.healthTone);
 
   const heading = $('.heading h1');
   if (heading) heading.textContent = tr(activeSite().heading);
@@ -1799,6 +2017,7 @@ function applyLanguage(language, persist) {
   refreshZoneCard();
   refreshButtonTips();
   refreshStatusPanel();
+  if (typeof Diagnostics !== 'undefined') Diagnostics.render();
   refreshBadges();
   refreshTunerLabels();
   refreshImpact();
@@ -1824,12 +2043,20 @@ function applyLanguage(language, persist) {
    ══════════════════════════════════════════════════════════════════ */
 const Diagnostics = {
   lines: [],
-  log(message, kind) {
-    const stamp = new Date().toLocaleTimeString(activeLocale().locale, { hour12: false });
-    this.lines.unshift({ stamp, message, kind: kind || 'info' });
+  log(message, kind, translation) {
+    const at = new Date();
+    const stamp = at.toLocaleTimeString(activeLocale().locale, { hour12: false });
+    const inferredTranslation = takeI18nMetadata(message);
+    this.lines.unshift({
+      at: at.toISOString(), stamp, message, kind: kind || 'info',
+      ...(translation || inferredTranslation || {})
+    });
     if (this.lines.length > CONFIG.maxLogLines) this.lines.length = CONFIG.maxLogLines;
     this.render();
     if (kind === 'error') console.error('[BeachWatch]', message);
+  },
+  logI18n(key, variables, kind) {
+    return this.log(formatI18nMessage(key, variables), kind, { key, vars: variables || {} });
   },
   render() {
     const box = $('#diagLog');
@@ -1838,13 +2065,23 @@ const Diagnostics = {
     this.lines.forEach(line => {
       const p = document.createElement('p');
       p.className = line.kind;
-      p.textContent = line.stamp + '  ' + line.message;
+      const stamp = line.at
+        ? new Date(line.at).toLocaleTimeString(activeLocale().locale, { hour12: false })
+        : line.stamp;
+      p.textContent = stamp + '  ' + (line.i18nKey
+        ? formatI18nMessage(line.i18nKey, line.i18nVars || {}, line.i18nPrefix, line.i18nSuffix)
+        : line.message);
       box.append(p);
     });
   },
   countError(message) {
     state.metrics.errors += 1;
     this.log(message, 'error');
+    refreshMetrics();
+  },
+  countErrorI18n(key, variables) {
+    state.metrics.errors += 1;
+    this.logI18n(key, variables, 'error');
     refreshMetrics();
   }
 };
@@ -3108,7 +3345,7 @@ function acknowledgeAlert() {
   const seconds = NorthStar.acknowledge();
   if (seconds === null) return;
   Diagnostics.log(tr('nsAcknowledged', { seconds: seconds.toFixed(1) }), 'ok');
-  pushEvent(tr('nsEventAck', { seconds: seconds.toFixed(1) }), 'ok', { tta: Number(seconds.toFixed(2)) });
+  pushI18nEvent('nsEventAck', { seconds: seconds.toFixed(1) }, 'ok', { tta: Number(seconds.toFixed(2)) });
   if (adminToast) adminToast.classList.remove('show');
   refreshNorthStar();
   refreshMetrics();
@@ -4272,12 +4509,12 @@ async function detectLoop() {
         if (!activeCameras().filter(cameraReady).length) {
           state.halted = true;
           setHealth('healthError', 'bad');
-          state.lastError = tr('loopHaltedHelp');
+          setStatusError('loopHaltedHelp');
           statusTitle.textContent = tr('loopHalted');
           statusText.textContent = tr('loopHaltedHelp');
           Diagnostics.log(tr('loopHalted'), 'error');
         } else {
-          state.lastError = tr('cameraDropped', { name: camera.name });
+          setStatusError('cameraDropped', { name: camera.name });
           setHealth('healthRecovering', 'warn');
         }
       }
@@ -4473,11 +4710,11 @@ function updateAggregateAlert() {
     /* 경보가 없을 때는 마지막 실패 사유를 계속 보여 준다. 예전에는 감지
        루프가 매 프레임 이 자리를 '감시 중'으로 덮어써서, 카메라 권한 거부나
        잘못된 주소 같은 안내가 한 프레임 만에 사라졌다. */
-    if (state.lastError) {
+    if (currentStatusError()) {
       stateChip.textContent = tr('levelWatch');
       stateChip.className = 'state watch';
       statusTitle.textContent = tr('needsAttention');
-      statusText.textContent = state.lastError;
+      statusText.textContent = currentStatusError();
       return;
     }
     stateChip.textContent = state.detecting ? 'LIVE' : tr('ready');
@@ -4498,7 +4735,7 @@ function updateAggregateAlert() {
     return;
   }
   if (worst.alertLevel === 'alert') {
-    stateChip.textContent = 'ALERT';
+    stateChip.textContent = tr('levelAlert');
     stateChip.className = 'state alert';
     statusTitle.textContent = prefix + tr('alertTitle');
     statusText.textContent = tr('alertCount', { count: total });
@@ -4532,7 +4769,11 @@ function raiseAlert(camera, level, count, dwellSeconds) {
   let enteredAt = Date.now();
   camera.riskSince.forEach(since => { enteredAt = Math.min(enteredAt, since); });
   NorthStar.open(camera, enteredAt);
-  pushEvent(camera.name + ' · ' + tr('eventAlert', { level: levelLabel, count }),
+  pushI18nEvent('eventAlert', {
+    camera: camera.name,
+    levelKey: level === 'critical' ? 'levelCritical' : 'levelAlert',
+    count
+  },
     level === 'critical' ? 'error' : 'warn',
     { level, count, dwell: Math.round(dwellSeconds), camera: camera.name, snapshot });
   liveRegion.textContent = camera.name + ' ' + tr('adminAlertBody', { level: levelLabel, count });
@@ -4769,9 +5010,16 @@ function sendEmail(contact, payload) {
 }
 
 function sendTestEmail() {
-  const contact = state.contacts.find(c => c.email);
-  if (!contact) { Diagnostics.log(tr('emailNeedRecipient'), 'warn'); return; }
-  sendEmail(contact, buildAlertPayload(focusedCamera(), 'alert', 0, 0, contact, true));
+  const recipients = new Map();
+  state.contacts.forEach(contact => {
+    const email = String(contact.email || '').trim();
+    if (email && !recipients.has(email.toLowerCase())) recipients.set(email.toLowerCase(), contact);
+  });
+  if (!recipients.size) { Diagnostics.log(tr('emailNeedRecipient'), 'warn'); return; }
+  const camera = focusedCamera();
+  recipients.forEach(contact => {
+    sendEmail(contact, buildAlertPayload(camera, 'alert', 0, 0, contact, true));
+  });
 }
 
 
@@ -5020,7 +5268,7 @@ function testContact(id) {
   const contact = state.contacts.find(c => c.id === id);
   if (!contact) return;
   notifyRecipients(focusedCamera(), 'alert', tr('levelAlert'), 0, 0, true, contact);
-  pushEvent(tr('notifyTestSent', { name: contact.name }), 'info', { camera: focusedCamera().name });
+  pushI18nEvent('notifyTestSent', { name: contact.name }, 'info', { camera: focusedCamera().name });
 }
 
 
@@ -5068,12 +5316,23 @@ function pushEvent(message, kind, extra) {
     at: at.toISOString(),
     label: at.toLocaleTimeString(activeLocale().locale, { hour12: false }),
     message, kind: kind || 'info'
-  }, extra || {}));
+  }, takeI18nMetadata(message) || {}, extra || {}));
   if (state.events.length > CONFIG.maxEvents) state.events.length = CONFIG.maxEvents;
   /* 스냅샷은 용량이 크다. 최근 것만 이미지를 들고 나머지는 텍스트만 남긴다. */
   state.events.forEach((e, i) => { if (i >= CONFIG.maxSnapshots && e.snapshot) e.snapshot = ''; });
-  eventText.textContent = state.events[0].label + ' · ' + message;
   renderEventLog();
+}
+
+function eventMessage(entry) {
+  return formatEventRecord(entry);
+}
+
+function eventLabel(entry) {
+  if (entry && entry.at) {
+    const date = new Date(entry.at);
+    if (!isNaN(date.getTime())) return date.toLocaleTimeString(activeLocale().locale, { hour12: false });
+  }
+  return entry && entry.label || '';
 }
 
 function renderEventLog() {
@@ -5083,20 +5342,22 @@ function renderEventLog() {
   state.events.slice(0, 20).forEach(entry => {
     const p = document.createElement('p');
     p.className = entry.kind + (entry.snapshot ? ' has-shot' : '');
-    p.textContent = entry.label + '  ' + entry.message;
+    p.textContent = eventLabel(entry) + '  ' + eventMessage(entry);
     if (entry.snapshot) {
       /* 경보 순간의 화면. 누르면 크게 볼 수 있다. */
       const shot = document.createElement('img');
       shot.className = 'event-shot';
       shot.src = entry.snapshot;
-      shot.alt = tr('snapshotAlt', { time: entry.label });
+      shot.alt = tr('snapshotAlt', { time: eventLabel(entry) });
       shot.loading = 'lazy';
       shot.addEventListener('click', () => openSnapshot(entry));
       p.append(shot);
     }
     box.append(p);
   });
-  if (!state.events.length) eventText.textContent = tr('noEvents');
+  eventText.textContent = state.events.length
+    ? eventLabel(state.events[0]) + ' · ' + eventMessage(state.events[0])
+    : tr('noEvents');
 }
 
 function exportEvents() {
@@ -5125,10 +5386,12 @@ function exportEvents() {
    17. UI 갱신
    ══════════════════════════════════════════════════════════════════ */
 function setHealth(key, tone) {
+  state.healthKey = key || 'healthIdle';
+  state.healthTone = tone || '';
   const name = $('#healthName');
-  if (name) name.textContent = tr(key);
+  if (name) name.textContent = tr(state.healthKey);
   const badge = $('#badgeHealth');
-  if (badge) badge.className = 'badge' + (tone ? ' ' + tone : '');
+  if (badge) badge.className = 'badge' + (state.healthTone ? ' ' + state.healthTone : '');
 }
 
 function refreshBadges() {
@@ -5164,7 +5427,11 @@ function refreshMetrics() {
 }
 
 function refreshStatusPanel() {
-  if (state.halted) { statusTitle.textContent = tr('loopHalted'); return; }
+  if (state.halted) {
+    statusTitle.textContent = tr('loopHalted');
+    statusText.textContent = currentStatusError() || tr('loopHaltedHelp');
+    return;
+  }
   updateAggregateAlert();
 }
 
@@ -5334,11 +5601,27 @@ function handleStreamLoss(camera, reason) {
   if (camera.stallTimer) { clearInterval(camera.stallTimer); camera.stallTimer = null; }
   if (!camera.online) return;
   camera.online = false;
-  Diagnostics.log(camera.name + ' stream lost (' + reason + ')', 'warn');
-  pushEvent(camera.name + ' · ' + tr('eventCameraLost'), 'warn', { camera: camera.name });
+  Diagnostics.logI18n('streamLostDetail', {
+    name: camera.name,
+    reasonKey: streamLossReasonKey(reason)
+  }, 'warn');
+  pushI18nEvent('eventCameraLost', { camera: camera.name }, 'warn', { camera: camera.name });
   setHealth('healthRecovering', 'warn');
   refreshAllPanels(); renderCameraBar();
   scheduleReconnect(camera);
+}
+
+function streamLossReasonKey(reason) {
+  const value = String(reason || '').toLowerCase();
+  if (value === 'track ended') return 'streamReasonTrackEnded';
+  if (value === 'track muted') return 'streamReasonTrackMuted';
+  if (value.indexOf('video error') === 0) return 'streamReasonVideoError';
+  if (value.indexOf('video stalled') === 0) return 'streamReasonVideoStalled';
+  if (value.indexOf('video ended') === 0) return 'streamReasonVideoEnded';
+  if (value.indexOf('video emptied') === 0) return 'streamReasonVideoEmptied';
+  if (value.indexOf('stream stalled') === 0) return 'streamReasonStreamStalled';
+  if (value.indexOf('hls fatal') === 0) return 'streamReasonHlsFatal';
+  return 'streamReasonUnknown';
 }
 
 function scheduleReconnect(camera) {
@@ -5346,11 +5629,15 @@ function scheduleReconnect(camera) {
   const delays = CONFIG.reconnectBackoff;
   if (camera.reconnectAttempt >= delays.length) {
     setHealth('healthError', 'bad');
-    Diagnostics.log(camera.name + ' reconnect gave up after ' + delays.length + ' attempts', 'error');
+    setStatusError('cameraDropped', { name: camera.name });
+    refreshStatusPanel();
+    Diagnostics.logI18n('reconnectGiveUp', { name: camera.name, attempts: delays.length }, 'error');
     return;
   }
   const delay = delays[camera.reconnectAttempt++];
-  Diagnostics.log(camera.name + ' reconnect in ' + delay + 'ms (attempt ' + camera.reconnectAttempt + ')', 'warn');
+  Diagnostics.logI18n('reconnectWait', {
+    name: camera.name, delay, attempt: camera.reconnectAttempt
+  }, 'warn');
   camera.reconnectTimer = setTimeout(() => connectCamera(camera, true), delay);
 }
 
@@ -5361,7 +5648,9 @@ async function connectCamera(camera, isRetry) {
   if (camera.kind === 'file') return connectFile(camera);
 
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    statusTitle.textContent = tr('cameraUnsupported');
+    setStatusError('cameraUnsupported');
+    statusTitle.textContent = tr('needsAttention');
+    statusText.textContent = currentStatusError();
     setHealth('healthError', 'bad');
     return false;
   }
@@ -5389,9 +5678,9 @@ async function connectCamera(camera, isRetry) {
     camera.error = null;
     camera.reconnectAttempt = 0;
     state.halted = false;
-    state.lastError = '';
+    clearStatusError();
     Diagnostics.log(tr('camConnected', { name: camera.name, resolution: camera.video.videoWidth + 'x' + camera.video.videoHeight }), 'ok');
-    if (isRetry) pushEvent(camera.name + ' · ' + tr('eventCameraBack'), 'ok', { camera: camera.name });
+    if (isRetry) pushI18nEvent('eventCameraBack', { camera: camera.name }, 'ok', { camera: camera.name });
 
     setHealth('healthGood', 'good');
     refreshAllPanels(); renderCameraBar(); drawBoundary(camera);
@@ -5401,10 +5690,10 @@ async function connectCamera(camera, isRetry) {
   } catch (error) {
     camera.online = false;
     camera.error = error && error.message ? error.message : String(error);
-    Diagnostics.countError(tr('camFailed', { name: camera.name, reason: camera.error }));
-    state.lastError = tr('cameraPermissionHelp');
+    Diagnostics.countErrorI18n('camFailed', Object.assign({ name: camera.name }, cameraErrorVariables(error)));
+    setStatusError('cameraPermissionHelp');
     statusTitle.textContent = tr('needsAttention');
-    statusText.textContent = state.lastError;
+    statusText.textContent = currentStatusError();
     setHealth('healthError', 'bad');
     refreshAllPanels(); renderCameraBar();
     if (isRetry) scheduleReconnect(camera);
@@ -5425,15 +5714,15 @@ async function connectCamera(camera, isRetry) {
    같은 경로를 탄다 — 기준선 그리기·감지·경보가 모두 그대로 동작한다. */
 async function connectScreen(camera) {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-    camera.error = tr('errScreenUnsupported');
-    state.lastError = camera.error;
+    camera.error = 'errScreenUnsupported';
+    setStatusError('errScreenUnsupported');
     statusTitle.textContent = tr('needsAttention');
-    statusText.textContent = camera.error;
+    statusText.textContent = currentStatusError();
     setHealth('healthError', 'bad');
     refreshAllPanels(); renderCameraBar();
     return false;
   }
-  Diagnostics.log(tr('camConnecting', { name: camera.name }) + ' [screen]', 'info');
+  Diagnostics.logI18n('camConnectingScreen', { name: camera.name }, 'info');
 
   const seq = (camera.connectSeq = (camera.connectSeq || 0) + 1);
   const stale = () => camera.connectSeq !== seq || !state.cameras.includes(camera);
@@ -5457,7 +5746,7 @@ async function connectScreen(camera) {
     camera.error = null;
     camera.reconnectAttempt = 0;
     state.halted = false;
-    state.lastError = '';
+    clearStatusError();
     Diagnostics.log(tr('camConnected', {
       name: camera.name,
       resolution: camera.video.videoWidth + 'x' + camera.video.videoHeight
@@ -5472,15 +5761,16 @@ async function connectScreen(camera) {
     /* 사용자가 공유 창에서 '취소'를 누른 것은 오류가 아니다. 조용히 되돌린다. */
     const cancelled = error && (error.name === 'NotAllowedError' || error.name === 'AbortError');
     if (cancelled) {
-      Diagnostics.log(tr('screenShareCancelled'), 'info');
-      state.lastError = tr('screenShareCancelled');
+      Diagnostics.logI18n('screenShareCancelled', {}, 'info');
+      setStatusError('screenShareCancelled');
     } else {
-      Diagnostics.countError(tr('camFailed', { name: camera.name, reason: camera.error }));
-      state.lastError = tr('camFailed', { name: camera.name, reason: camera.error });
+      const errorVars = Object.assign({ name: camera.name }, cameraErrorVariables(error));
+      Diagnostics.countErrorI18n('camFailed', errorVars);
+      setStatusError('camFailed', errorVars);
       setHealth('healthError', 'bad');
     }
     statusTitle.textContent = tr('needsAttention');
-    statusText.textContent = state.lastError;
+    statusText.textContent = currentStatusError();
     teardownSource(camera);
     refreshAllPanels(); renderCameraBar();
     return false;
@@ -5499,7 +5789,7 @@ async function connectScreen(camera) {
    기기 카메라처럼 자연히 멈추므로, 시연 편의를 위해 자동으로 처음부터
    반복 재생한다. */
 async function connectFile(camera) {
-  Diagnostics.log(tr('camConnecting', { name: camera.name }) + ' [file]', 'info');
+  Diagnostics.logI18n('camConnectingFile', { name: camera.name }, 'info');
   try {
     camera.video.crossOrigin = null;
     camera.video.loop = true;
@@ -5512,7 +5802,7 @@ async function connectFile(camera) {
     camera.reconnectAttempt = 0;
     camera.lastFrameAt = Date.now();
     state.halted = false;
-    state.lastError = '';
+    clearStatusError();
     Diagnostics.log(tr('camConnected', {
       name: camera.name,
       resolution: camera.video.videoWidth + 'x' + camera.video.videoHeight
@@ -5524,10 +5814,10 @@ async function connectFile(camera) {
   } catch (error) {
     camera.online = false;
     camera.error = error && error.message ? error.message : String(error);
-    Diagnostics.countError(tr('camFailed', { name: camera.name, reason: camera.error }));
-    state.lastError = tr('errFilePlayback');
+    Diagnostics.countErrorI18n('camFailed', Object.assign({ name: camera.name }, cameraErrorVariables(error)));
+    setStatusError('errFilePlayback');
     statusTitle.textContent = tr('needsAttention');
-    statusText.textContent = state.lastError;
+    statusText.textContent = currentStatusError();
     setHealth('healthError', 'bad');
     teardownSource(camera);
     refreshAllPanels(); renderCameraBar();
@@ -5571,7 +5861,7 @@ async function ensureHls() {
 
 async function connectStream(camera, isRetry) {
   const kind = resolveStreamKind(camera.url, camera.streamKind);
-  Diagnostics.log(tr('camConnecting', { name: camera.name }) + ' [' + kind + ']', 'info');
+  Diagnostics.logI18n('camConnectingStream', { name: camera.name, kind }, 'info');
   try {
     if (kind === 'mjpeg') {
       await connectMjpeg(camera);
@@ -5586,14 +5876,14 @@ async function connectStream(camera, isRetry) {
     camera.error = null;
     camera.reconnectAttempt = 0;
     camera.lastFrameAt = Date.now();
-    state.lastError = '';
+    clearStatusError();
     attachStallWatchdog(camera);
     Diagnostics.log(tr('camConnected', {
       name: camera.name,
       resolution: (camera.usesCanvas ? camera.canvas.width + 'x' + camera.canvas.height
                                      : camera.video.videoWidth + 'x' + camera.video.videoHeight)
     }), 'ok');
-    if (isRetry) pushEvent(camera.name + ' · ' + tr('eventCameraBack'), 'ok', { camera: camera.name });
+    if (isRetry) pushI18nEvent('eventCameraBack', { camera: camera.name }, 'ok', { camera: camera.name });
     setHealth('healthGood', 'good');
     refreshAllPanels(); renderCameraBar(); drawBoundary(camera);
     await ensureDetectionRunning();
@@ -5601,11 +5891,12 @@ async function connectStream(camera, isRetry) {
   } catch (error) {
     camera.online = false;
     camera.error = error && error.message ? error.message : String(error);
-    Diagnostics.countError(tr('camFailed', { name: camera.name, reason: camera.error }));
+    const errorVars = Object.assign({ name: camera.name }, cameraErrorVariables(error));
+    Diagnostics.countErrorI18n('camFailed', errorVars);
     /* 주소를 잘못 넣었을 때 아무 안내도 없이 패널만 꺼지던 문제를 막는다 */
-    state.lastError = tr('streamFailedHelp', { name: camera.name, reason: camera.error });
+    setStatusError('streamFailedHelp', errorVars);
     statusTitle.textContent = tr('needsAttention');
-    statusText.textContent = state.lastError;
+    statusText.textContent = currentStatusError();
     setHealth('healthError', 'bad');
     teardownSource(camera);
     refreshAllPanels(); renderCameraBar();
@@ -5690,6 +5981,7 @@ function connectMjpeg(camera) {
 function disconnectAll() {
   state.cameras.forEach(teardownSource);
   stopDetection(true);
+  clearStatusError();
   setHealth('healthIdle', '');
   refreshAllPanels(); renderCameraBar();
 }
@@ -5815,7 +6107,7 @@ async function ensureDetectionRunning() {
        아무것도 감지하지 않는 상태가 된다. 이 시스템에서 가장 위험한 실패이므로
        여기서 멈추고 실패 상태를 그대로 남긴다. */
     if (!ready) {
-      state.lastError = tr('modelLoadFailed');
+      setStatusError('modelLoadFailed');
       stopDetection(false);
       setHealth('healthError', 'bad');
       statusTitle.textContent = tr('modelLoadFailed');
@@ -5824,7 +6116,7 @@ async function ensureDetectionRunning() {
       stateChip.className = 'state alert';
       return false;
     }
-    state.lastError = '';
+    clearStatusError();
   }
   if (!state.detecting) resumeDetection();
   return true;
@@ -6005,7 +6297,7 @@ function startSimulation(camera) {
   camera.riskSince.clear();
   camera.riskSeen.clear();
   setHealth('healthGood', 'good');
-  pushEvent(camera.name + ' · ' + tr('eventSimStart'), 'info', { camera: camera.name });
+  pushI18nEvent('eventSimStartNamed', { camera: camera.name }, 'info', { camera: camera.name });
   refreshAllPanels(); renderCameraBar(); drawBoundary(camera); refreshBadges();
   ensureDetectionRunning();
 }
@@ -8464,7 +8756,9 @@ const ArduinoThermal = {
         this.sendCommand('T'); // 아두이노로 'T' 신호 전송
 
         if (typeof pushEvent === 'function') {
-          pushEvent(`[익사 위험군 확정] 위험 구역 내 인원(${risky.riskCount}명) + 열화상 생체 열원(${value.toFixed(1)}°C) → 튜브 사출 작동!`, 'error', {
+          pushI18nEvent('thermalEventRisk', {
+            count: risky.riskCount, temperature: value.toFixed(1)
+          }, 'error', {
             camera: risky.name || '열화상/일반 동시'
           });
         }
@@ -8477,7 +8771,7 @@ const ArduinoThermal = {
     /* 열원만 감지되고 위험 구역에는 들어오지 않은 경우 */
     else if (!isInsideDangerZone && kind === 'person') {
       if (typeof pushEvent === 'function' && Math.random() < 0.05) {
-        pushEvent(`[열화상 감지] 생체 열원(${value.toFixed(1)}°C) 감지 (위험 구역 외곽)`, 'info');
+        pushI18nEvent('thermalEventDetected', { temperature: value.toFixed(1) }, 'info');
       }
     }
   },

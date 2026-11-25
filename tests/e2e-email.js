@@ -147,6 +147,14 @@ function check(name, ok, detail) {
   check('수신자 등록됨 (state.contacts)', contactState && contactState.email === 'e2e@example.com',
     JSON.stringify(contactState));
 
+  await page.click('#addContact');
+  await page.fill('#contactName', 'E2E 담당자 2');
+  await page.fill('#contactEmail', 'e2e-second@example.com');
+  await page.click('#contactSave');
+  const contactEmails = await page.evaluate(() => window.BeachWatch.state.contacts
+    .filter(c => c.email).map(c => c.email));
+  check('두 번째 이메일 수신자 등록됨', contactEmails.includes('e2e-second@example.com'), contactEmails.join(', '));
+
   // 이메일 발송 준비 상태 (이메일 수신자가 있으면 true — 별도 키 입력 불필요)
   const configured = await page.evaluate(() => window.BeachWatch.emailConfigured());
   check('이메일 발송 준비됨 (수신자만으로 true)', configured === true);
@@ -154,16 +162,14 @@ function check(name, ok, detail) {
   // 3) 설정의 "테스트 이메일 보내기"
   await page.evaluate(() => { window.__emailPosts.length = 0; });
   await page.click('#emailTestSend');
-  await page.waitForFunction(() => window.__emailPosts.length >= 1, null, { timeout: 8000 }).catch(() => {});
+  await page.waitForFunction(() => window.__emailPosts.length >= 2, null, { timeout: 8000 }).catch(() => {});
 
   let posts = await page.evaluate(() => window.__emailPosts);
-  check('테스트 발송: FormSubmit POST 호출됨', posts.length >= 1, 'posts=' + posts.length);
-  if (posts.length) {
-    const p = posts[posts.length - 1];
-    check('  └ 수신자 이메일로 전송(엔드포인트)',
-      p.url.indexOf('/ajax/e2e%40example.com') !== -1 || p.url.indexOf('/ajax/e2e@example.com') !== -1, p.url);
-    check('  └ 본문에 to_email 포함', p.body && p.body.to_email === 'e2e@example.com', p.body && p.body.to_email);
-  }
+  check('테스트 발송: 모든 담당자에게 FormSubmit POST', posts.length === 2, 'posts=' + posts.length);
+  const testRecipients = posts.map(p => p.body && p.body.to_email).sort();
+  check('  └ 두 이메일 주소 모두 포함',
+    JSON.stringify(testRecipients) === JSON.stringify(['e2e-second@example.com', 'e2e@example.com']),
+    testRecipients.join(', '));
 
   // 4) 실제 경보 경로 (notifyRecipients 와 동일한 sendEmail)
   await page.evaluate(() => { window.__emailPosts.length = 0; });
